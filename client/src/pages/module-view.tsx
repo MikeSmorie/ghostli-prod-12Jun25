@@ -286,35 +286,48 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       
       const data = await response.json();
       
-      // Set the output result
-      setOutputResult(data.content);
+      // Debug logging of the response data structure
+      console.log("API Response data:", data);
       
-      // Set metadata
-      setGenerationMetadata({
-        wordCount: data.metadata.wordCount,
-        iterationCount: data.metadata.iterations, // Fixed to match server response field name
-        processingTimeMs: data.metadata.generationTime // Fixed to match server response field name
-      });
-      
-      // Set additional generated content if available
-      if (data.seo && Array.isArray(data.seo)) {
-        setSeoSuggestions(data.seo);
-      }
-      
-      if (data.hashtags && Array.isArray(data.hashtags)) {
-        setHashtags(data.hashtags);
-      }
-      
-      if (data.keywords && Array.isArray(data.keywords)) {
-        setKeywords(data.keywords);
+      // Check if content exists before trying to access it
+      if (data && typeof data.content === 'string') {
+        // Set the output result
+        setOutputResult(data.content);
+        
+        // Set metadata if it exists
+        if (data.metadata) {
+          setGenerationMetadata({
+            wordCount: data.metadata.wordCount || 0,
+            iterationCount: data.metadata.iterations || 1, // Fixed to match server response field name
+            processingTimeMs: data.metadata.generationTime || 0 // Fixed to match server response field name
+          });
+        } else {
+          // Set default metadata if none is provided
+          setGenerationMetadata({
+            wordCount: data.content.split(/\s+/).filter(Boolean).length,
+            iterationCount: 1,
+            processingTimeMs: 0
+          });
+        }
+        
+        // Set additional generated content if available
+        setSeoSuggestions(Array.isArray(data.seo) ? data.seo : []);
+        setHashtags(Array.isArray(data.hashtags) ? data.hashtags : []);
+        setKeywords(Array.isArray(data.keywords) ? data.keywords : []);
+      } else {
+        // If content is missing, throw an error to be caught by the catch block
+        throw new Error("API response missing content field or has invalid format");
       }
       
       // Switch to output module
       setActiveModule('output');
       
+      // Use metadata from state to ensure values exist
       toast({
         title: "Content generation successful",
-        description: `Generated ${data.metadata.wordCount} words in ${(data.metadata.generationTime / 1000).toFixed(1)}s`,
+        description: generationMetadata 
+          ? `Generated ${generationMetadata.wordCount} words in ${(generationMetadata.processingTimeMs / 1000).toFixed(1)}s`
+          : "Generated content successfully",
       });
     } catch (error) {
       toast({
