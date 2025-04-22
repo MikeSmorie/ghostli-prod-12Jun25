@@ -60,4 +60,18 @@
   .section {
     @apply p-6 my-4 rounded-lg bg-white dark:bg-gray-800 shadow text-gray-900 dark:text-gray-100;
   }
+  
+  /* Phone input custom styles for dark mode */
+  .dark-search {
+    @apply bg-gray-800 text-white border-gray-700;
+  }
+  
+  .light-search {
+    @apply bg-white text-gray-900 border-gray-300;
+  }
+  
+  /* Custom resize handle styles */
+  .resize-handle {
+    @apply absolute bottom-1 right-1 w-4 h-4 cursor-se-resize opacity-50 hover:opacity-100;
+  }
 }

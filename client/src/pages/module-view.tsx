@@ -130,19 +130,40 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   };
 
   const validatePhone = (value: string): boolean => {
-    const phoneRegex = /^\d+$/;
-    const isValid = phoneRegex.test(value);
-    setPhoneError(isValid ? "" : "Please enter numbers only");
+    // Only validate the numeric part of the phone number (exclude country code + and spaces)
+    const numericPart = value.replace(/[^0-9]/g, '');
+    // Check if it has at least 8 digits (common minimum length for most countries)
+    const isValid = numericPart.length >= 8;
+    setPhoneError(isValid ? "" : "Please enter a valid phone number with at least 8 digits");
     return isValid;
   };
 
   const validateAndProceed = () => {
     const isEmailValid = validateEmail(email);
-    const isPhoneValid = validatePhone(phoneNumber);
+    // For phone validation, extract just the numeric part
+    const numericPhone = phoneNumber.replace(/[^0-9]/g, '');
+    const isPhoneValid = validatePhone(numericPhone);
     
     if (isEmailValid && isPhoneValid) {
       // Show verification dialog
       setShowVerificationDialog(true);
+    } else {
+      // Show validation failure toast
+      if (!isEmailValid) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid email address.",
+          variant: "destructive"
+        });
+      }
+      
+      if (!isPhoneValid) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid phone number with country code.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -274,33 +295,51 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                         <HelpCircleIcon className="h-4 w-4 ml-2 text-gray-400" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="max-w-xs">Your phone number will be used for verification purposes only.</p>
+                        <p className="max-w-xs">Your phone number will be used for verification purposes only. The country code will be automatically populated based on your selection.</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className={`${phoneError ? 'border-red-500' : ''}`}>
+                <div className={`${phoneError ? 'border-red-500 rounded-md' : ''}`}>
                   <PhoneInput
                     country={'us'} // Default country
                     value={phoneNumber}
                     onChange={(phone, countryData: any) => {
-                      setPhoneNumber(phone);
+                      // Ensure only numeric characters are accepted
+                      const numericPart = phone.replace(/[^0-9]/g, '');
+                      if (numericPart === phone.replace(/[^0-9+]/g, '')) {
+                        setPhoneNumber(phone);
+                        setPhoneError('');
+                      } else {
+                        setPhoneError('Please enter only numeric characters.');
+                      }
                       setCountry(countryData?.countryCode || "");
                     }}
-                    onBlur={() => validatePhone(phoneNumber)}
+                    onBlur={() => validatePhone(phoneNumber.replace(/[^0-9]/g, ''))}
                     inputClass="w-full"
                     containerClass="w-full"
-                    buttonStyle={{ background: "transparent" }}
+                    buttonStyle={{ 
+                      background: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)', 
+                      borderColor: isDarkMode ? 'rgb(75, 85, 99)' : 'rgb(209, 213, 219)'
+                    }}
                     inputStyle={{ 
                       width: "100%", 
                       borderRadius: "0.375rem", 
-                      border: "1px solid rgb(209, 213, 219)",
+                      border: isDarkMode ? "1px solid rgb(75, 85, 99)" : "1px solid rgb(209, 213, 219)",
                       padding: "0.5rem 0.75rem",
-                      fontSize: "0.875rem"
+                      fontSize: "0.875rem",
+                      backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
+                      color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)'
                     }}
+                    dropdownStyle={{
+                      backgroundColor: isDarkMode ? '#374151' : '#ffffff',
+                      color: isDarkMode ? '#f9fafb' : '#111827'
+                    }}
+                    searchClass={isDarkMode ? 'dark-search' : 'light-search'}
                     countryCodeEditable={false}
                     enableSearch={true}
                     disableSearchIcon={false}
+                    preferredCountries={['us', 'ca', 'gb', 'au']}
                   />
                 </div>
                 {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
@@ -402,29 +441,49 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                 </Select>
               </div>
               
-              {/* Input Text Area */}
+              {/* Input Text Area with resizing handle */}
               <div>
-                <label className="block mb-2 font-medium">Content Prompt:</label>
-                <textarea
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className={`w-full min-h-24 p-3 border rounded-md ${
-                    isDarkMode 
-                      ? 'bg-gray-800 text-white border-gray-700' 
-                      : 'bg-white text-gray-900 border-gray-300'
-                  }`}
-                  placeholder="Describe what content you want to generate..."
-                  rows={4}
-                  style={{
-                    // Ensure proper contrast in both light and dark mode
-                    backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
-                    color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)',
-                  }}
-                />
+                <div className="flex items-center mb-1">
+                  <label className="font-medium">Content Prompt</label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircleIcon className="h-4 w-4 ml-2 text-gray-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Enter your content requirements here. You can resize this field using the resize handle at the bottom right corner.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    className={`w-full min-h-32 p-3 border rounded-md resize-y ${
+                      isDarkMode 
+                        ? 'bg-gray-800 text-white border-gray-700' 
+                        : 'bg-white text-gray-900 border-gray-300'
+                    }`}
+                    placeholder="Describe what content you want to generate..."
+                    rows={4}
+                    style={{
+                      // Ensure proper contrast in both light and dark mode
+                      backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
+                      color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)',
+                    }}
+                  />
+                  {/* Custom resize handle with tooltip */}
+                  <div className="absolute bottom-1 right-1 w-4 h-4 cursor-se-resize opacity-50 hover:opacity-100" title="Drag to resize">
+                    <svg viewBox="0 0 24 24" className="w-full h-full" fill={isDarkMode ? 'white' : 'black'}>
+                      <path d="M22 22H16V20H20V16H22V22ZM22 13H20V15H22V13ZM13 22H15V20H13V22ZM9 22H11V20H9V22Z" />
+                    </svg>
+                  </div>
+                </div>
                 <div className="mt-4">
                   <Button 
                     onClick={processInput} 
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                     disabled={!isVerified}
                   >
                     Generate Content
@@ -441,8 +500,14 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
             <CardContent className="pt-6">
               <h3 className="text-xl font-semibold mb-4">Generated Content</h3>
               
-              <div className="bg-gray-50 border p-4 rounded-md mb-6 min-h-40">
-                <pre className="whitespace-pre-wrap">{outputResult}</pre>
+              <div className={`border p-4 rounded-md mb-6 min-h-40 ${
+                isDarkMode 
+                  ? 'bg-gray-800 text-white border-gray-700' 
+                  : 'bg-gray-50 text-gray-900 border-gray-300'
+              }`}>
+                <pre className="whitespace-pre-wrap" style={{
+                  color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)'
+                }}>{outputResult}</pre>
               </div>
               
               {/* Output Format Options */}
@@ -517,8 +582,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
               A verification code has been sent to your email address and phone number. 
               Please check your email or messages to complete verification before proceeding.
               
-              <div className="mt-4 p-3 bg-gray-100 rounded-md">
-                <p className="text-center font-medium">For demo purposes, click "Verify" below to simulate verification.</p>
+              <div className={`mt-4 p-3 rounded-md ${
+                isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+              }`}>
+                <p className={`text-center font-medium ${
+                  isDarkMode ? 'text-gray-100' : 'text-gray-800'
+                }`}>For demo purposes, click "Verify" below to simulate verification.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
