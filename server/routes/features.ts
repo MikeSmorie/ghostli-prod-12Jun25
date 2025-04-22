@@ -1,204 +1,129 @@
-import express from "express";
+import { Express, Request, Response } from "express";
 import { db } from "@db";
-import { features, planFeatures, userSubscriptions, insertFeatureSchema, insertPlanFeatureSchema } from "@db/schema";
-import { eq, and } from "drizzle-orm";
+import { featureFlags, insertFeatureFlagSchema } from "@db/schema";
+import { eq } from "drizzle-orm";
+import { isFeatureEnabled, getUserFeatures } from "../services/featureFlags";
+import { authenticateJWT, requireRole } from "../auth";
 
-const router = express.Router();
-
-// Public route: Check if a feature is enabled for a user
-router.get("/:featureId", async (req, res) => {
-  try {
-    const { featureId } = req.params;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+// Register feature flag related routes
+export function registerFeatureRoutes(app: Express) {
+  // Get all feature flags
+  app.get("/api/admin/features", authenticateJWT, requireRole("admin"), async (req, res) => {
+    try {
+      const allFlags = await db
+        .select()
+        .from(featureFlags);
+      
+      res.json(allFlags);
+    } catch (error: any) {
+      console.error("Error fetching feature flags:", error);
+      res.status(500).json({ message: "Failed to fetch feature flags", error: error.message });
     }
+  });
 
-    // Get user's subscription
-    const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.userId, userId),
-      with: {
-        plan: {
-          with: {
-            planFeatures: {
-              where: eq(planFeatures.featureId, parseInt(featureId))
-            }
-          }
-        }
+  // Create or update a feature flag
+  app.post("/api/admin/features", authenticateJWT, requireRole("admin"), async (req, res) => {
+    try {
+      const validatedData = insertFeatureFlagSchema.parse(req.body);
+      
+      // Check if feature already exists
+      const existingFeature = await db
+        .select()
+        .from(featureFlags)
+        .where(eq(featureFlags.featureName, validatedData.featureName))
+        .limit(1);
+      
+      if (existingFeature.length > 0) {
+        // Update existing feature
+        const result = await db
+          .update(featureFlags)
+          .set({
+            featureName: validatedData.featureName,
+            isEnabled: validatedData.isEnabled,
+            tierLevel: validatedData.tierLevel,
+            description: validatedData.description,
+            updatedAt: new Date()
+          })
+          .where(eq(featureFlags.id, existingFeature[0].id))
+          .returning();
+        
+        res.json(result[0]);
+      } else {
+        // Create new feature
+        const result = await db
+          .insert(featureFlags)
+          .values({
+            featureName: validatedData.featureName,
+            isEnabled: validatedData.isEnabled,
+            tierLevel: validatedData.tierLevel,
+            description: validatedData.description,
+            createdAt: new Date()
+          })
+          .returning();
+        
+        res.status(201).json(result[0]);
       }
-    });
-
-    if (!subscription) {
-      return res.json({ isEnabled: false });
+    } catch (error: any) {
+      console.error("Error creating/updating feature flag:", error);
+      res.status(400).json({ message: "Failed to create/update feature flag", error: error.message });
     }
+  });
 
-    // Check custom overrides first
-    const customFeatures = subscription.customFeatures ?
-      JSON.parse(subscription.customFeatures) : [];
-
-    if (customFeatures.includes(parseInt(featureId))) {
-      return res.json({ isEnabled: true });
-    }
-
-    // Check plan features
-    const planFeature = subscription.plan?.planFeatures[0];
-    const isEnabled = planFeature?.enabled ?? false;
-
-    res.json({ isEnabled });
-  } catch (error) {
-    console.error("Feature check error:", error);
-    res.status(500).json({ message: "Error checking feature access" });
-  }
-});
-
-// Admin routes: Feature management
-
-// Get all available features
-router.get("/", async (_req, res) => {
-  try {
-    const allFeatures = await db.query.features.findMany({
-      orderBy: features.category
-    });
-    res.json(allFeatures);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching features" });
-  }
-});
-
-// Create a new feature
-router.post("/", async (req, res) => {
-  try {
-    const featureData = insertFeatureSchema.parse(req.body);
-    const [feature] = await db.insert(features)
-      .values(featureData)
-      .returning();
-
-    res.json(feature);
-  } catch (error) {
-    res.status(400).json({
-      message: "Error creating feature",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-// Admin: Override features for a specific user
-router.post("/admin/override", async (req, res) => {
-  try {
-    const { userId, featureId, enabled } = req.body;
-
-    // Get user's subscription
-    const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.userId, userId)
-    });
-
-    if (!subscription) {
-      return res.status(404).json({ message: "User subscription not found" });
-    }
-
-    // Parse existing custom features or initialize empty array
-    const customFeatures = subscription.customFeatures ?
-      JSON.parse(subscription.customFeatures) : [];
-
-    // Update custom features
-    const updatedFeatures = enabled ?
-      Array.from(new Set([...customFeatures, featureId])) :
-      customFeatures.filter((id: number) => id !== featureId);
-
-    // Update subscription with new custom features
-    await db
-      .update(userSubscriptions)
-      .set({
-        customFeatures: JSON.stringify(updatedFeatures),
-      })
-      .where(eq(userSubscriptions.userId, userId));
-
-    res.json({
-      message: `Feature ${enabled ? 'enabled' : 'disabled'} for user`,
-      customFeatures: updatedFeatures
-    });
-  } catch (error) {
-    res.status(400).json({
-      message: "Error updating user features",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-// Get user's custom features
-router.get("/admin/user-features/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.userId, parseInt(userId))
-    });
-
-    const customFeatures = subscription?.customFeatures ?
-      JSON.parse(subscription.customFeatures) : [];
-
-    res.json({ customFeatures });
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching user features" });
-  }
-});
-
-// Assign feature to a plan
-router.post("/admin/assign", async (req, res) => {
-  try {
-    const assignmentData = insertPlanFeatureSchema.parse(req.body);
-    const [planFeature] = await db.insert(planFeatures)
-      .values(assignmentData)
-      .returning();
-
-    res.json(planFeature);
-  } catch (error) {
-    res.status(400).json({
-      message: "Error assigning feature to plan",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-// Get all features for a specific plan
-router.get("/admin/plan/:planId", async (req, res) => {
-  try {
-    const { planId } = req.params;
-    const planFeaturesList = await db.query.planFeatures.findMany({
-      where: eq(planFeatures.planId, parseInt(planId)),
-      with: {
-        feature: true
+  // Delete a feature flag
+  app.delete("/api/admin/features/:featureName", authenticateJWT, requireRole("admin"), async (req, res) => {
+    try {
+      const { featureName } = req.params;
+      
+      const result = await db
+        .delete(featureFlags)
+        .where(eq(featureFlags.featureName, featureName))
+        .returning();
+      
+      if (result.length === 0) {
+        return res.status(404).json({ message: "Feature flag not found" });
       }
-    });
+      
+      res.json({ message: "Feature flag deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting feature flag:", error);
+      res.status(500).json({ message: "Failed to delete feature flag", error: error.message });
+    }
+  });
 
-    res.json(planFeaturesList);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching plan features" });
-  }
-});
+  // Check if a specific feature is enabled for the current user
+  app.get("/api/features/:featureName", authenticateJWT, async (req, res) => {
+    try {
+      const { featureName } = req.params;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const hasAccess = await isFeatureEnabled(featureName, userId);
+      
+      res.json({ featureName, hasAccess });
+    } catch (error: any) {
+      console.error(`Error checking feature access for ${req.params.featureName}:`, error);
+      res.status(500).json({ message: "Failed to check feature access", error: error.message });
+    }
+  });
 
-// Toggle feature status for a plan
-router.patch("/admin/toggle", async (req, res) => {
-  try {
-    const { planId, featureId, enabled } = req.body;
-    const [updated] = await db
-      .update(planFeatures)
-      .set({ enabled })
-      .where(
-        and(
-          eq(planFeatures.planId, planId),
-          eq(planFeatures.featureId, featureId)
-        )
-      )
-      .returning();
-
-    res.json(updated);
-  } catch (error) {
-    res.status(400).json({
-      message: "Error toggling feature status",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-export default router;
+  // Get all features with access status for the current user
+  app.get("/api/features", authenticateJWT, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userFeatures = await getUserFeatures(userId);
+      
+      res.json(userFeatures);
+    } catch (error: any) {
+      console.error("Error fetching user features:", error);
+      res.status(500).json({ message: "Failed to fetch user features", error: error.message });
+    }
+  });
+}

@@ -153,6 +153,21 @@ export const planFeatures = pgTable("plan_features", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Define subscription tier levels
+export const tierLevelEnum = z.enum(["free", "basic", "premium", "enterprise"]);
+export type TierLevel = z.infer<typeof tierLevelEnum>;
+
+// Feature flags table to control access to features
+export const featureFlags = pgTable("feature_flags", {
+  id: serial("id").primaryKey(),
+  featureName: text("feature_name").notNull().unique(),
+  isEnabled: boolean("is_enabled").default(true),
+  tierLevel: text("tier_level").notNull().default("premium"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
 // Define all relations
 export const usersRelations = relations(users, ({ many }) => ({
   activityLogs: many(activityLogs),
@@ -343,6 +358,11 @@ export const selectFeatureSchema = createSelectSchema(features);
 export const insertPlanFeatureSchema = createInsertSchema(planFeatures);
 export const selectPlanFeatureSchema = createSelectSchema(planFeatures);
 
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags, {
+  tierLevel: tierLevelEnum.default("premium")
+});
+export const selectFeatureFlagSchema = createSelectSchema(featureFlags);
+
 // Types
 export type InsertUser = typeof users.$inferInsert;
 export type SelectUser = typeof users.$inferSelect;
@@ -362,3 +382,5 @@ export type InsertFeature = typeof features.$inferInsert;
 export type SelectFeature = typeof features.$inferSelect;
 export type InsertPlanFeature = typeof planFeatures.$inferInsert;
 export type SelectPlanFeature = typeof planFeatures.$inferSelect;
+export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
+export type SelectFeatureFlag = typeof featureFlags.$inferSelect;

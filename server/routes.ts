@@ -6,7 +6,7 @@ import express from "express";
 import subscriptionRoutes from "./routes/subscription";
 import webhookRoutes from "./routes/webhook";
 import aiRoutes from "./routes/ai";
-import featureRoutes from "./routes/features";
+import { registerFeatureRoutes } from "./routes/features";
 import messagesRoutes from "./routes/announcements";
 import adminLogsRoutes from "./routes/admin-logs";
 import paymentRoutes from "./routes/payment";
@@ -61,9 +61,8 @@ export function registerRoutes(app: Express) {
   app.use("/api/webhook", webhookRoutes);
   app.use("/api/ai", aiRoutes);
 
-  // Split features routes into public and admin
-  app.use("/api/features/check", requireAuth, featureRoutes); // Public feature check route
-  app.use("/api/features/admin", requireAdmin, featureRoutes); // Admin-only routes
+  // Register feature routes
+  registerFeatureRoutes(app);
 
   app.use("/api/messages", messagesRoutes);
   app.use("/api/admin", requireAdmin, adminLogsRoutes);
