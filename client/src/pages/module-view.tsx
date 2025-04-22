@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,18 @@ const ARCHETYPE_OPTIONS = [
 export default function ModuleView({ moduleId }: ModuleViewProps) {
   const params = useParams();
   const id = moduleId || params.id;
+  const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Map module IDs to meaningful names
+  const moduleNames = {
+    "1": "Content Generator",
+    "2": "Content Parameters",
+    "3": "Account Verification",
+    "4": "Performance Analytics",
+    "5": "AI Detection Shield",
+    "6": "Output Formats"
+  };
   
   // User data state
   const [email, setEmail] = useState(localStorage.getItem('user_email') || "");
@@ -449,6 +460,52 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
 
   // State to track active module
   const [activeModule, setActiveModule] = useState<string>('verification');
+
+  // Set appropriate active module based on the module ID when component mounts or ID changes
+  useEffect(() => {
+    // Map module IDs to appropriate internal modules
+    switch(id) {
+      case "1": 
+        setActiveModule('verification');
+        break;
+      case "2":
+        setActiveModule('parameters');
+        break;
+      case "3":
+        setActiveModule('verification');
+        break;
+      case "4":
+        // For Analytics module - redirect to the analytics page
+        if (outputResult) {
+          setActiveModule('output');
+        } else {
+          toast({
+            title: "No content available",
+            description: "Please generate content first before viewing analytics",
+          });
+          navigate("/module/1");
+        }
+        break;
+      case "5":
+        // For AI Detection Shield - show parameters with focus on anti-detection
+        setActiveModule('parameters');
+        break;
+      case "6":
+        // For Output Formats - show output or redirect
+        if (outputResult) {
+          setActiveModule('output');
+        } else {
+          toast({
+            title: "No content available",
+            description: "Please generate content first before accessing formats",
+          });
+          navigate("/module/1");
+        }
+        break;
+      default:
+        setActiveModule('verification');
+    }
+  }, [id]);
 
   // Function to switch between modules
   const switchModule = (moduleName: string) => {
