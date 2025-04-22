@@ -80,11 +80,11 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const { toast } = useToast();
   
   // User data state
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState(localStorage.getItem('user_email') || "");
+  const [phoneNumber, setPhoneNumber] = useState(localStorage.getItem('user_phone') || "");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [country, setCountry] = useState<string>("");
+  const [country, setCountry] = useState<string>(localStorage.getItem('user_country') || "");
   
   // Content parameters
   const [inputValue, setInputValue] = useState("");
@@ -103,7 +103,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   // Output and verification state
   const [outputResult, setOutputResult] = useState("");
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(localStorage.getItem('user_verified') === 'true');
   const [isCopied, setIsCopied] = useState({
     html: false,
     formatted: false,
@@ -184,8 +184,14 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
     }
   };
 
-  // Simulate verification (in a real app, this would involve email/SMS verification)
+  // Simulate verification and save to localStorage
   const simulateVerification = () => {
+    // Save verification status and user data to localStorage
+    localStorage.setItem('user_email', email);
+    localStorage.setItem('user_phone', phoneNumber);
+    localStorage.setItem('user_verified', 'true');
+    localStorage.setItem('user_country', country);
+    
     setShowVerificationDialog(false);
     setIsVerified(true);
     toast({
@@ -461,17 +467,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     </div>
                     <div className={`${phoneError ? 'border-red-500 rounded-md' : ''}`}>
                       <PhoneInput
-                        country={'us'} // Default country
+                        country={country || 'us'} // Use stored country or default to US
                         value={phoneNumber}
                         onChange={(phone, countryData: any) => {
-                          // Ensure only numeric characters are accepted
-                          const numericPart = phone.replace(/[^0-9]/g, '');
-                          if (numericPart === phone.replace(/[^0-9+]/g, '')) {
-                            setPhoneNumber(phone);
-                            setPhoneError('');
-                          } else {
-                            setPhoneError('Please enter only numeric characters.');
-                          }
+                          // Always store the full phone number including + sign
+                          setPhoneNumber(phone);
+                          setPhoneError('');
                           setCountry(countryData?.countryCode || "");
                         }}
                         onBlur={() => validatePhone(phoneNumber.replace(/[^0-9]/g, ''))}
@@ -498,10 +499,22 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                         countryCodeEditable={false}
                         enableSearch={true}
                         disableSearchIcon={false}
+                        searchPlaceholder="Search country..."
                         preferredCountries={['us', 'ca', 'gb', 'au']}
                       />
                     </div>
                     {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+                    
+                    {/* Phone number format guidance */}
+                    <div className="mt-2 p-3 rounded-md bg-blue-50 dark:bg-blue-900 text-sm">
+                      <p className="font-medium mb-1">Phone Number Formatting Guide:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li>Select your country from the dropdown or use the search</li>
+                        <li>Country code will be added automatically (e.g., +1 for US)</li>
+                        <li><strong>Important:</strong> Do not add leading zeros after the country code</li>
+                        <li>Example: For UK number "01234 567890", enter as "1234 567890"</li>
+                      </ul>
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-4">
