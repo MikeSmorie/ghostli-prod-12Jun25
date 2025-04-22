@@ -39,6 +39,16 @@ interface GenerationParams {
   generateSEO?: boolean;
   generateHashtags?: boolean;
   generateKeywords?: boolean;
+  // E-A-T and content quality parameters
+  includeCitations?: boolean;
+  checkDuplication?: boolean;
+  addRhetoricalElements?: boolean;
+  strictToneAdherence?: boolean;
+  runSelfAnalysis?: boolean;
+  // Additional refinement options
+  maxIterations?: number;
+  wordCountTolerance?: number;
+  runAIDetectionTest?: boolean;
 }
 
 interface GenerationMetadata {
@@ -95,6 +105,13 @@ export default function ContentGenerator() {
   const [generateSEO, setGenerateSEO] = useState(true);
   const [generateHashtags, setGenerateHashtags] = useState(true);
   const [generateKeywords, setGenerateKeywords] = useState(true);
+  
+  // E-A-T and content quality parameters
+  const [includeCitations, setIncludeCitations] = useState(false);
+  const [checkDuplication, setCheckDuplication] = useState(false);
+  const [addRhetoricalElements, setAddRhetoricalElements] = useState(true);
+  const [strictToneAdherence, setStrictToneAdherence] = useState(false);
+  const [runSelfAnalysis, setRunSelfAnalysis] = useState(false);
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -366,6 +383,12 @@ export default function ContentGenerator() {
       generateSEO,
       generateHashtags,
       generateKeywords,
+      // Include E-A-T and content quality parameters
+      includeCitations,
+      checkDuplication,
+      addRhetoricalElements,
+      strictToneAdherence,
+      runSelfAnalysis,
     };
     
     mutate(params);

@@ -31,6 +31,12 @@ const ContentGenerationRequestSchema = z.object({
   generateSEO: z.boolean().optional().default(true),
   generateHashtags: z.boolean().optional().default(true),
   generateKeywords: z.boolean().optional().default(true),
+  // E-A-T and content quality parameters
+  includeCitations: z.boolean().optional().default(false),
+  checkDuplication: z.boolean().optional().default(false),
+  addRhetoricalElements: z.boolean().optional().default(true),
+  strictToneAdherence: z.boolean().optional().default(false),
+  runSelfAnalysis: z.boolean().optional().default(false),
   // New refinement options
   maxIterations: z.number().int().min(1).max(10).optional().default(5),
   wordCountTolerance: z.number().min(0.01).max(0.5).optional().default(0.1),

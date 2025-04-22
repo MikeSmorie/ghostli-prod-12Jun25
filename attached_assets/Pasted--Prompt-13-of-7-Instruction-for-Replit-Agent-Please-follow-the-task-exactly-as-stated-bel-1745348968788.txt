@@ -1,0 +1,30 @@
+**Prompt 13 of 7**
+
+**Instruction for Replit Agent**:  
+Please follow the task exactly as stated below. Do **not** interpret, preempt, or go ahead with any actions beyond this prompt.
+
+**Task**:  
+Enhance the **content quality** and **SEO compliance** of the **WriteRIGHT-01/OM-7** content generation process with the following improvements:
+
+1. **E-A-T Compliance**:
+   - **Add citations** and **references** to authoritative sources in the generated content where appropriate, ensuring the content appears **credible** and **trustworthy**.
+   - Content should sound **expert-level** by using **professionally-accepted terminology**, backed by **reliable facts**.
+
+2. **Content Duplication Check**:
+   - Integrate a **content duplication check** to ensure the generated text is **original** and does not significantly overlap with existing content on the web.
+   - Use tools like **Copyscape** or **Siteliner** for this check before output is finalized.
+   - If any parts are found to be too similar to existing content, flag them for modification.
+
+3. **Content Enrichment**:
+   - Introduce **rhetorical questions**, **analogies**, and **personalized anecdotes** to make the content feel more natural, engaging, and relatable.
+   - Apply **diverse sentence structures** and **varied vocabulary** to enrich the content.
+
+4. **Tone and Brand Archetype Adherence**:
+   - Ensure the **tone** selected by the operator is adhered to throughout the content, and **Brand Archetype** is followed carefully.
+   - Adjust language dynamically during the generation process to maintain consistency with the tone and archetype selected.
+
+5. **Self-Analysis for Humanization**:
+   - After each content generation, run a **self-analysis** to evaluate the content’s **human-like qualities** (e.g., is it conversational, authoritative, original, and readable?).
+   - Ensure content flows **naturally** and sounds like it was **written by a human**, introducing natural variations and imperfections (typos, grammatical mistakes, etc.) as specified by the operator.
+
+Once these improvements are implemented, please confirm the adjustments and test the output for compliance with high-quality content standards and Google’s guidelines.

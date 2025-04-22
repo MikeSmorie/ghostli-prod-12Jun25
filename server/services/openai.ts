@@ -37,10 +37,16 @@ export interface ContentGenerationParams {
   generateSEO?: boolean;
   generateHashtags?: boolean;
   generateKeywords?: boolean;
+  // E-A-T and content quality parameters
+  includeCitations?: boolean;             // Whether to include authoritative citations
+  checkDuplication?: boolean;             // Whether to check for content duplication
+  addRhetoricalElements?: boolean;        // Whether to add rhetorical questions, analogies
+  strictToneAdherence?: boolean;          // Whether to strictly adhere to selected tone throughout
+  runSelfAnalysis?: boolean;              // Whether to run self-analysis for humanization
   // New refinement options
-  maxIterations?: number; // Maximum number of refinement iterations
-  wordCountTolerance?: number; // Percentage tolerance for word count
-  runAIDetectionTest?: boolean; // Whether to run AI detection test
+  maxIterations?: number;                 // Maximum number of refinement iterations
+  wordCountTolerance?: number;            // Percentage tolerance for word count
+  runAIDetectionTest?: boolean;           // Whether to run AI detection test
 }
 
 export interface ContentGenerationResult {
@@ -64,6 +70,20 @@ export interface ContentGenerationResult {
       passedAsHuman: boolean;
       toolsUsed: string[];
     };
+    contentQualityResults?: {
+      toneAdherenceScore: number;       // 0-100 score for tone adherence
+      brandArchetypeScore: number;      // 0-100 score for brand archetype adherence
+      originality: number;              // 0-100 score for originality (content duplication check)
+      expertiseScore: number;           // 0-100 score for expertise level (E-A-T)
+      rhetoricalElementsUsed: string[]; // Types of rhetorical elements used
+      selfAnalysisNotes?: string[];     // Notes from self-analysis
+    };
+    citations?: {
+      source: string;                   // Source name
+      url?: string;                     // URL if available
+      authors?: string[];               // Authors if available
+      publicationDate?: string;         // Publication date if available
+    }[];
   };
   // Additional generated content (optional)
   seo?: string[];
@@ -561,7 +581,119 @@ Respond with a JSON object containing only the arrays requested. Do not include 
       }
     }
     
-    // Return the result
+    // E-A-T Compliance - Generate citations if requested
+    let citations;
+    if (params.includeCitations) {
+      iterations++;
+      try {
+        // Request to generate authoritative citations for the content
+        const citationPrompt = `
+The following content needs authoritative citations and references to enhance E-A-T compliance.
+Analyze the content and identify 3-5 key facts, statistics, or claims that would benefit from citation.
+For each identified element, provide a citation to a reputable, authoritative source.
+
+Format your response as a JSON array with the following structure for each citation:
+{
+  "source": "Name of reputable source",
+  "url": "URL of the source (if available)",
+  "authors": ["Author Name 1", "Author Name 2"],
+  "publicationDate": "YYYY-MM-DD (if known)",
+  "citedContent": "Brief quote or paraphrase of the content being cited"
+}
+
+Content to analyze:
+${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated]' : ''}`;
+
+        const citationSystemPrompt = `You are an expert citation and reference generator. You identify claims, statistics, and facts that require citations and generate authoritative, academic-quality references from reputable sources in the field. Respond with a valid JSON array only.`;
+
+        const response = await openai.chat.completions.create({
+          model: MODEL,
+          messages: [
+            { role: "system", content: citationSystemPrompt },
+            { role: "user", content: citationPrompt }
+          ],
+          temperature: 0.3, // Lower temperature for more factual/consistent results
+          response_format: { type: "json_object" }
+        });
+
+        try {
+          const citationData = JSON.parse(response.choices[0].message.content || "{}");
+          
+          if (citationData.citations && Array.isArray(citationData.citations)) {
+            citations = citationData.citations;
+            
+            refinementSteps.push({
+              step: iterations,
+              action: "E-A-T enhancement",
+              result: `Generated ${citations.length} authoritative citations for content`
+            });
+          }
+        } catch (error) {
+          console.error("Error parsing citation data:", error);
+        }
+      } catch (error) {
+        console.error("Error generating citations:", error);
+      }
+    }
+
+    // Content Quality Analysis - Check duplication, tone adherence, etc.
+    let contentQualityResults;
+    if (params.checkDuplication || params.strictToneAdherence || params.runSelfAnalysis) {
+      iterations++;
+      try {
+        // Prepare the quality analysis prompt
+        const qualityAnalysisPrompt = `
+Perform a comprehensive content quality analysis on the following content.
+${params.checkDuplication ? 'Check for potential content duplication issues.' : ''}
+${params.strictToneAdherence ? `Evaluate consistency of the ${params.tone} tone throughout the content.` : ''}
+${params.runSelfAnalysis ? 'Analyze human-like qualities and provide self-analysis notes.' : ''}
+
+Analyze usage of rhetorical elements (questions, analogies, personalized anecdotes).
+Evaluate expertise level and how well it demonstrates authority on the subject.
+${params.brandArchetype ? `Assess adherence to the ${params.brandArchetype} brand archetype.` : ''}
+
+Format your response as a JSON object with the following structure:
+{
+  "toneAdherenceScore": 0-100,
+  "brandArchetypeScore": 0-100,
+  "originality": 0-100,
+  "expertiseScore": 0-100,
+  "rhetoricalElementsUsed": ["list", "of", "rhetorical", "elements", "found"],
+  "selfAnalysisNotes": ["note 1", "note 2", "etc."]
+}
+
+Content to analyze:
+${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated]' : ''}`;
+
+        const qualityAnalysisSystemPrompt = `You are an expert content quality analyst who evaluates content for tone consistency, originality, expertise level, and persuasive elements. Respond with a valid JSON object only.`;
+
+        const response = await openai.chat.completions.create({
+          model: MODEL,
+          messages: [
+            { role: "system", content: qualityAnalysisSystemPrompt },
+            { role: "user", content: qualityAnalysisPrompt }
+          ],
+          temperature: 0.3,
+          response_format: { type: "json_object" }
+        });
+
+        try {
+          contentQualityResults = JSON.parse(response.choices[0].message.content || "{}");
+          
+          refinementSteps.push({
+            step: iterations,
+            action: "Content quality analysis",
+            result: `Analyzed content quality (Tone: ${contentQualityResults.toneAdherenceScore}/100, Expertise: ${contentQualityResults.expertiseScore}/100)`
+          });
+        } catch (error) {
+          console.error("Error parsing quality analysis data:", error);
+        }
+      } catch (error) {
+        console.error("Error during content quality analysis:", error);
+      }
+    }
+
+    // Return the result with all enhancements
     return {
       content: finalContent,
       metadata: {
@@ -574,6 +706,8 @@ Respond with a JSON object containing only the arrays requested. Do not include 
         totalTokens: usage?.total_tokens || 0,
         refinementSteps: refinementSteps,
         ...(aiDetectionResults && { aiDetectionResults }),
+        ...(contentQualityResults && { contentQualityResults }),
+        ...(citations && { citations }),
       },
       // Include additional content if it was generated
       ...(seoSuggestions && { seo: seoSuggestions }),
@@ -661,8 +795,52 @@ ${params.generateKeywords ? '- Generate 8-12 targeted keywords related to the co
 Include these additional elements in a separate section at the end of your response, clearly labeled and formatted.
 ` : '';
 
+  // E-A-T compliance instructions
+  const eatComplianceInstructions = params.includeCitations ? `
+E-A-T COMPLIANCE GUIDELINES:
+- Demonstrate Expertise by using professionally-accepted terminology
+- Show Authoritativeness by referencing established principles and concepts
+- Build Trustworthiness by including verifiable facts and data points
+- Where appropriate, incorporate credible references and sources for key statistics, facts, or claims
+- Use subject-specific vocabulary that shows domain expertise
+- Present balanced viewpoints when discussing controversial topics
+- If including citations, use this format: "[Source: Author/Organization]" after key facts or statistics
+` : '';
+
+  // Content quality enhancement instructions
+  const contentQualityInstructions = `
+CONTENT QUALITY ENHANCEMENT:
+${params.addRhetoricalElements ? `
+- Include rhetorical questions to engage the reader
+- Use analogies and metaphors to explain complex concepts
+- Add personalized anecdotes that relate to the topic
+- Employ diverse sentence structures for better readability
+- Utilize varied vocabulary to create more engaging content
+` : ''}
+${params.strictToneAdherence ? `
+- Maintain consistent ${params.tone} tone throughout the entire content
+- Ensure vocabulary choices align with the selected tone
+- Adjust phrasing and sentence structure to reinforce the tone
+` : ''}
+${params.checkDuplication ? `
+- Ensure content is original and not duplicative of common web content
+- Approach topics from fresh angles and perspectives
+- Avoid overused phrases and clichés in the industry/topic
+` : ''}
+`;
+
+  // Self-analysis instructions
+  const selfAnalysisInstructions = params.runSelfAnalysis ? `
+SELF-ANALYSIS FOR HUMANIZATION:
+- After drafting content, analyze for natural flow and conversational quality
+- Ensure content reads as if written by a human expert
+- Check that any humanization elements (typos, grammar variations) appear natural
+- Confirm the content maintains a consistent voice while having natural variations
+- Verify that the content contains appropriate engagement elements for the target audience
+` : '';
+
   return `
-You are a professional content creator with expertise in creating high-quality, engaging content.
+You are a professional content creator with expertise in creating high-quality, engaging content that meets E-A-T (Expertise, Authoritativeness, Trustworthiness) standards.
 
 CONTENT REQUIREMENTS:
 - Create content based on the user's prompt
@@ -674,12 +852,16 @@ CONTENT REQUIREMENTS:
 - Ensure content is factually accurate and appropriately researched
 - Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
 ${antiDetectionGuidance}
+${eatComplianceInstructions}
+${contentQualityInstructions}
+${selfAnalysisInstructions}
 ${additionalGeneration}
 CONTENT STRUCTURE:
 - Include a compelling headline/title
 - Organize with clear sections and subheadings where appropriate
 - Use appropriate formatting for readability (paragraphs, bullet points if needed)
 - Maintain logical flow of ideas
+- Include appropriate transitions between sections
 
 CONSTRAINTS:
 - Do not include placeholder text or lorem ipsum
