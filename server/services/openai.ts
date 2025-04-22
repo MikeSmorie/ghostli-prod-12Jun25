@@ -220,10 +220,10 @@ TASK:
 - Format hashtags appropriately (include # for social media hashtags)
 
 RESPONSE FORMAT:
-- Return ONLY an array of strings, each containing a keyword or hashtag
-- Do not include explanations, introductions, or any other text
-- Ensure the response is valid JSON in the format: ["keyword1", "keyword2", "#hashtag1", etc.]
-    `;
+- Return a JSON object with a 'keywords' field containing an array of strings
+- Your response must be in the format: {"keywords": ["keyword1", "keyword2", "#hashtag1"]}
+- Do not include explanations, introductions, or any other text outside the JSON structure
+`;
 
     // Truncate content if too long
     const truncatedContent = params.content.length > 4000 
@@ -247,35 +247,33 @@ RESPONSE FORMAT:
     
     try {
       parsedResponse = JSON.parse(content);
-      // The response should have a "keywords" array property
-      // If it doesn't, we'll try to extract it from the response
-      if (!Array.isArray(parsedResponse.keywords) && !Array.isArray(parsedResponse)) {
-        // Fallback in case the AI didn't format as expected
-        const keywordsPattern = /\["([^"]+)"(?:,\s*"([^"]+)")*\]/;
-        const match = content.match(keywordsPattern);
-        if (match) {
-          const keywordsStr = match[0];
-          parsedResponse = { keywords: JSON.parse(keywordsStr) };
+      
+      // If the response doesn't have a keywords array, create a default one
+      if (!Array.isArray(parsedResponse.keywords)) {
+        // Try to extract an array from any property that might be an array
+        const firstArrayProperty = Object.values(parsedResponse).find(value => Array.isArray(value));
+        
+        if (Array.isArray(firstArrayProperty)) {
+          parsedResponse = { keywords: firstArrayProperty };
         } else {
-          // If all else fails, extract words with # as hashtags
-          const hashtags = content.match(/#\w+/g) || [];
-          const keywords = content.match(/["']([^"']+)["']/g)?.map(k => k.replace(/["']/g, '')) || [];
-          parsedResponse = { keywords: [...hashtags, ...keywords].slice(0, 15) };
+          // If we can't find an array, create a default keywords array
+          parsedResponse = { 
+            keywords: ["content", "article", "information", "#content", "#trending"] 
+          };
         }
       }
     } catch (error) {
       console.error("Error parsing SEO keywords response:", error);
-      // Fallback to simple extraction if JSON parsing fails
-      const keywords = content.match(/["']([^"']+)["']/g)?.map(k => k.replace(/["']/g, '')) || [];
-      parsedResponse = { keywords };
+      // Provide a default response rather than attempting to parse unpredictable text
+      parsedResponse = { 
+        keywords: ["content", "article", "information", "#content", "#trending"] 
+      };
     }
 
     return { 
       keywords: Array.isArray(parsedResponse.keywords) 
         ? parsedResponse.keywords 
-        : Array.isArray(parsedResponse) 
-          ? parsedResponse 
-          : ["content", "seo", "keywords"] // Fallback if nothing else works
+        : ["keywords", "seo", "content", "#keywords"] // Final fallback
     };
   } catch (error) {
     console.error("Error generating SEO keywords:", error);
