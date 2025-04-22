@@ -129,12 +129,12 @@ function Router() {
 
   return (
     <div className="min-h-screen">
-      <nav className="border-b">
+      <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
         <div className="container flex h-16 items-center px-4">
           <NavigationControls />
           <div className="flex items-center gap-4 ml-auto">
             <AIAssistant />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm font-medium">
               {user.username}
             </span>
             {user.role === "supergod" && (
@@ -145,12 +145,13 @@ function Router() {
             <FontSizeControls />
             <ThemeToggle />
             <Button
-              variant="ghost"
-              size="icon"
+              variant="destructive"
+              size="sm"
               onClick={handleLogout}
-              className="h-8 w-8"
+              className="flex items-center gap-2"
             >
               <LogOut className="h-4 w-4" />
+              <span>Logout</span>
             </Button>
           </div>
         </div>

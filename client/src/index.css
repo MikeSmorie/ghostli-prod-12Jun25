@@ -8,11 +8,15 @@
   }
 
   body {
-    @apply font-sans antialiased bg-gray-50 text-foreground;
+    @apply font-sans antialiased text-foreground;
+  }
+
+  body {
+    @apply bg-gray-50 dark:bg-gray-900;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold text-white bg-blue-800 p-3 mb-4 rounded-md;
+    @apply font-bold text-white bg-blue-800 dark:bg-blue-900 p-3 mb-4 rounded-md;
   }
 
   h1 {
@@ -30,15 +34,15 @@
 
 @layer components {
   .instruction {
-    @apply bg-gray-100 p-4 my-4 text-black italic rounded;
+    @apply bg-gray-100 dark:bg-gray-800 p-4 my-4 text-black dark:text-gray-100 italic rounded;
   }
 
   .input-field {
-    @apply border border-blue-300 bg-blue-50 p-3 rounded-md text-black;
+    @apply border border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950 p-3 rounded-md text-black dark:text-white;
   }
 
   .output-result {
-    @apply bg-green-100 p-4 my-3 font-bold rounded-md text-black;
+    @apply bg-green-100 dark:bg-green-900 p-4 my-3 font-bold rounded-md text-black dark:text-white;
   }
 
   .output-result p {
@@ -50,10 +54,10 @@
   }
 
   .btn-secondary {
-    @apply bg-gray-400 text-black px-4 py-2 rounded-md hover:bg-gray-500 transition-colors;
+    @apply bg-gray-400 dark:bg-gray-600 text-black dark:text-white px-4 py-2 rounded-md hover:bg-gray-500 dark:hover:bg-gray-700 transition-colors;
   }
 
   .section {
-    @apply p-6 my-4 rounded-lg bg-white shadow;
+    @apply p-6 my-4 rounded-lg bg-white dark:bg-gray-800 shadow text-gray-900 dark:text-gray-100;
   }
 }
