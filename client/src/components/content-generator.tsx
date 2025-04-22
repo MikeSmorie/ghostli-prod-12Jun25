@@ -619,7 +619,20 @@ export default function ContentGenerator() {
                   </div>
                   
                   <div className="flex items-center justify-between pt-1 pb-2 px-2 border rounded-md">
-                    <span className="text-sm font-medium">Mode:</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-sm font-medium flex items-center">
+                            Mode <AlertTriangle className="h-3 w-3 ml-1 text-amber-500" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[300px] p-3">
+                          <p className="mb-2"><strong>Speed vs. Undetectable:</strong></p>
+                          <p className="mb-2"><strong>Speed:</strong> Faster generation with standard anti-AI detection (good for drafts).</p>
+                          <p><strong>Undetectable:</strong> Maximum humanization with multiple passes for AI detection evasion (slower but more secure).</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <div className="flex items-center">
                       <span className={`text-xs mr-2 ${!prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Speed</span>
                       <Switch

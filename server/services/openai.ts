@@ -54,8 +54,15 @@ export async function generateContent(params: ContentGenerationParams): Promise<
   const systemMessage = constructSystemMessage(params);
   
   try {
-    // Generate content
-    const { content, usage } = await generateWithOpenAI(systemMessage, params.prompt);
+    // Determine temperature based on prioritization setting
+    const baseTemperature = params.prioritizeUndetectable ? 0.8 : 0.7;
+    
+    // Generate content with appropriate settings
+    const { content, usage } = await generateWithOpenAI(
+      systemMessage, 
+      params.prompt,
+      { temperature: baseTemperature }
+    );
     
     // Count words in the generated content
     const wordCount = content.split(/\s+/).filter(Boolean).length;
@@ -68,7 +75,11 @@ export async function generateContent(params: ContentGenerationParams): Promise<
       // Add adjustment note for second iteration
       const adjustmentPrompt = `The content needs to be adjusted to be closer to ${params.wordCount} words. Current word count is ${wordCount}. ${wordCount > params.wordCount ? 'Please make it more concise.' : 'Please expand on it a bit more.'}`;
       
-      const { content: adjustedContent } = await generateWithOpenAI(systemMessage, adjustmentPrompt + "\n\nOriginal content:\n" + finalContent);
+      const { content: adjustedContent } = await generateWithOpenAI(
+        systemMessage, 
+        adjustmentPrompt + "\n\nOriginal content:\n" + finalContent,
+        { temperature: baseTemperature }
+      );
       finalContent = adjustedContent;
       iterations++;
     }
@@ -80,14 +91,27 @@ export async function generateContent(params: ContentGenerationParams): Promise<
         ? "Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. Don't change the meaning or core message:"
         : "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent:";
       
-      const { content: humanizedContent } = await generateWithOpenAI(systemMessage, antiAIPrompt + "\n\n" + finalContent);
+      // Use higher temperature for humanization to increase variability
+      const humanizationTemperature = params.prioritizeUndetectable ? 0.85 : 0.75;
+      
+      const { content: humanizedContent } = await generateWithOpenAI(
+        systemMessage, 
+        antiAIPrompt + "\n\n" + finalContent,
+        { temperature: humanizationTemperature }
+      );
       finalContent = humanizedContent;
       iterations++;
       
       // If we're prioritizing undetectability, make an additional pass
       if (params.prioritizeUndetectable) {
         const secondPassPrompt = "This content still has some AI-detection patterns. Apply a second humanization pass focusing on adding narrative inconsistencies, personal anecdotes, and more colloquial language. Make it extremely difficult for any AI detector to recognize this as AI-generated:";
-        const { content: deeplyHumanizedContent } = await generateWithOpenAI(systemMessage, secondPassPrompt + "\n\n" + humanizedContent);
+        
+        // Use even higher temperature for the second pass to maximize unpredictability
+        const { content: deeplyHumanizedContent } = await generateWithOpenAI(
+          systemMessage, 
+          secondPassPrompt + "\n\n" + humanizedContent,
+          { temperature: 0.9 }
+        );
         finalContent = deeplyHumanizedContent;
         iterations++;
       }
@@ -126,6 +150,21 @@ function constructSystemMessage(params: ContentGenerationParams): string {
   const toneDescription = getToneDescription(params.tone);
   const archetypeDescription = getArchetypeDescription(params.brandArchetype);
   
+  // Additional anti-detection guidance based on prioritizeUndetectable setting
+  const antiDetectionGuidance = params.prioritizeUndetectable 
+    ? `
+ANTI-DETECTION PRIORITY GUIDELINES:
+- Prioritize human-like variations over consistency
+- Incorporate occasional minor grammatical imperfections
+- Use colloquialisms and conversational language where appropriate
+- Vary sentence structure and length significantly
+- Include personal perspectives and subjective views
+- Insert occasional narrative tangents that add personality
+- Use less predictable vocabulary choices and phrasing
+- Balance technical correctness with human imperfection
+`
+    : '';
+  
   return `
 You are a professional content creator with expertise in creating high-quality, engaging content.
 
@@ -138,7 +177,7 @@ CONTENT REQUIREMENTS:
 - Use active voice and engaging language
 - Ensure content is factually accurate and appropriately researched
 - Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
-
+${antiDetectionGuidance}
 CONTENT STRUCTURE:
 - Include a compelling headline/title
 - Organize with clear sections and subheadings where appropriate

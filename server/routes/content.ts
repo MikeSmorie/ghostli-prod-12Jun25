@@ -20,7 +20,8 @@ const ContentGenerationRequestSchema = z.object({
     "everyman", "jester", "lover", "magician"
   ]),
   wordCount: z.number().int().min(50).max(5000),
-  antiAIDetection: z.boolean().default(false)
+  antiAIDetection: z.boolean().default(false),
+  prioritizeUndetectable: z.boolean().optional().default(true)
 });
 
 /**
