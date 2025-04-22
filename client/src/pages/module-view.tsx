@@ -104,6 +104,8 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
   const [generationMetadata, setGenerationMetadata] = useState<{
     wordCount: number;
     iterationCount: number;
@@ -254,6 +256,35 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
     
     try {
       setIsGenerating(true);
+      setGenerationProgress(0);
+      
+      // Calculate estimated time based on content settings
+      const baseTime = 10; // Base time in seconds
+      const wordCountFactor = targetWordCount / 500; // Scale based on word count
+      const antiAIFactor = antiAIDetection ? (prioritizeUndetectable ? 3 : 1.5) : 1; // Anti-AI detection adds time
+      const additionalContentFactor = 1 + 
+        (generateSEO ? 0.1 : 0) + 
+        (generateHashtags ? 0.1 : 0) + 
+        (generateKeywords ? 0.1 : 0);
+      
+      // Calculate total estimated time in seconds
+      const estimatedTotalTime = baseTime * wordCountFactor * antiAIFactor * additionalContentFactor;
+      setEstimatedTimeRemaining(Math.round(estimatedTotalTime));
+      
+      // Start progress simulation
+      const progressInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          // Gradually increase progress, but never reach 100% until the actual response arrives
+          const newProgress = prev + (0.5 + Math.random() * 1.5);
+          // Cap at 95% until real response
+          return Math.min(newProgress, 95);
+        });
+        
+        setEstimatedTimeRemaining(prev => {
+          if (prev === null || prev <= 1) return 1;
+          return prev - 1;
+        });
+      }, 1000);
       
       // Request parameters
       const requestBody = {
@@ -337,6 +368,14 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       });
       console.error("Content generation error:", error);
     } finally {
+      // Clear the progress simulation interval
+      clearInterval(progressInterval);
+      
+      // Complete the progress bar
+      setGenerationProgress(100);
+      setEstimatedTimeRemaining(0);
+      
+      // Reset generation state
       setIsGenerating(false);
     }
   };
@@ -738,6 +777,17 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
+                    {/* Prompt guidance card - will always be visible */}
+                    <div className="mb-3 p-3 rounded-md bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+                      <h5 className="font-semibold text-blue-800 dark:text-blue-400 mb-2">Writing Prompt Guide</h5>
+                      <ul className="list-disc pl-5 space-y-1 text-sm">
+                        <li>Who is this writing for?</li>
+                        <li>How will it be used?</li>
+                        <li>What reaction do you want from the reader?</li>
+                        <li>Any specific format requirements?</li>
+                      </ul>
+                    </div>
+                    
                     <div className="relative">
                       <textarea
                         value={inputValue}
@@ -747,7 +797,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             ? 'bg-gray-800 text-white border-gray-700' 
                             : 'bg-white text-gray-900 border-gray-300'
                         }`}
-                        placeholder="Please include: 1) Who is this writing for? 2) How will it be used? 3) What reaction do you want from the reader? 4) Any specific format requirements..."
+                        placeholder="Type your writing prompt here..."
                         rows={4}
                         style={{
                           backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
@@ -960,6 +1010,33 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                       )}
                     </div>
 
+                    {/* Progress bar and estimated time */}
+                    {isGenerating && (
+                      <div className="mt-4 mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium">Generating content...</span>
+                          {estimatedTimeRemaining !== null && estimatedTimeRemaining > 0 && (
+                            <span className="text-xs text-gray-500">
+                              Estimated time remaining: {estimatedTimeRemaining}s
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-600 transition-all duration-500 rounded-full"
+                            style={{ width: `${generationProgress}%` }}
+                          ></div>
+                        </div>
+                        
+                        <div className="text-xs text-center mt-1 text-gray-500">
+                          {generationProgress < 95 
+                            ? "Processing your request..." 
+                            : "Finalizing content..."}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="mt-4 flex gap-3">
                       <Button 
                         onClick={processInput}
