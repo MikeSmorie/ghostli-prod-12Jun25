@@ -1,226 +1,189 @@
 import OpenAI from "openai";
-import { logError } from "../middleware/logger";
 
 // Initialize OpenAI client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o";
 
-interface ContentGenerationParams {
+export interface ContentGenerationParams {
   prompt: string;
   tone: string;
-  archetype: string;
-  targetWordCount: number;
+  brandArchetype: string;
+  wordCount: number;
+  antiAIDetection: boolean;
 }
 
-interface ContentGenerationResult {
+export interface ContentGenerationResult {
   content: string;
-  actualWordCount: number;
-  iterationCount: number;
-  processingTimeMs: number;
+  metadata: {
+    startTime: Date;
+    endTime: Date;
+    wordCount: number;
+    iterations: number;
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 }
 
-export class OpenAIService {
-  /**
-   * Generate content with iterative refinement and anti-AI detection
-   */
-  async generateContent(params: ContentGenerationParams): Promise<ContentGenerationResult> {
-    const startTime = Date.now();
-    let iterationCount = 0;
-    let finalContent = "";
-    let wordCount = 0;
+/**
+ * Generates content using OpenAI's GPT model
+ * @param params Content generation parameters
+ * @returns Generated content with metadata
+ */
+export async function generateContent(params: ContentGenerationParams): Promise<ContentGenerationResult> {
+  const startTime = new Date();
+  const systemMessage = constructSystemMessage(params);
+  
+  try {
+    // Generate content
+    const { content, usage } = await generateWithOpenAI(systemMessage, params.prompt);
     
-    try {
-      // Initial content generation
-      const initialContent = await this.getInitialDraft(params);
-      iterationCount++;
+    // Count words in the generated content
+    const wordCount = content.split(/\s+/).filter(Boolean).length;
+
+    // If word count is significantly different from requested, do another pass
+    let iterations = 1;
+    let finalContent = content;
+    
+    if (Math.abs(wordCount - params.wordCount) > params.wordCount * 0.2 && params.wordCount > 100) {
+      // Add adjustment note for second iteration
+      const adjustmentPrompt = `The content needs to be adjusted to be closer to ${params.wordCount} words. Current word count is ${wordCount}. ${wordCount > params.wordCount ? 'Please make it more concise.' : 'Please expand on it a bit more.'}`;
       
-      // Initial word count analysis
-      wordCount = this.countWords(initialContent);
-      
-      // If word count is within 10% of target, we can proceed to next stage
-      let contentToRefine = initialContent;
-      if (Math.abs(wordCount - params.targetWordCount) > params.targetWordCount * 0.1) {
-        // Adjust word count if needed
-        contentToRefine = await this.adjustWordCount(contentToRefine, params.targetWordCount, wordCount);
-        iterationCount++;
-        wordCount = this.countWords(contentToRefine);
-      }
-      
-      // Tone and archetype alignment check
-      let contentToAlign = contentToRefine;
-      const alignmentResult = await this.checkAlignment(contentToAlign, params.tone, params.archetype);
-      if (!alignmentResult.aligned) {
-        contentToAlign = await this.alignContent(contentToAlign, params.tone, params.archetype);
-        iterationCount++;
-      }
-      
-      // Apply anti-AI detection techniques
-      finalContent = await this.applyAntiAIDetection(contentToAlign);
-      iterationCount++;
-      
-      // Calculate final word count
-      wordCount = this.countWords(finalContent);
-      
-      const processingTimeMs = Date.now() - startTime;
-      
-      return {
-        content: finalContent,
-        actualWordCount: wordCount,
-        iterationCount,
-        processingTimeMs
-      };
-    } catch (error) {
-      await logError(error as Error, "OpenAIService.generateContent");
-      throw new Error(`Content generation failed: ${(error as Error).message}`);
+      const { content: adjustedContent } = await generateWithOpenAI(systemMessage, adjustmentPrompt + "\n\nOriginal content:\n" + finalContent);
+      finalContent = adjustedContent;
+      iterations++;
     }
-  }
-  
-  /**
-   * Generate the initial draft based on prompt, tone, and archetype
-   */
-  private async getInitialDraft(params: ContentGenerationParams): Promise<string> {
-    const systemPrompt = this.buildSystemPrompt(params.tone, params.archetype, params.targetWordCount);
-    
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: params.prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: this.estimateMaxTokens(params.targetWordCount),
-    });
-    
-    return response.choices[0].message.content || "";
-  }
-  
-  /**
-   * Check if content aligns with desired tone and archetype
-   */
-  private async checkAlignment(content: string, tone: string, archetype: string): Promise<{aligned: boolean, reasons?: string[]}> {
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { 
-          role: "system", 
-          content: `You are an expert content analyzer. Analyze the following content and determine if it aligns with a ${tone} tone and a ${archetype} brand archetype. Respond with JSON in the format: {"aligned": boolean, "reasons": string[] (if not aligned)}` 
-        },
-        { role: "user", content }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.2,
-    });
-    
-    const responseContent = response.choices[0].message.content || "";
-    try {
-      return JSON.parse(responseContent);
-    } catch (e) {
-      return { aligned: false, reasons: ["Failed to parse alignment check response."] };
+
+    // Apply anti-AI detection treatment if requested
+    if (params.antiAIDetection) {
+      const antiAIPrompt = "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent:";
+      const { content: humanizedContent } = await generateWithOpenAI(systemMessage, antiAIPrompt + "\n\n" + finalContent);
+      finalContent = humanizedContent;
+      iterations++;
     }
-  }
-  
-  /**
-   * Align content with the desired tone and archetype
-   */
-  private async alignContent(content: string, tone: string, archetype: string): Promise<string> {
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { 
-          role: "system", 
-          content: `You are an expert content editor. The following content needs to be revised to better align with a ${tone} tone and a ${archetype} brand archetype. Preserve the original meaning but adjust the style, vocabulary, and sentence structure to match the requested tone and archetype. DO NOT add additional information or change the subject matter.` 
-        },
-        { role: "user", content }
-      ],
-      temperature: 0.7,
-    });
+
+    // Calculate final word count
+    const finalWordCount = finalContent.split(/\s+/).filter(Boolean).length;
     
-    return response.choices[0].message.content || content;
-  }
-  
-  /**
-   * Adjust the word count to match the target
-   */
-  private async adjustWordCount(content: string, targetWordCount: number, currentWordCount: number): Promise<string> {
-    const action = currentWordCount > targetWordCount ? "reduce" : "expand";
+    const endTime = new Date();
     
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { 
-          role: "system", 
-          content: `You are an expert content editor. The following content needs to be ${action}d from approximately ${currentWordCount} words to ${targetWordCount} words. ${action === "reduce" ? "Remove unnecessary details while preserving the key message." : "Elaborate on existing points without introducing completely new topics."} Preserve the style, tone, and voice of the original content.` 
-        },
-        { role: "user", content }
-      ],
-      temperature: 0.7,
-    });
-    
-    return response.choices[0].message.content || content;
-  }
-  
-  /**
-   * Apply anti-AI detection techniques to make the content appear more human-written
-   */
-  private async applyAntiAIDetection(content: string): Promise<string> {
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { 
-          role: "system", 
-          content: `You are an expert in making AI-generated content appear human-written to bypass AI detection tools. Apply the following techniques to the content:
-          
-          1. Introduce sentence structure variety (mix short and long sentences)
-          2. Add occasional incomplete sentences or sentence fragments
-          3. Use casual connectors like "well", "actually", "anyway", "you know" occasionally
-          4. Vary punctuation patterns and use some unconventional punctuation
-          5. Introduce a few subtle typos (about 1-2 per 500 words) like an extra space, a missing article, or a common homophone error
-          6. Add some redundancy that humans naturally include
-          7. Use idioms and colloquialisms where appropriate
-          8. Vary paragraph lengths
-          
-          Important: Don't overdo any of these techniques. They should be subtle and appear natural. Preserve the original meaning, tone, and key points of the content.` 
-        },
-        { role: "user", content }
-      ],
-      temperature: 0.8,
-    });
-    
-    return response.choices[0].message.content || content;
-  }
-  
-  /**
-   * Build the system prompt for content generation
-   */
-  private buildSystemPrompt(tone: string, archetype: string, targetWordCount: number): string {
-    return `You are an expert content creator specializing in ${tone} tone for brands that embody the ${archetype} archetype. 
-    
-    Generate content that:
-    1. Maintains a consistent ${tone} tone throughout
-    2. Embodies the characteristics of the ${archetype} brand archetype
-    3. Has approximately ${targetWordCount} words (this is a target, not a hard requirement)
-    4. Is well-structured and engaging
-    5. Contains natural language patterns that a human would use
-    
-    Focus on creating authentic content that genuinely represents the ${archetype} archetype with a ${tone} tone.`;
-  }
-  
-  /**
-   * Count words in text
-   */
-  private countWords(text: string): number {
-    return text.trim().split(/\s+/).length;
-  }
-  
-  /**
-   * Estimate max tokens needed based on target word count
-   * Assuming average of 0.75 tokens per word for English
-   */
-  private estimateMaxTokens(wordCount: number): number {
-    return Math.ceil(wordCount * 1.33) + 200; // Add 200 token buffer
+    // Return the result
+    return {
+      content: finalContent,
+      metadata: {
+        startTime,
+        endTime,
+        wordCount: finalWordCount,
+        iterations,
+        promptTokens: usage?.prompt_tokens || 0,
+        completionTokens: usage?.completion_tokens || 0,
+        totalTokens: usage?.total_tokens || 0,
+      }
+    };
+  } catch (error) {
+    console.error("Error generating content with OpenAI:", error);
+    throw error;
   }
 }
 
-export const openAIService = new OpenAIService();
+/**
+ * Constructs a system message based on content generation parameters
+ * @param params Content generation parameters
+ * @returns System message string
+ */
+function constructSystemMessage(params: ContentGenerationParams): string {
+  const toneDescription = getToneDescription(params.tone);
+  const archetypeDescription = getArchetypeDescription(params.brandArchetype);
+  
+  return `
+You are a professional content creator with expertise in creating high-quality, engaging content.
+
+CONTENT REQUIREMENTS:
+- Create content based on the user's prompt
+- Write in a ${params.tone} tone (${toneDescription})
+- Embody the ${params.brandArchetype} brand archetype (${archetypeDescription})
+- Target word count: ${params.wordCount} words (stay within 10% of this target)
+- Content should be well-structured with appropriate headings, paragraphs, and formatting
+- Use active voice and engaging language
+- Ensure content is factually accurate and appropriately researched
+- Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
+
+CONTENT STRUCTURE:
+- Include a compelling headline/title
+- Organize with clear sections and subheadings where appropriate
+- Use appropriate formatting for readability (paragraphs, bullet points if needed)
+- Maintain logical flow of ideas
+
+CONSTRAINTS:
+- Do not include placeholder text or lorem ipsum
+- Do not include meta-commentary about the content itself
+- Do not mention that you are an AI unless explicitly asked to do so
+- Do not start with phrases like "Here's a..." or "Below is..."
+- Focus on delivering valuable, engaging, and informative content
+`;
+}
+
+/**
+ * Helper function to generate content with OpenAI
+ * @param systemMessage System message for content generation
+ * @param userPrompt User prompt for content generation
+ * @returns Generated content and token usage
+ */
+async function generateWithOpenAI(systemMessage: string, userPrompt: string) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+    
+    return { 
+      content: response.choices[0].message.content || "",
+      usage: response.usage,
+    };
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    throw new Error("Error generating content with OpenAI API. Please try again later.");
+  }
+}
+
+// Helper functions for tone and archetype descriptions
+function getToneDescription(tone: string): string {
+  const descriptions: Record<string, string> = {
+    professional: "formal, authoritative, and credible",
+    casual: "relaxed, conversational, and approachable",
+    persuasive: "convincing, compelling, and motivational",
+    informative: "educational, clear, and objective",
+    humorous: "light-hearted, entertaining, and witty",
+    formal: "sophisticated, serious, and structured",
+  };
+  
+  return descriptions[tone] || "balanced and appropriate";
+}
+
+function getArchetypeDescription(archetype: string): string {
+  const descriptions: Record<string, string> = {
+    sage: "wise, thoughtful, and insightful",
+    hero: "courageous, triumphant, and inspiring",
+    outlaw: "rebellious, disruptive, and revolutionary",
+    explorer: "adventurous, independent, and pioneering",
+    creator: "innovative, artistic, and imaginative",
+    ruler: "authoritative, structured, and commanding",
+    caregiver: "nurturing, supportive, and empathetic",
+    innocent: "optimistic, pure, and straightforward",
+    everyman: "relatable, authentic, and down-to-earth",
+    jester: "playful, entertaining, and humorous",
+    lover: "passionate, indulgent, and appreciative",
+    magician: "transformative, visionary, and charismatic",
+  };
+  
+  return descriptions[archetype] || "authentic and engaging";
+}

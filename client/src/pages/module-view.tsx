@@ -858,16 +858,17 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
             <AlertDialogDescription>
               A verification code has been sent to your email address and phone number. 
               Please check your email or messages to complete verification before proceeding.
-              
-              <div className={`mt-4 p-3 rounded-md ${
-                isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
-              }`}>
-                <p className={`text-center font-medium ${
-                  isDarkMode ? 'text-gray-100' : 'text-gray-800'
-                }`}>For demo purposes, click "Verify" below to simulate verification.</p>
-              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          <div className={`mt-4 p-3 rounded-md ${
+            isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+          }`}>
+            <div className={`text-center font-medium ${
+              isDarkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>For demo purposes, click "Verify" below to simulate verification.</div>
+          </div>
+          
           <AlertDialogFooter>
             <AlertDialogAction onClick={simulateVerification}>
               Verify

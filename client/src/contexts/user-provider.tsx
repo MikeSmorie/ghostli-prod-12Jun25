@@ -1,58 +1,13 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
+import { UserContext, User, AuthContextType, defaultAuthContext } from "./user-context";
 import { useToast } from "@/hooks/use-toast";
 
-// Define user interface
-interface User {
-  id: number;
-  username: string;
-  email?: string;
-  role: string;
-}
-
-// Auth context interface
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  error: Error | null;
-  isAuthenticated: boolean;
-  loginMutation: {
-    mutate: (credentials: LoginCredentials) => Promise<void>;
-    isLoading: boolean;
-  };
-  registerMutation: {
-    mutate: (userData: RegisterUserData) => Promise<void>;
-    isLoading: boolean;
-  };
-  logoutMutation: {
-    mutate: () => Promise<void>;
-    isLoading: boolean;
-  };
-  updateUserInfo: (userInfo: Partial<User>) => void;
-}
-
-interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-interface RegisterUserData {
-  username: string;
-  password: string;
-  email?: string;
-}
-
-// Create auth context
-const AuthContext = createContext<AuthContextType | null>(null);
-
 // Provider component that wraps the app
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function UserProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [loginLoading, setLoginLoading] = useState<boolean>(false);
-  const [registerLoading, setRegisterLoading] = useState<boolean>(false);
-  const [logoutLoading, setLogoutLoading] = useState<boolean>(false);
 
   // Check if user is logged in
   useEffect(() => {
@@ -80,9 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Login function
-  const login = async (credentials: LoginCredentials) => {
+  const login = async (credentials: { username: string; password: string }) => {
     try {
-      setLoginLoading(true);
+      setIsLoading(true);
       setError(null);
       
       const response = await fetch('/api/login', {
@@ -112,14 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       throw err;
     } finally {
-      setLoginLoading(false);
+      setIsLoading(false);
     }
   };
 
   // Register function
-  const register = async (userData: RegisterUserData) => {
+  const register = async (userData: { username: string; password: string; email?: string }) => {
     try {
-      setRegisterLoading(true);
+      setIsLoading(true);
       setError(null);
       
       const response = await fetch('/api/register', {
@@ -149,14 +104,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       throw err;
     } finally {
-      setRegisterLoading(false);
+      setIsLoading(false);
     }
   };
 
   // Logout function
   const logout = async () => {
     try {
-      setLogoutLoading(true);
+      setIsLoading(true);
       
       const response = await fetch('/api/logout', {
         method: 'POST'
@@ -180,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: "destructive",
       });
     } finally {
-      setLogoutLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -197,33 +152,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     error,
     isAuthenticated: !!user,
-    loginMutation: {
-      mutate: login,
-      isLoading: loginLoading
-    },
-    registerMutation: {
-      mutate: register,
-      isLoading: registerLoading
-    },
-    logoutMutation: {
-      mutate: logout,
-      isLoading: logoutLoading
-    },
+    login,
+    register,
+    logout,
     updateUserInfo
   };
 
   return (
-    <AuthContext.Provider value={authValue}>
+    <UserContext.Provider value={authValue}>
       {children}
-    </AuthContext.Provider>
+    </UserContext.Provider>
   );
-}
-
-// Hook to use the auth context
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }

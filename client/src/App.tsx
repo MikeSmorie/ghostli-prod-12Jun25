@@ -20,6 +20,7 @@ import SubscriptionFeatures from "@/pages/subscription-features";
 import SubscriptionManagement from "@/pages/subscription-management";
 import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
 import FeatureFlagsDemoPage from "@/pages/feature-flags-demo";
+import ContentGenerationPage from "./pages/content-generation";
 import { useUser } from "@/hooks/use-user";
 import { Loader2, LogOut } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -179,6 +180,7 @@ function Router() {
         <Route path="/subscription/plans" component={SubscriptionPlans} />
         <Route path="/subscription/features" component={SubscriptionFeatures} />
         <Route path="/features-demo" component={FeatureFlagsDemoPage} />
+        <Route path="/content-generation" component={ContentGenerationPage} />
         <Route component={NotFound} />
       </Switch>
 

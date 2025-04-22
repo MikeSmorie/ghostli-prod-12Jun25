@@ -1,89 +1,85 @@
-import { Request, Response, Express } from "express";
-import { openAIService } from "../services/openai";
+import { Router, Request, Response, Express } from "express";
 import { z } from "zod";
-import { logActivity, logError } from "../middleware/logger";
+import { ContentGenerationParams, generateContent } from "../services/openai";
 
-// Validation schema for content generation request
-const contentGenerationSchema = z.object({
-  prompt: z.string().min(5, "Prompt must be at least 5 characters long"),
-  tone: z.string().min(1, "Tone is required"),
-  archetype: z.string().min(1, "Brand archetype is required"),
-  targetWordCount: z.number().int().min(50).max(5000)
+// Schema for content generation request
+const ContentGenerationRequestSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required"),
+  tone: z.enum([
+    "professional", "casual", "persuasive", 
+    "informative", "humorous", "formal"
+  ]),
+  brandArchetype: z.enum([
+    "sage", "hero", "outlaw", "explorer", 
+    "creator", "ruler", "caregiver", "innocent",
+    "everyman", "jester", "lover", "magician"
+  ]),
+  wordCount: z.number().int().min(50).max(1000),
+  antiAIDetection: z.boolean().default(false)
 });
 
+/**
+ * Register content generation routes on the Express app
+ * @param app Express application instance
+ */
 export function registerContentRoutes(app: Express) {
-  // Generate content endpoint
-  app.post("/api/content/generate", async (req: Request, res: Response) => {
+  /**
+   * Generate content using OpenAI
+   * POST /api/generate-content
+   */
+  app.post("/api/generate-content", async (req: Request, res: Response) => {
     try {
       // Validate request body
-      const validation = contentGenerationSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ 
-          error: "Invalid request parameters", 
-          details: validation.error.format() 
+      const validationResult = ContentGenerationRequestSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid request parameters",
+          details: validationResult.error.format()
         });
       }
       
-      // Log the content generation attempt
-      if (req.user) {
-        await logActivity(req.user.id, "content_generation_attempt", 
-          `Prompt: ${req.body.prompt.substring(0, 50)}... | Tone: ${req.body.tone} | Archetype: ${req.body.archetype} | Target Word Count: ${req.body.targetWordCount}`
-        );
+      // Extract validated parameters
+      const params: ContentGenerationParams = validationResult.data;
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
       }
       
       // Generate content
-      const result = await openAIService.generateContent({
-        prompt: req.body.prompt,
-        tone: req.body.tone,
-        archetype: req.body.archetype,
-        targetWordCount: req.body.targetWordCount
-      });
+      const result = await generateContent(params);
       
-      // Log successful content generation
-      if (req.user) {
-        await logActivity(req.user.id, "content_generation_success", 
-          `Word Count: ${result.actualWordCount} | Iterations: ${result.iterationCount} | Processing Time: ${result.processingTimeMs}ms`
-        );
-      }
-      
-      return res.status(200).json({
+      // Return the generated content with metadata
+      return res.json({
         content: result.content,
         metadata: {
-          wordCount: result.actualWordCount,
-          iterationCount: result.iterationCount,
-          processingTimeMs: result.processingTimeMs
+          wordCount: result.metadata.wordCount,
+          generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
+          iterations: result.metadata.iterations,
+          tokens: {
+            prompt: result.metadata.promptTokens,
+            completion: result.metadata.completionTokens,
+            total: result.metadata.totalTokens
+          }
         }
       });
     } catch (error) {
-      await logError(error as Error, "content_generation_endpoint");
-      return res.status(500).json({ 
-        error: "Content generation failed", 
-        message: (error as Error).message 
-      });
-    }
-  });
-  
-  // Endpoint to analyze existing content
-  app.post("/api/content/analyze", async (req: Request, res: Response) => {
-    const { content } = req.body;
-    if (!content || typeof content !== "string") {
-      return res.status(400).json({ error: "Content is required" });
-    }
-    
-    try {
-      // Simple stats for now, could be expanded in future
-      const wordCount = content.trim().split(/\s+/).length;
+      console.error("Content generation error:", error);
       
-      return res.status(200).json({
-        wordCount,
-        characterCount: content.length,
-        estimatedReadingTimeMinutes: Math.ceil(wordCount / 200) // Assumes 200 words per minute reading speed
-      });
-    } catch (error) {
-      await logError(error as Error, "content_analysis_endpoint");
-      return res.status(500).json({ 
-        error: "Content analysis failed", 
-        message: (error as Error).message 
+      if (error instanceof Error) {
+        return res.status(500).json({
+          error: "Content generation failed",
+          message: error.message
+        });
+      }
+      
+      return res.status(500).json({
+        error: "Content generation failed",
+        message: "An unknown error occurred"
       });
     }
   });
