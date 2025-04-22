@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,10 +31,11 @@ import {
   HelpCircleIcon,
   FileIcon,
   FileTextIcon,
-  FileTypeIcon,
   CheckIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 interface ModuleViewProps {
   moduleId?: string;
@@ -75,6 +76,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [country, setCountry] = useState<string>("");
   
   // Content parameters
   const [inputValue, setInputValue] = useState("");
@@ -90,6 +92,34 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
     formatted: false,
     plaintext: false
   });
+  
+  // Theme detection
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  
+  // Check for dark mode on component mount and whenever it might change
+  useEffect(() => {
+    // Check if the system prefers dark mode
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Also check if the document has a dark class or data-theme attribute
+    const updateTheme = () => {
+      const isDark = 
+        darkModeMediaQuery.matches || 
+        document.documentElement.classList.contains('dark') ||
+        document.documentElement.getAttribute('data-theme') === 'dark';
+      
+      setIsDarkMode(isDark);
+    };
+    
+    // Initial check
+    updateTheme();
+    
+    // Set up listeners
+    darkModeMediaQuery.addEventListener('change', updateTheme);
+    
+    // Clean up
+    return () => darkModeMediaQuery.removeEventListener('change', updateTheme);
+  }, []);
 
   // Validation functions
   const validateEmail = (value: string): boolean => {
@@ -234,7 +264,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                 {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
               </div>
               
-              {/* Phone field with validation */}
+              {/* Phone field with validation and country code */}
               <div>
                 <div className="flex items-center mb-1">
                   <label className="font-medium">Phone Number</label>
@@ -249,13 +279,30 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <Input
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  onBlur={() => validatePhone(phoneNumber)}
-                  className={`w-full ${phoneError ? 'border-red-500' : ''}`}
-                  placeholder="1234567890"
-                />
+                <div className={`${phoneError ? 'border-red-500' : ''}`}>
+                  <PhoneInput
+                    country={'us'} // Default country
+                    value={phoneNumber}
+                    onChange={(phone, countryData: any) => {
+                      setPhoneNumber(phone);
+                      setCountry(countryData?.countryCode || "");
+                    }}
+                    onBlur={() => validatePhone(phoneNumber)}
+                    inputClass="w-full"
+                    containerClass="w-full"
+                    buttonStyle={{ background: "transparent" }}
+                    inputStyle={{ 
+                      width: "100%", 
+                      borderRadius: "0.375rem", 
+                      border: "1px solid rgb(209, 213, 219)",
+                      padding: "0.5rem 0.75rem",
+                      fontSize: "0.875rem"
+                    }}
+                    countryCodeEditable={false}
+                    enableSearch={true}
+                    disableSearchIcon={false}
+                  />
+                </div>
                 {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
               </div>
               
@@ -361,9 +408,18 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                 <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="w-full min-h-24 p-3 border rounded-md"
+                  className={`w-full min-h-24 p-3 border rounded-md ${
+                    isDarkMode 
+                      ? 'bg-gray-800 text-white border-gray-700' 
+                      : 'bg-white text-gray-900 border-gray-300'
+                  }`}
                   placeholder="Describe what content you want to generate..."
                   rows={4}
+                  style={{
+                    // Ensure proper contrast in both light and dark mode
+                    backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
+                    color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)',
+                  }}
                 />
                 <div className="mt-4">
                   <Button 

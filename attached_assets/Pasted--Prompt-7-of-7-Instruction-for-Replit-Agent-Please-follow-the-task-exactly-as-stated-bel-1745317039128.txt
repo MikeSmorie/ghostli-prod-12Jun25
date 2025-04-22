@@ -1,0 +1,29 @@
+**Prompt 7 of 7**  
+**Instruction for Replit Agent**:  
+Please follow the task exactly as stated below. Do **not** interpret, preempt, or go ahead with any actions beyond this prompt.
+
+**Task**:  
+Make the following updates to **WriteRIGHT-01/OM-7** UI:
+
+1. **Phone Number Protocol**:
+   - Implement a **country code selector** for the phone number input field, which either:
+     - Allows the user to manually choose the country prefix (e.g., dropdown for countries and auto-populate the phone prefix).
+     - OR automatically detects the user's country and populates the appropriate prefix (e.g., via geolocation or a default setting).
+   - Ensure that only **numeric characters** are accepted in the phone number field, and show an error message if anything other than numbers is entered.
+   - Add a **"?" explainer** next to the phone number input field to explain that the country prefix will be auto-populated or selectable, depending on the user's settings.
+
+2. **Content Prompt Field Background**:
+   - Change the **background color** of the **Content Prompt input field** to match the light/dark mode setting. Ensure that the background is consistent with the other input fields and has sufficient contrast with the text.
+   - Ensure that the text in the **Content Prompt input field** is **legible**, especially in **light mode**, by ensuring the text and background contrast meet accessibility standards.
+   - Implement a **handle** to allow users to **resize** the Content Prompt input field if they need more space to enter longer prompts.
+
+3. **UI Consistency**:
+   - Ensure that all input fields, including **Content Prompt**, **Phone Number**, and **Tone Selection**, follow the same visual style and color scheme. These should adhere to the **light/dark mode** setting selected by the user.
+   - For the **"Content Prompt"**, ensure the font color and background are visually consistent with other input areas to avoid **white-on-white text**.
+   - Ensure that **labels**, **input fields**, and **buttons** are clearly distinguished with appropriate **padding**, **margins**, and **spacing** to avoid visual clutter.
+
+4. **Feature Validation**:
+   - Make sure that when the **"Verify Contact Information"** button is clicked, it verifies the phone number and displays a success or error message.
+   - For **email and phone number validation**, show appropriate messages (e.g., "Please enter a valid phone number" or "Phone number format is incorrect").
+
+Once these updates are completed, please confirm the changes and proceed with further tasks.
