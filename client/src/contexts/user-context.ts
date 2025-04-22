@@ -8,13 +8,19 @@ export interface User {
   role: string;
 }
 
+export interface AuthResult {
+  ok: boolean;
+  message: string;
+  user?: User;
+}
+
 export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  login: (credentials: { username: string; password: string }) => Promise<void>;
-  register: (userData: { username: string; password: string; email?: string }) => Promise<void>;
+  login: (credentials: { username: string; password: string }) => Promise<AuthResult>;
+  register: (userData: { username: string; password: string; email?: string }) => Promise<AuthResult>;
   logout: () => Promise<void>;
   updateUserInfo: (userInfo: Partial<User>) => void;
 }
@@ -25,8 +31,8 @@ export const defaultAuthContext: AuthContextType = {
   isLoading: false,
   error: null,
   isAuthenticated: false,
-  login: async () => {},
-  register: async () => {},
+  login: async () => ({ ok: false, message: "Not implemented" }),
+  register: async () => ({ ok: false, message: "Not implemented" }),
   logout: async () => {},
   updateUserInfo: () => {}
 };

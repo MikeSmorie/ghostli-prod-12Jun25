@@ -83,7 +83,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        return { ok: false, message: errorData.message || 'Registration failed' };
       }
       
       const newUser = await response.json();
@@ -93,14 +93,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         title: "Registration successful",
         description: `Welcome, ${newUser.username}!`
       });
+      
+      return { ok: true, message: 'Registration successful', user: newUser };
     } catch (err) {
       setError(err as Error);
-      toast({
-        title: "Registration failed",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-      throw err;
+      console.error("Registration error:", err);
+      return { ok: false, message: (err as Error).message || 'Registration failed due to an unexpected error' };
     } finally {
       setIsLoading(false);
     }
