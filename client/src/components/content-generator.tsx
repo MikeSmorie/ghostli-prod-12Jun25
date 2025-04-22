@@ -129,7 +129,7 @@ export default function ContentGenerator() {
           });
         }, 1000);
         
-        const response = await apiRequest("POST", "/api/generate-content", params);
+        const response = await apiRequest("POST", "/api/content/generate", params);
         
         // Clear interval when response is received
         clearInterval(progressInterval);
