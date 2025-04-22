@@ -2,73 +2,18 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLocation } from "wouter";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
 
 export default function AppCentral() {
   const [, setLocation] = useLocation();
-  const [moduleNames, setModuleNames] = useState<string[]>(
-    Array.from({ length: 10 }, (_, i) => `Module ${i + 1}`)
+  const [moduleNames] = useState<string[]>(
+    Array.from({ length: 6 }, (_, i) => `Module ${i + 1}`)
   );
-  const [suggestion, setSuggestion] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
-  const modules = Array.from({ length: 10 }, (_, i) => ({
+  const modules = Array.from({ length: 6 }, (_, i) => ({
     id: i + 1,
     name: moduleNames[i],
     path: `/module/${i + 1}`
   }));
-
-  const getSuggestion = async () => {
-    if (!suggestion.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter a description for your app",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/suggest-modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: suggestion }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get suggestions");
-      }
-
-      const data = await response.json();
-
-      // Extract module names from the suggestions
-      const suggestions = Object.keys(data).map(key => data[key].name || key);
-      const newNames = [...moduleNames];
-      suggestions.forEach((suggestion, index) => {
-        if (index < newNames.length) {
-          newNames[index] = suggestion;
-        }
-      });
-      setModuleNames(newNames);
-
-      toast({
-        title: "Success",
-        description: "Module suggestions updated",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get suggestions",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="container mx-auto py-6">
