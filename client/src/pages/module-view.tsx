@@ -974,12 +974,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             <div className="space-y-1">
                               <div className="flex justify-between">
                                 <label className="text-xs">Typos: {typosPercentage.toFixed(1)}%</label>
-                                <span className="text-xs text-gray-500">0-5%</span>
+                                <span className="text-xs text-gray-500">0-15%</span>
                               </div>
                               <input
                                 type="range"
                                 min={0}
-                                max={5}
+                                max={15}
                                 step={0.1}
                                 value={typosPercentage}
                                 onChange={(e) => setTyposPercentage(parseFloat(e.target.value))}
@@ -991,12 +991,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             <div className="space-y-1">
                               <div className="flex justify-between">
                                 <label className="text-xs">Grammar Mistakes: {grammarMistakesPercentage.toFixed(1)}%</label>
-                                <span className="text-xs text-gray-500">0-5%</span>
+                                <span className="text-xs text-gray-500">0-15%</span>
                               </div>
                               <input
                                 type="range"
                                 min={0}
-                                max={5}
+                                max={15}
                                 step={0.1}
                                 value={grammarMistakesPercentage}
                                 onChange={(e) => setGrammarMistakesPercentage(parseFloat(e.target.value))}
@@ -1008,12 +1008,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             <div className="space-y-1">
                               <div className="flex justify-between">
                                 <label className="text-xs">Human Mis-errors: {humanMisErrorsPercentage.toFixed(1)}%</label>
-                                <span className="text-xs text-gray-500">0-5%</span>
+                                <span className="text-xs text-gray-500">0-15%</span>
                               </div>
                               <input
                                 type="range"
                                 min={0}
-                                max={5}
+                                max={15}
                                 step={0.1}
                                 value={humanMisErrorsPercentage}
                                 onChange={(e) => setHumanMisErrorsPercentage(parseFloat(e.target.value))}
