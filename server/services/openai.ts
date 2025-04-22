@@ -29,6 +29,10 @@ export interface ContentGenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  // Humanization parameters (percentages)
+  typosPercentage?: number;
+  grammarMistakesPercentage?: number;
+  humanMisErrorsPercentage?: number;
 }
 
 export interface ContentGenerationResult {

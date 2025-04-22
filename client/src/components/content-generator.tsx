@@ -31,6 +31,10 @@ interface GenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  // Humanization parameters (percentages)
+  typosPercentage?: number;
+  grammarMistakesPercentage?: number;
+  humanMisErrorsPercentage?: number;
 }
 
 interface GenerationMetadata {
@@ -77,6 +81,11 @@ export default function ContentGenerator() {
   const [wordCount, setWordCount] = useState(300);
   const [antiAIDetection, setAntiAIDetection] = useState(true); // Default to true for undetectable content
   const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(false); // Toggle for speed vs undetectability (default to speed for better responsiveness)
+  
+  // Humanization parameters
+  const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos
+  const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState(1.0); // Default 1% grammar mistakes
+  const [humanMisErrorsPercentage, setHumanMisErrorsPercentage] = useState(1.0); // Default 1% human mis-errors
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -340,6 +349,10 @@ export default function ContentGenerator() {
       wordCount,
       antiAIDetection,
       prioritizeUndetectable,
+      // Include humanization parameters
+      typosPercentage,
+      grammarMistakesPercentage,
+      humanMisErrorsPercentage,
     };
     
     mutate(params);
@@ -648,6 +661,83 @@ export default function ContentGenerator() {
                         onCheckedChange={setPrioritizeUndetectable}
                       />
                       <span className={`text-xs ml-2 ${prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Undetectable</span>
+                    </div>
+                  </div>
+                  
+                  {/* Humanization Parameters */}
+                  <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-purple-800 dark:text-purple-400">Humanization Parameters</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-purple-600 dark:text-purple-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Humanization Parameters:</strong></p>
+                            <p className="mb-1">These sliders control the percentage of human-like imperfections added to the generated content.</p>
+                            <p className="mb-1"><strong>Typos:</strong> Spelling mistakes and typographical errors.</p>
+                            <p className="mb-1"><strong>Grammar Mistakes:</strong> Minor grammatical issues like missing commas, wrong tense, etc.</p>
+                            <p className="mb-1"><strong>Human Mis-errors:</strong> Natural inconsistencies like punctuation variations or word choice errors.</p>
+                            <p className="text-xs italic">Higher percentages make content appear more human-written but may impact readability.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-4 mt-3">
+                      {/* Typos Slider */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Label htmlFor="typos" className="text-xs">Typos: {typosPercentage.toFixed(1)}%</Label>
+                          <span className="text-xs text-gray-500">0-5%</span>
+                        </div>
+                        <Slider
+                          id="typos"
+                          min={0}
+                          max={5}
+                          step={0.1}
+                          value={[typosPercentage]}
+                          onValueChange={(value) => setTyposPercentage(value[0])}
+                          className="py-1"
+                        />
+                      </div>
+                      
+                      {/* Grammar Mistakes Slider */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Label htmlFor="grammar" className="text-xs">Grammar Mistakes: {grammarMistakesPercentage.toFixed(1)}%</Label>
+                          <span className="text-xs text-gray-500">0-5%</span>
+                        </div>
+                        <Slider
+                          id="grammar"
+                          min={0}
+                          max={5}
+                          step={0.1}
+                          value={[grammarMistakesPercentage]}
+                          onValueChange={(value) => setGrammarMistakesPercentage(value[0])}
+                          className="py-1"
+                        />
+                      </div>
+                      
+                      {/* Human Mis-errors Slider */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <Label htmlFor="human-errors" className="text-xs">Human Mis-errors: {humanMisErrorsPercentage.toFixed(1)}%</Label>
+                          <span className="text-xs text-gray-500">0-5%</span>
+                        </div>
+                        <Slider
+                          id="human-errors"
+                          min={0}
+                          max={5}
+                          step={0.1}
+                          value={[humanMisErrorsPercentage]}
+                          onValueChange={(value) => setHumanMisErrorsPercentage(value[0])}
+                          className="py-1"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
