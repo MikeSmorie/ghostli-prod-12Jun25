@@ -28,6 +28,7 @@ export interface ContentGenerationParams {
   brandArchetype: string;
   wordCount: number;
   antiAIDetection: boolean;
+  prioritizeUndetectable?: boolean;
 }
 
 export interface ContentGenerationResult {
@@ -74,10 +75,22 @@ export async function generateContent(params: ContentGenerationParams): Promise<
 
     // Apply anti-AI detection treatment if requested
     if (params.antiAIDetection) {
-      const antiAIPrompt = "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent:";
+      // Define the anti-AI prompt based on prioritizeUndetectable parameter
+      let antiAIPrompt = params.prioritizeUndetectable 
+        ? "Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. Don't change the meaning or core message:"
+        : "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent:";
+      
       const { content: humanizedContent } = await generateWithOpenAI(systemMessage, antiAIPrompt + "\n\n" + finalContent);
       finalContent = humanizedContent;
       iterations++;
+      
+      // If we're prioritizing undetectability, make an additional pass
+      if (params.prioritizeUndetectable) {
+        const secondPassPrompt = "This content still has some AI-detection patterns. Apply a second humanization pass focusing on adding narrative inconsistencies, personal anecdotes, and more colloquial language. Make it extremely difficult for any AI detector to recognize this as AI-generated:";
+        const { content: deeplyHumanizedContent } = await generateWithOpenAI(systemMessage, secondPassPrompt + "\n\n" + humanizedContent);
+        finalContent = deeplyHumanizedContent;
+        iterations++;
+      }
     }
 
     // Calculate final word count
@@ -145,18 +158,27 @@ CONSTRAINTS:
  * Helper function to generate content with OpenAI
  * @param systemMessage System message for content generation
  * @param userPrompt User prompt for content generation
+ * @param options Additional generation options
  * @returns Generated content and token usage
  */
-async function generateWithOpenAI(systemMessage: string, userPrompt: string) {
+async function generateWithOpenAI(
+  systemMessage: string, 
+  userPrompt: string, 
+  options: { temperature?: number; max_tokens?: number } = {}
+) {
   try {
+    // Use provided options or default values
+    const temperature = options.temperature !== undefined ? options.temperature : 0.7;
+    const max_tokens = options.max_tokens !== undefined ? options.max_tokens : 2000;
+
     const response = await openai.chat.completions.create({
       model: MODEL,
       messages: [
         { role: "system", content: systemMessage },
         { role: "user", content: userPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 2000,
+      temperature,
+      max_tokens,
     });
     
     return { 

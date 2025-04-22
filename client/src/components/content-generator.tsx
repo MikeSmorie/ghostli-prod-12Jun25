@@ -30,6 +30,7 @@ interface GenerationParams {
   brandArchetype: string;
   wordCount: number;
   antiAIDetection: boolean;
+  prioritizeUndetectable?: boolean;
 }
 
 interface GenerationMetadata {
@@ -338,6 +339,7 @@ export default function ContentGenerator() {
       brandArchetype,
       wordCount,
       antiAIDetection,
+      prioritizeUndetectable,
     };
     
     mutate(params);
