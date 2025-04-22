@@ -88,6 +88,15 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [inputValue, setInputValue] = useState("");
   const [tone, setTone] = useState<string>("");
   const [archetype, setArchetype] = useState<string>("");
+  const [targetWordCount, setTargetWordCount] = useState<number>(500);
+  
+  // Generation state
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationMetadata, setGenerationMetadata] = useState<{
+    wordCount: number;
+    iterationCount: number;
+    processingTimeMs: number;
+  } | null>(null);
   
   // Output and verification state
   const [outputResult, setOutputResult] = useState("");
@@ -184,7 +193,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   };
 
   // Process input and generate content
-  const processInput = () => {
+  const processInput = async () => {
     if (!isVerified) {
       toast({
         title: "Verification required",
@@ -194,18 +203,84 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       return;
     }
     
-    if (inputValue.trim()) {
-      let result = `Processed input: ${inputValue}`;
+    if (!inputValue.trim()) {
+      toast({
+        title: "Content prompt required",
+        description: "Please enter a content prompt before generating.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!tone) {
+      toast({
+        title: "Tone selection required",
+        description: "Please select a content tone before generating.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!archetype) {
+      toast({
+        title: "Brand archetype required",
+        description: "Please select a brand archetype before generating.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsGenerating(true);
       
-      if (tone) {
-        result += `\nTone: ${tone}`;
+      // Request parameters
+      const requestBody = {
+        prompt: inputValue,
+        tone: tone,
+        archetype: archetype,
+        targetWordCount: targetWordCount
+      };
+      
+      const response = await fetch('/api/content/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
-      if (archetype) {
-        result += `\nBrand Archetype: ${archetype}`;
-      }
+      const data = await response.json();
       
-      setOutputResult(result);
+      // Set the output result
+      setOutputResult(data.content);
+      
+      // Set metadata
+      setGenerationMetadata({
+        wordCount: data.metadata.wordCount,
+        iterationCount: data.metadata.iterationCount,
+        processingTimeMs: data.metadata.processingTimeMs
+      });
+      
+      // Switch to output module
+      setActiveModule('output');
+      
+      toast({
+        title: "Content generation successful",
+        description: `Generated ${data.metadata.wordCount} words in ${(data.metadata.processingTimeMs / 1000).toFixed(1)}s`,
+      });
+    } catch (error) {
+      toast({
+        title: "Content generation failed",
+        description: (error as Error).message,
+        variant: "destructive"
+      });
+      console.error("Content generation error:", error);
+    } finally {
+      setIsGenerating(false);
     }
   };
 

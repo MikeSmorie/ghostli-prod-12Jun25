@@ -7,6 +7,7 @@ import subscriptionRoutes from "./routes/subscription";
 import webhookRoutes from "./routes/webhook";
 import aiRoutes from "./routes/ai";
 import { registerFeatureRoutes } from "./routes/features";
+import { registerContentRoutes } from "./routes/content";
 import messagesRoutes from "./routes/announcements";
 import adminLogsRoutes from "./routes/admin-logs";
 import paymentRoutes from "./routes/payment";
@@ -63,6 +64,9 @@ export function registerRoutes(app: Express) {
 
   // Register feature routes
   registerFeatureRoutes(app);
+  
+  // Register content generation routes
+  registerContentRoutes(app);
 
   app.use("/api/messages", messagesRoutes);
   app.use("/api/admin", requireAdmin, adminLogsRoutes);
