@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -106,6 +106,8 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
+  // Reference to store the progress interval
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [generationMetadata, setGenerationMetadata] = useState<{
     wordCount: number;
     iterationCount: number;
@@ -128,6 +130,16 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   
   // Theme detection
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  
+  // Cleanup effect to clear interval if component unmounts during generation
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, []);
   
   // Check for dark mode on component mount and whenever it might change
   useEffect(() => {
@@ -272,7 +284,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       setEstimatedTimeRemaining(Math.round(estimatedTotalTime));
       
       // Start progress simulation
-      const progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
         setGenerationProgress(prev => {
           // Gradually increase progress, but never reach 100% until the actual response arrives
           const newProgress = prev + (0.5 + Math.random() * 1.5);
@@ -369,7 +381,10 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       console.error("Content generation error:", error);
     } finally {
       // Clear the progress simulation interval
-      clearInterval(progressInterval);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
       
       // Complete the progress bar
       setGenerationProgress(100);
