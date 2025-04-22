@@ -1,0 +1,36 @@
+**Prompt 9 of 7**
+
+**Instruction for Replit Agent**:  
+Please follow the task exactly as stated below. Do **not** interpret, preempt, or go ahead with any actions beyond this prompt.
+
+**Task**:  
+Refactor the **WriteRIGHT-01/OM-7** layout structure and functionality based on the following specifications:
+
+1. **Module 1: User Verification**  
+   - This module should capture **email** and **phone number**:
+     - **Email**: Validate proper email format.
+     - **Phone number**: Validate numeric characters only.  
+     - **Country Code Selector**: Add a selector for the country code (either auto-detect or manual selection).
+     - Display a **"?" explainer** next to both fields for clarification (e.g., “Please enter a valid email address”).
+   - Ensure this module is the **first step** in the user flow.
+   - **Verification Button**: Add a button to verify contact info before proceeding.
+
+2. **Module 2: Content Parameters**  
+   - **Dropdown selector** for **content tone** (options like Professional, Casual, etc.).
+   - **Dropdown selector** for **Brand Archetype** (options like Innocent, Explorer, Hero, etc.), with brief descriptions available via **"?" explainers**.
+   - **Content Prompt Field**:  
+     - Make the field **resizable** so users can input larger prompts.
+     - Ensure the background color and text contrast are consistent with light/dark mode settings.
+
+3. **Left Navigation Stack**  
+   - Implement a **left-side navigation stack** that allows the user to easily navigate between modules (e.g., **User Verification**, **Content Parameters**, **Generated Content**).
+   - Label each module clearly in the navigation stack for clarity.
+   - Hide **unused modules** to reduce clutter.
+
+4. **Input and Output Fields**  
+   - Ensure **input fields** (email, phone number, content prompt) are properly styled and easily distinguishable.
+   - Implement **output fields** for displaying generated content, with the following capabilities:
+     - **Edit** and **Save** features for generated content.
+     - **Download options** for the content in formats such as **PDF**, **Word**, **HTML**, etc.
+
+Once these changes are completed, please confirm the updates and await further instructions.
