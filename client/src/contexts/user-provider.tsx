@@ -48,7 +48,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        return { ok: false, message: errorData.message || 'Login failed' };
       }
       
       const userData = await response.json();
@@ -58,14 +58,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         title: "Login successful",
         description: `Welcome back, ${userData.username}!`
       });
+      
+      return { ok: true, message: 'Login successful', user: userData };
     } catch (err) {
       setError(err as Error);
-      toast({
-        title: "Login failed",
-        description: (err as Error).message,
-        variant: "destructive",
-      });
-      throw err;
+      console.error("Login error:", err);
+      return { ok: false, message: (err as Error).message || 'Login failed due to an unexpected error' };
     } finally {
       setIsLoading(false);
     }

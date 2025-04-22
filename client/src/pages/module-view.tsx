@@ -40,6 +40,7 @@ import {
   SaveIcon,
   ClockIcon,
   RefreshCwIcon,
+  Info as InfoIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from 'react-phone-input-2';
