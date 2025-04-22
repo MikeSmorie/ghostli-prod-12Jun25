@@ -74,11 +74,14 @@ export default function ContentGenerator() {
   const [tone, setTone] = useState("professional");
   const [brandArchetype, setBrandArchetype] = useState("sage");
   const [wordCount, setWordCount] = useState(300);
-  const [antiAIDetection, setAntiAIDetection] = useState(false);
+  const [antiAIDetection, setAntiAIDetection] = useState(true); // Default to true for undetectable content
+  const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(true); // Toggle for speed vs undetectability
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
+  const [seoKeywords, setSeoKeywords] = useState<string[] | null>(null);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   
   // Progress indication state
   const [progress, setProgress] = useState(0);
@@ -363,6 +366,49 @@ export default function ContentGenerator() {
     return `This is sample content generated based on your prompt: "${params.prompt}". It would be written in a ${params.tone} tone, using the ${params.brandArchetype} brand archetype, and would be approximately ${params.wordCount} words long. ${params.antiAIDetection ? "Content would be optimized to bypass AI detection." : ""}`;
   };
   
+  // Generate SEO keywords for content
+  const generateSeoKeywords = async () => {
+    if (!generatedContent) {
+      toast({
+        title: "No Content",
+        description: "Please generate content first before generating SEO keywords.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsGeneratingSeo(true);
+      
+      // Call API to generate SEO keywords
+      const response = await apiRequest("POST", "/api/generate-seo", {
+        content: generatedContent.substring(0, 2000) // Limit content length for API request
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate SEO keywords");
+      }
+      
+      const data = await response.json();
+      setSeoKeywords(data.keywords);
+      
+      toast({
+        title: "SEO Keywords Generated",
+        description: "Your SEO keywords and hashtags are now available.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "SEO Generation Failed",
+        description: error.message || "An error occurred while generating SEO keywords",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingSeo(false);
+    }
+  };
+  
   // Format duration from milliseconds to readable string
   const formatDuration = (ms: number): string => {
     if (ms < 1000) return `${ms}ms`;
@@ -382,6 +428,16 @@ export default function ContentGenerator() {
             <div className="md:col-span-1 space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="prompt">Prompt</Label>
+                <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
+                  <p className="font-medium mb-1">How to form an effective prompt:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Be specific about your target audience (e.g., "for marketing professionals")</li>
+                    <li>Clearly state the purpose (e.g., "to explain the benefits of our SaaS product")</li>
+                    <li>Specify the format you want (e.g., "as a blog post with headings and bullet points")</li>
+                    <li>Include key points you want to emphasize</li>
+                    <li>Mention any style preferences (e.g., "with storytelling elements")</li>
+                  </ul>
+                </div>
                 <Textarea
                   id="prompt"
                   placeholder="What would you like to generate? Be specific with your requirements."
@@ -545,13 +601,33 @@ export default function ContentGenerator() {
                   />
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="antiDetection"
-                    checked={antiAIDetection}
-                    onCheckedChange={setAntiAIDetection}
-                  />
-                  <Label htmlFor="antiDetection">Enable Anti-AI Detection</Label>
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="antiDetection"
+                      checked={antiAIDetection}
+                      onCheckedChange={setAntiAIDetection}
+                    />
+                    <Label htmlFor="antiDetection" className="font-medium">Enable Anti-AI Detection</Label>
+                  </div>
+                  
+                  <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-md border border-yellow-200 dark:border-yellow-800 text-sm">
+                    <p className="font-bold mb-1 text-yellow-800 dark:text-yellow-400">IMPORTANT:</p>
+                    <p>Our anti-AI detection system ensures your content is completely undetectable by third parties or Google as AI-written. This is a core feature of the WriteRIGHT system.</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-1 pb-2 px-2 border rounded-md">
+                    <span className="text-sm font-medium">Mode:</span>
+                    <div className="flex items-center">
+                      <span className={`text-xs mr-2 ${!prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Speed</span>
+                      <Switch
+                        id="priorityMode"
+                        checked={prioritizeUndetectable}
+                        onCheckedChange={setPrioritizeUndetectable}
+                      />
+                      <span className={`text-xs ml-2 ${prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Undetectable</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -625,7 +701,7 @@ export default function ContentGenerator() {
                         </div>
                       )}
                       
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"
@@ -641,9 +717,55 @@ export default function ContentGenerator() {
                           onClick={handleReset}
                           className="flex items-center"
                         >
+                          <RefreshCw className="h-4 w-4 mr-1" />
                           Reset
                         </Button>
+                        <Button
+                          variant={seoKeywords ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={generateSeoKeywords}
+                          disabled={isGeneratingSeo || !generatedContent}
+                          className="flex items-center"
+                        >
+                          {isGeneratingSeo ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              Generating SEO...
+                            </>
+                          ) : (
+                            <>
+                              <Search className="h-4 w-4 mr-1" />
+                              Generate SEO Keywords
+                            </>
+                          )}
+                        </Button>
                       </div>
+                      
+                      {/* Display SEO Keywords */}
+                      {seoKeywords && seoKeywords.length > 0 && (
+                        <div className="mt-4 space-y-3 p-4 bg-blue-50 dark:bg-blue-950 rounded-md border">
+                          <h4 className="font-medium text-sm">SEO Keywords & Hashtags</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {seoKeywords.map((keyword, index) => (
+                              <Badge key={index} variant="secondary" className="bg-blue-100 dark:bg-blue-900">
+                                {keyword.startsWith('#') ? keyword : `#${keyword.replace(/\s+/g, '')}`}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div className="pt-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => navigator.clipboard.writeText(seoKeywords.map(k => 
+                                k.startsWith('#') ? k : `#${k.replace(/\s+/g, '')}`).join(' '))}
+                              className="text-xs"
+                            >
+                              <Copy className="h-3 w-3 mr-1" />
+                              Copy All Hashtags
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </TabsContent>
                     
                     <TabsContent value="export" className="space-y-4">
