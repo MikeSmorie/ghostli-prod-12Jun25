@@ -78,7 +78,7 @@ export default function ContentGenerator() {
   const [prompt, setPrompt] = useState("");
   const [tone, setTone] = useState("professional");
   const [brandArchetype, setBrandArchetype] = useState("sage");
-  const [wordCount, setWordCount] = useState(300);
+  const [wordCount, setWordCount] = useState(1000);
   const [antiAIDetection, setAntiAIDetection] = useState(true); // Default to true for undetectable content
   const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(false); // Toggle for speed vs undetectability (default to speed for better responsiveness)
   
@@ -442,15 +442,15 @@ export default function ContentGenerator() {
             {/* Left Column - Input Parameters */}
             <div className="md:col-span-1 space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="prompt">Prompt</Label>
+                <Label htmlFor="prompt">What would you like me to write about?</Label>
                 <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
-                  <p className="font-medium mb-1">How to form an effective prompt:</p>
+                  <p className="font-medium mb-1">Please include in your request:</p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>Be specific about your target audience (e.g., "for marketing professionals")</li>
-                    <li>Clearly state the purpose (e.g., "to explain the benefits of our SaaS product")</li>
-                    <li>Specify the format you want (e.g., "as a blog post with headings and bullet points")</li>
-                    <li>Include key points you want to emphasize</li>
-                    <li>Mention any style preferences (e.g., "with storytelling elements")</li>
+                    <li>What or who is this writing for? (e.g., "for marketing professionals", "for our company blog")</li>
+                    <li>How will it be used? (e.g., "as a sales email", "for our website's about page")</li>
+                    <li>What reaction do you want from the reader? (e.g., "to feel confident in our expertise", "to sign up for a demo")</li>
+                    <li>Any key points you want to emphasize</li>
+                    <li>Specific format requirements (e.g., "as a blog post with headings and bullet points")</li>
                   </ul>
                 </div>
                 <Textarea
@@ -664,7 +664,8 @@ export default function ContentGenerator() {
                     </div>
                   </div>
                   
-                  {/* Humanization Parameters */}
+                  {/* Humanization Parameters - Only shown when Anti-AI Detection is enabled */}
+                  {antiAIDetection && (
                   <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
                     <div className="flex items-center mb-2">
                       <h3 className="text-sm font-bold text-purple-800 dark:text-purple-400">Humanization Parameters</h3>
@@ -740,6 +741,7 @@ export default function ContentGenerator() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               </div>
               
