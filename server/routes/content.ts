@@ -40,9 +40,9 @@ const SeoGenerationRequestSchema = z.object({
 export function registerContentRoutes(app: Express) {
   /**
    * Generate content using OpenAI
-   * POST /api/generate-content
+   * POST /api/content/generate
    */
-  app.post("/api/generate-content", async (req: Request, res: Response) => {
+  app.post("/api/content/generate", async (req: Request, res: Response) => {
     try {
       // Validate request body
       const validationResult = ContentGenerationRequestSchema.safeParse(req.body);

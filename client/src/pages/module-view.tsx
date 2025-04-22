@@ -688,7 +688,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                   {/* Input Text Area with resizing handle */}
                   <div>
                     <div className="flex items-center mb-1">
-                      <label className="font-medium">Content Prompt</label>
+                      <label className="font-medium">What would you like me to write about?</label>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
@@ -709,7 +709,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             ? 'bg-gray-800 text-white border-gray-700' 
                             : 'bg-white text-gray-900 border-gray-300'
                         }`}
-                        placeholder="Describe what content you want to generate..."
+                        placeholder="Please include: 1) Who is this writing for? 2) How will it be used? 3) What reaction do you want from the reader? 4) Any specific format requirements..."
                         rows={4}
                         style={{
                           backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
@@ -723,6 +723,149 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                         </svg>
                       </div>
                     </div>
+                    {/* Anti-AI Detection Section */}
+                    <div className="mt-6 mb-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="antiDetection"
+                            checked={antiAIDetection}
+                            onChange={(e) => setAntiAIDetection(e.target.checked)}
+                            className="w-4 h-4 mr-2 rounded"
+                          />
+                          <label htmlFor="antiDetection" className="font-medium">Enable Anti-AI Detection</label>
+                        </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <HelpCircleIcon className="h-4 w-4 text-gray-400" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-md p-3">
+                              <p className="mb-2"><strong>Anti-AI Detection:</strong></p>
+                              <p className="mb-2">Our anti-AI detection system ensures your content is completely undetectable by third parties or Google as AI-written. This is a core feature of the WriteRIGHT system.</p>
+                              <p className="text-sm text-gray-500">When enabled, your content will be processed with specialized techniques to avoid AI detection.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    
+                      {/* Mode Toggle */}
+                      {antiAIDetection && (
+                        <div className="p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-md mb-4">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Mode Selection:</span>
+                            <div className="flex items-center">
+                              <span className={`text-xs mr-2 ${!prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Speed</span>
+                              <div className="relative inline-block w-10 h-5 transition-colors duration-300 rounded-full">
+                                <input
+                                  type="checkbox"
+                                  id="toggleUndetectable"
+                                  checked={prioritizeUndetectable}
+                                  onChange={(e) => setPrioritizeUndetectable(e.target.checked)}
+                                  className="sr-only"
+                                />
+                                <label
+                                  htmlFor="toggleUndetectable"
+                                  className={`absolute inset-0 rounded-full cursor-pointer transition-colors ${
+                                    prioritizeUndetectable ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                                  }`}
+                                >
+                                  <span 
+                                    className={`absolute inset-y-0 left-0 w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
+                                      prioritizeUndetectable ? 'translate-x-5' : 'translate-x-0'
+                                    }`} 
+                                  />
+                                </label>
+                              </div>
+                              <span className={`text-xs ml-2 ${prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Undetectable</span>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-xs">
+                            <p className="mb-1"><strong>Speed Mode:</strong> Faster generation with standard AI detection evasion (1 pass)</p>
+                            <p><strong>Undetectable Mode:</strong> Maximum humanization with 3 processing passes for complete AI-detection evasion (takes 2-3x longer)</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Humanization Parameters Section */}
+                      {antiAIDetection && (
+                        <div className="p-3 mb-4 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
+                          <div className="flex items-center mb-2">
+                            <h3 className="text-sm font-bold text-purple-800 dark:text-purple-400">Humanization Parameters</h3>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <HelpCircleIcon className="h-4 w-4 ml-2 text-purple-600 dark:text-purple-500" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-md p-3">
+                                  <p className="mb-1"><strong>Humanization Parameters:</strong></p>
+                                  <p className="mb-1">These sliders control the percentage of human-like imperfections added to the generated content.</p>
+                                  <p className="mb-1"><strong>Typos:</strong> Spelling mistakes and typographical errors.</p>
+                                  <p className="mb-1"><strong>Grammar Mistakes:</strong> Minor grammatical issues like missing commas, wrong tense, etc.</p>
+                                  <p className="mb-1"><strong>Human Mis-errors:</strong> Natural inconsistencies like punctuation variations or word choice errors.</p>
+                                  <p className="text-xs italic">Higher percentages make content appear more human-written but may impact readability.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          
+                          <div className="space-y-4 mt-3">
+                            {/* Typos Slider */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <label className="text-xs">Typos: {typosPercentage.toFixed(1)}%</label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={typosPercentage}
+                                onChange={(e) => setTyposPercentage(parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                              />
+                            </div>
+                            
+                            {/* Grammar Mistakes Slider */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <label className="text-xs">Grammar Mistakes: {grammarMistakesPercentage.toFixed(1)}%</label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={grammarMistakesPercentage}
+                                onChange={(e) => setGrammarMistakesPercentage(parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                              />
+                            </div>
+                            
+                            {/* Human Mis-errors Slider */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between">
+                                <label className="text-xs">Human Mis-errors: {humanMisErrorsPercentage.toFixed(1)}%</label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={humanMisErrorsPercentage}
+                                onChange={(e) => setHumanMisErrorsPercentage(parseFloat(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="mt-4 flex gap-3">
                       <Button 
                         onClick={processInput}
