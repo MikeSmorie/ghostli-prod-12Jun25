@@ -11,7 +11,8 @@ import {
 const ContentGenerationRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
   tone: z.enum([
-    "professional", "casual", "persuasive", 
+    "professional", "casual", "academic", 
+    "enthusiastic", "authoritative", "persuasive", 
     "informative", "humorous", "formal"
   ]),
   brandArchetype: z.enum([

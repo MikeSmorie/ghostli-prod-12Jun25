@@ -35,6 +35,10 @@ interface GenerationParams {
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
   humanMisErrorsPercentage?: number;
+  // Additional generation options
+  generateSEO?: boolean;
+  generateHashtags?: boolean;
+  generateKeywords?: boolean;
 }
 
 interface GenerationMetadata {
@@ -86,6 +90,11 @@ export default function ContentGenerator() {
   const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos
   const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState(1.0); // Default 1% grammar mistakes
   const [humanMisErrorsPercentage, setHumanMisErrorsPercentage] = useState(1.0); // Default 1% human mis-errors
+  
+  // Additional generation options
+  const [generateSEO, setGenerateSEO] = useState(true);
+  const [generateHashtags, setGenerateHashtags] = useState(true);
+  const [generateKeywords, setGenerateKeywords] = useState(true);
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -353,6 +362,10 @@ export default function ContentGenerator() {
       typosPercentage,
       grammarMistakesPercentage,
       humanMisErrorsPercentage,
+      // Include additional generation options
+      generateSEO,
+      generateHashtags,
+      generateKeywords,
     };
     
     mutate(params);
