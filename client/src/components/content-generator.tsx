@@ -76,7 +76,7 @@ export default function ContentGenerator() {
   const [brandArchetype, setBrandArchetype] = useState("sage");
   const [wordCount, setWordCount] = useState(300);
   const [antiAIDetection, setAntiAIDetection] = useState(true); // Default to true for undetectable content
-  const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(true); // Toggle for speed vs undetectability
+  const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(false); // Toggle for speed vs undetectability (default to speed for better responsiveness)
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);

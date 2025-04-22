@@ -88,8 +88,8 @@ export async function generateContent(params: ContentGenerationParams): Promise<
     if (params.antiAIDetection) {
       // Define the anti-AI prompt based on prioritizeUndetectable parameter
       let antiAIPrompt = params.prioritizeUndetectable 
-        ? "Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. Don't change the meaning or core message:"
-        : "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent:";
+        ? "Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. Include occasional false starts, self-corrections, and emotionally charged language. Don't change the meaning or core message:"
+        : "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent. Use more varied sentence structures and occasionally imperfect grammar patterns that humans typically use:";
       
       // Use higher temperature for humanization to increase variability
       const humanizationTemperature = params.prioritizeUndetectable ? 0.85 : 0.75;
@@ -102,9 +102,9 @@ export async function generateContent(params: ContentGenerationParams): Promise<
       finalContent = humanizedContent;
       iterations++;
       
-      // If we're prioritizing undetectability, make an additional pass
+      // If we're prioritizing undetectability, make an additional pass with more advanced techniques
       if (params.prioritizeUndetectable) {
-        const secondPassPrompt = "This content still has some AI-detection patterns. Apply a second humanization pass focusing on adding narrative inconsistencies, personal anecdotes, and more colloquial language. Make it extremely difficult for any AI detector to recognize this as AI-generated:";
+        const secondPassPrompt = "This content still has some AI-detection patterns. Apply a second humanization pass focusing on adding narrative inconsistencies, personal anecdotes, occasional minor typos (like 'teh' for 'the'), and more colloquial language. Add rhetorical questions, thinking evolution markers like 'Actually...' or 'On second thought...', and some emotional reactions. Make it extremely difficult for any AI detector to recognize this as AI-generated:";
         
         // Use even higher temperature for the second pass to maximize unpredictability
         const { content: deeplyHumanizedContent } = await generateWithOpenAI(
@@ -113,6 +113,18 @@ export async function generateContent(params: ContentGenerationParams): Promise<
           { temperature: 0.9 }
         );
         finalContent = deeplyHumanizedContent;
+        iterations++;
+        
+        // For maximum undetectability, apply a third pass with very specific human patterns
+        const thirdPassPrompt = "For this final pass, add these very specific human writing patterns to make the content completely undetectable by AI tools: 1) Add at least one incomplete sentence or thought that trails off with '...', 2) Include at least one place where you correct a previous statement with 'or rather' or 'I mean', 3) Use at least one intensifier like 'really' or 'very' that technically could be removed, 4) Add at least one brief personal opinion or aside in parentheses, and 5) Include one minor numerical inconsistency typical of human error (like mentioning 'three options' but listing four). Make these changes feel natural within the flow:";
+        
+        // Use maximum temperature for the final pass
+        const { content: finalHumanizedContent } = await generateWithOpenAI(
+          systemMessage, 
+          thirdPassPrompt + "\n\n" + deeplyHumanizedContent,
+          { temperature: 1.0 }
+        );
+        finalContent = finalHumanizedContent;
         iterations++;
       }
     }
@@ -151,9 +163,10 @@ function constructSystemMessage(params: ContentGenerationParams): string {
   const archetypeDescription = getArchetypeDescription(params.brandArchetype);
   
   // Additional anti-detection guidance based on prioritizeUndetectable setting
-  const antiDetectionGuidance = params.prioritizeUndetectable 
-    ? `
-ANTI-DETECTION PRIORITY GUIDELINES:
+  const antiDetectionGuidance = params.antiAIDetection 
+    ? (params.prioritizeUndetectable 
+      ? `
+ADVANCED ANTI-DETECTION PRIORITY GUIDELINES:
 - Prioritize human-like variations over consistency
 - Incorporate occasional minor grammatical imperfections
 - Use colloquialisms and conversational language where appropriate
@@ -162,7 +175,26 @@ ANTI-DETECTION PRIORITY GUIDELINES:
 - Insert occasional narrative tangents that add personality
 - Use less predictable vocabulary choices and phrasing
 - Balance technical correctness with human imperfection
+- Add occasional typos followed by corrections (like "teh the")
+- Use phrasal repetitions like humans do when emphasizing points
+- Insert occasional false starts to ideas that are then elaborated upon
+- Add emotional responses (e.g., "I feel strongly that...")
+- Incorporate analogies and metaphors that may be slightly imperfect
+- Insert rhetorical questions and self-answers
+- Include conversational hedging (e.g., "perhaps", "it seems to me")
+- Add thinking evolution markers (e.g., "On second thought", "Actually")
 `
+      : `
+STANDARD ANTI-DETECTION GUIDELINES:
+- Use natural, human-like language patterns
+- Vary sentence structures and lengths
+- Avoid overly perfect grammar and predictable patterns
+- Mix formal and informal language where appropriate
+- Include occasional opinion statements and personal perspectives
+- Use varied transition words between paragraphs
+- Balance clarity with natural language flow
+`
+    ) 
     : '';
   
   return `
