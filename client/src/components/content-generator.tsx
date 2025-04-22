@@ -779,6 +779,98 @@ export default function ContentGenerator() {
                     </div>
                   </div>
                   )}
+
+                  {/* Additional Generation Options */}
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-green-800 dark:text-green-400">Additional Generation Options</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-green-600 dark:text-green-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Additional Generation Options:</strong></p>
+                            <p className="mb-1">These options generate supplementary content along with your main text.</p>
+                            <p className="mb-1"><strong>SEO Keywords:</strong> Keywords for search engine optimization.</p>
+                            <p className="mb-1"><strong>Hashtags:</strong> Relevant hashtags for social media posts.</p>
+                            <p className="mb-1"><strong>Keywords:</strong> General keywords for categorization.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="seo" checked={generateSEO} onCheckedChange={(checked) => setGenerateSEO(checked as boolean)} />
+                        <Label htmlFor="seo" className="text-sm">Generate SEO Keywords</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="hashtags" checked={generateHashtags} onCheckedChange={(checked) => setGenerateHashtags(checked as boolean)} />
+                        <Label htmlFor="hashtags" className="text-sm">Generate Hashtags</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="keywords" checked={generateKeywords} onCheckedChange={(checked) => setGenerateKeywords(checked as boolean)} />
+                        <Label htmlFor="keywords" className="text-sm">Generate Keywords</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* E-A-T & Content Quality Controls */}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-blue-800 dark:text-blue-400">E-A-T & Content Quality</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-blue-600 dark:text-blue-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>E-A-T & Content Quality:</strong></p>
+                            <p className="mb-1">These options enhance the Expertise, Authoritativeness, and Trustworthiness of your content.</p>
+                            <p className="mb-1"><strong>Citations:</strong> Include authoritative citations and references.</p>
+                            <p className="mb-1"><strong>Duplication Check:</strong> Verify content originality.</p>
+                            <p className="mb-1"><strong>Rhetorical Elements:</strong> Add persuasive elements like questions and analogies.</p>
+                            <p className="mb-1"><strong>Strict Tone:</strong> Enforce consistent tone throughout content.</p>
+                            <p className="mb-1"><strong>Self-Analysis:</strong> Include AI self-critique to improve humanness.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="citations" checked={includeCitations} onCheckedChange={(checked) => setIncludeCitations(checked as boolean)} />
+                        <Label htmlFor="citations" className="text-sm">Include Citations & References</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="duplication" checked={checkDuplication} onCheckedChange={(checked) => setCheckDuplication(checked as boolean)} />
+                        <Label htmlFor="duplication" className="text-sm">Check for Content Duplication</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="rhetorical" checked={addRhetoricalElements} onCheckedChange={(checked) => setAddRhetoricalElements(checked as boolean)} />
+                        <Label htmlFor="rhetorical" className="text-sm">Add Rhetorical Elements</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="tone" checked={strictToneAdherence} onCheckedChange={(checked) => setStrictToneAdherence(checked as boolean)} />
+                        <Label htmlFor="tone" className="text-sm">Strict Tone Adherence</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="analysis" checked={runSelfAnalysis} onCheckedChange={(checked) => setRunSelfAnalysis(checked as boolean)} />
+                        <Label htmlFor="analysis" className="text-sm">Run Self-Analysis</Label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
