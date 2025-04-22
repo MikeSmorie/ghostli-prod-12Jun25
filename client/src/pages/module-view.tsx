@@ -119,6 +119,10 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
     formatted: false,
     plaintext: false
   });
+  // Additional generated content
+  const [seoSuggestions, setSeoSuggestions] = useState<string[]>([]);
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>([]);
   
   // Theme detection
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -291,6 +295,19 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
         iterationCount: data.metadata.iterations, // Fixed to match server response field name
         processingTimeMs: data.metadata.generationTime // Fixed to match server response field name
       });
+      
+      // Set additional generated content if available
+      if (data.seo && Array.isArray(data.seo)) {
+        setSeoSuggestions(data.seo);
+      }
+      
+      if (data.hashtags && Array.isArray(data.hashtags)) {
+        setHashtags(data.hashtags);
+      }
+      
+      if (data.keywords && Array.isArray(data.keywords)) {
+        setKeywords(data.keywords);
+      }
       
       // Switch to output module
       setActiveModule('output');
@@ -1008,6 +1025,59 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)'
                   }}>{outputResult}</pre>
                 </div>
+                
+                {/* Additional Generated Content Sections */}
+                {(seoSuggestions.length > 0 || hashtags.length > 0 || keywords.length > 0) && (
+                  <div className="mt-6 mb-4">
+                    <h4 className="text-lg font-medium mb-3">Additional Generated Content</h4>
+                    
+                    {/* SEO Suggestions */}
+                    {seoSuggestions.length > 0 && (
+                      <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-800">
+                        <h5 className="font-semibold text-green-800 dark:text-green-400 mb-2">SEO Suggestions</h5>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {seoSuggestions.map((suggestion, index) => (
+                            <li key={index} className="text-sm">{suggestion}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {/* Hashtags */}
+                    {hashtags.length > 0 && (
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-200 dark:border-blue-800">
+                        <h5 className="font-semibold text-blue-800 dark:text-blue-400 mb-2">Social Media Hashtags</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {hashtags.map((hashtag, index) => (
+                            <span 
+                              key={index} 
+                              className="inline-block bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-sm"
+                            >
+                              {hashtag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Keywords */}
+                    {keywords.length > 0 && (
+                      <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-md border border-purple-200 dark:border-purple-800">
+                        <h5 className="font-semibold text-purple-800 dark:text-purple-400 mb-2">Target Keywords</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {keywords.map((keyword, index) => (
+                            <span 
+                              key={index} 
+                              className="inline-block bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-sm"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 {/* Output Format Options */}
                 <div className="space-y-4">
