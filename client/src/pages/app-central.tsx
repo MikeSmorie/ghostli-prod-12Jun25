@@ -28,30 +28,6 @@ export default function AppCentral() {
           </Button>
         </div>
 
-        <div className="space-y-4 max-w-xl">
-          <div className="flex gap-2">
-            <Input
-              value={suggestion}
-              onChange={(e) => setSuggestion(e.target.value)}
-              placeholder="Describe your app to get module suggestions"
-              className="flex-1"
-            />
-            <Button 
-              onClick={getSuggestion}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Thinking...
-                </>
-              ) : (
-                'Suggest Modules'
-              )}
-            </Button>
-          </div>
-        </div>
-
         <div className="w-64">
           {modules.map((module) => (
             <Card 
