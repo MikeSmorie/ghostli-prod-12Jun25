@@ -69,7 +69,7 @@ export default function AppCentral() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">WriteRIGHT-01/OM-7 Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-2">WriteRIGHT Dashboard</h1>
         <p className="text-muted-foreground text-lg">
           Advanced content generation system with AI-detection avoidance
         </p>
@@ -80,7 +80,7 @@ export default function AppCentral() {
           <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400 mt-1" />
           <div>
             <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-lg mb-1">
-              Welcome to WriteRIGHT Content Generator
+              Welcome to WriteRIGHT
             </h3>
             <p className="text-blue-700 dark:text-blue-400">
               This system creates human-like content that bypasses AI detection. 

@@ -317,15 +317,33 @@ ${finalContent}`;
       // Define the anti-AI prompt based on prioritizeUndetectable parameter
       let antiAIPrompt = params.prioritizeUndetectable 
         ? `Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. 
-Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. 
-Include occasional false starts, self-corrections, and emotionally charged language. 
+
+IMPORTANT HUMANIZATION INSTRUCTIONS:
+1. Avoid predictable phrasing and formulaic expressions like "don't you think?" and "let's remember those who...". Replace these with more authentic and surprising ways of phrasing.
+2. Add at least 2-3 personal anecdotes or experiences that feel genuine and tied to the content - make them feel like authentic human memories, not generic examples.
+3. Create significant variations in sentence structure - mix short punchy sentences with longer, more complex ones that occasionally meander.
+4. Use varied and sometimes unexpected transitions between paragraphs.
+5. Include hesitations, self-corrections, and emotionally charged language that feels natural, not forced.
+6. Make the writing more asymmetrical and less perfectly balanced - humans don't always maintain perfect coherence.
+7. Add occasional tangential thoughts or brief asides that show personality.
+
 Apply the following humanization parameters precisely:
 - Typos: ${typosPercentage.toFixed(1)}% (spelling mistakes and typographical errors)
 - Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% (minor grammatical issues like missing commas, wrong tense)
 - Human Mis-errors: ${humanMisErrorsPercentage.toFixed(1)}% (natural inconsistencies like punctuation variations or word choice errors)
+
 Don't change the meaning or core message:`
-        : `Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent. 
-Use more varied sentence structures and occasionally imperfect grammar patterns that humans typically use.
+        : `Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent.
+
+IMPORTANT HUMANIZATION INSTRUCTIONS:
+1. Avoid predictable phrasing and formulaic expressions - use more spontaneous language patterns.
+2. Add at least 1-2 brief personal connections or experiences that feel authentic.
+3. Vary sentence structures significantly - don't follow predictable patterns.
+4. Use transitions that feel more natural and less perfectly constructed.
+5. Include occasional imperfect grammar that mimics how people actually write.
+6. Add subtle variations in style and tone throughout the piece.
+7. Make the writing less perfectly balanced - humans don't write with perfect coherence.
+
 Apply the following humanization parameters precisely:
 - Typos: ${typosPercentage.toFixed(1)}% (spelling mistakes and typographical errors)
 - Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% (minor grammatical issues like missing commas, wrong tense)
@@ -370,10 +388,13 @@ Also add narrative inconsistencies, personal anecdotes, and more colloquial lang
         const thirdPassPrompt = `For this final pass, add these very specific human writing patterns to make the content completely undetectable by AI tools (introduce approximately ${patternCount} of each type):
 
 1) Add approximately ${patternCount} incomplete sentence(s) or thought(s) that trail off with '...'
-2) Include approximately ${patternCount} place(s) where you correct a previous statement with 'or rather' or 'I mean'
+2) Include approximately ${patternCount} place(s) where you correct a previous statement with phrases like 'or rather,' 'I mean,' 'actually,' or 'wait, that's not right'
 3) Use approximately ${patternCount} intensifier(s) like 'really' or 'very' that technically could be removed
 4) Add approximately ${patternCount} brief personal opinion(s) or aside(s) in parentheses
 5) Include approximately ${patternCount} minor numerical inconsistency(/ies) typical of human error (like mentioning 'three options' but listing four)
+6) Add approximately ${patternCount} authentic personal anecdote(s) using phrases like "I remember when..." or "This reminds me of..." - make these feel genuinely human, with specific details from real-life experiences
+7) Use approximately ${patternCount} unexpected transition(s) between paragraphs that break from predictable format
+8) Include approximately ${patternCount} emotional reaction(s) to the content using varied, non-cliche expressions (avoid generic phrases like "don't you think?")
 
 Make sure these changes feel natural within the flow of the text. Maintain the overall percentage of errors at: Typos ${typosPercentage.toFixed(1)}%, Grammar Mistakes ${grammarMistakesPercentage.toFixed(1)}%, Human Mis-errors ${humanMisErrorsPercentage.toFixed(1)}%:`;
         
@@ -429,15 +450,31 @@ The content is still being detected as AI-generated. Apply one final humanizatio
 2. Grammar Mistakes: ${increasedGrammar.toFixed(1)}%
 3. Human Mis-errors: ${increasedHumanErrors.toFixed(1)}%
 
-Additionally:
-- Add more personal opinions and informal language
-- Include more digressions and clarifications
-- Add rhetorical questions and self-answers
-- Use more varied punctuation patterns
-- Include "stream of consciousness" elements
-- Add some incomplete thoughts and self-corrections
-- Use contractions extensively (don't, can't, wouldn't, etc.)
-- Insert occasional emotional responses (e.g., "I feel that...", "It's frustrating when...")
+Apply these specific improvements to make the content truly human-like:
+
+1. UNPREDICTABLE PHRASING:
+   - Replace any formulaic expressions like "don't you think?" with more authentic alternatives
+   - Use surprising word choices and unexpected turns of phrase
+   - Avoid clichés and predictable transitions between ideas
+   - Create sentence structures that wouldn't be taught in writing classes
+
+2. PERSONAL ELEMENTS:
+   - Add at least 3 detailed personal anecdotes or experiences that feel genuine and specific
+   - Include personal insights that reveal genuine opinions and emotions
+   - Add parenthetical asides that reflect personal thoughts
+   - Insert personal struggles or hesitations related to the topic
+
+3. STRUCTURAL ELEMENTS:
+   - Create asymmetrical organization rather than a perfectly balanced structure
+   - Include some tangents that feel natural and human
+   - Use inconsistent formatting that mimics real human writing
+   - Mix formal and informal language in an organic way
+
+4. LANGUAGE PATTERNS:
+   - Use more stream-of-consciousness elements
+   - Add incomplete thoughts and self-corrections
+   - Use contractions extensively (don't, can't, wouldn't, etc.)
+   - Insert emotional language that feels spontaneous
 
 The goal is to make this content 100% human-like and completely undetectable by AI detection tools.`;
         
