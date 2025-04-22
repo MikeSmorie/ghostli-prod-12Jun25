@@ -529,16 +529,17 @@ export default function ContentGenerator() {
                       <SelectItem value="professional">Professional</SelectItem>
                       <SelectItem value="casual">Casual</SelectItem>
                       <SelectItem value="persuasive">Persuasive</SelectItem>
+                      <SelectItem value="legal">Legal (compliant)</SelectItem>
+                      <SelectItem value="firm">Firm</SelectItem>
+                      <SelectItem value="placatory">Placatory</SelectItem>
                       <SelectItem value="informative">Informative</SelectItem>
-                      <SelectItem value="humorous">Humorous</SelectItem>
                       <SelectItem value="formal">Formal</SelectItem>
                       <SelectItem value="polite">Polite</SelectItem>
-                      <SelectItem value="firm">Firm</SelectItem>
-                      <SelectItem value="legal">Legal</SelectItem>
                       <SelectItem value="conversational">Conversational</SelectItem>
                       <SelectItem value="technical">Technical</SelectItem>
                       <SelectItem value="compassionate">Compassionate</SelectItem>
                       <SelectItem value="inspiring">Inspiring</SelectItem>
+                      <SelectItem value="humorous">Humorous</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
