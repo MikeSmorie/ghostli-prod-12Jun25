@@ -8,6 +8,20 @@ const openai = new OpenAI({
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const MODEL = "gpt-4o";
 
+/**
+ * Interface for SEO keyword generation
+ */
+export interface SeoGenerationParams {
+  content: string;
+}
+
+/**
+ * Interface for SEO keyword generation result
+ */
+export interface SeoGenerationResult {
+  keywords: string[];
+}
+
 export interface ContentGenerationParams {
   prompt: string;
   tone: string;
@@ -186,4 +200,85 @@ function getArchetypeDescription(archetype: string): string {
   };
   
   return descriptions[archetype] || "authentic and engaging";
+}
+
+/**
+ * Generates SEO keywords and hashtags based on content
+ * @param params Content parameters for SEO generation
+ * @returns List of generated keywords and hashtags
+ */
+export async function generateSeoKeywords(params: SeoGenerationParams): Promise<SeoGenerationResult> {
+  try {
+    const systemMessage = `
+You are an expert SEO specialist who can identify the most effective keywords and hashtags for content.
+
+TASK:
+- Analyze the content provided
+- Extract 10-15 relevant keywords and hashtags that would help the content rank well in search engines
+- Include a mix of primary keywords, long-tail keywords, and trending hashtags
+- Focus on keywords that have search volume but moderate competition
+- Format hashtags appropriately (include # for social media hashtags)
+
+RESPONSE FORMAT:
+- Return ONLY an array of strings, each containing a keyword or hashtag
+- Do not include explanations, introductions, or any other text
+- Ensure the response is valid JSON in the format: ["keyword1", "keyword2", "#hashtag1", etc.]
+    `;
+
+    // Truncate content if too long
+    const truncatedContent = params.content.length > 4000 
+      ? params.content.substring(0, 4000) + "..." 
+      : params.content;
+
+    // Request formatted as JSON for better parsing
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: truncatedContent }
+      ],
+      temperature: 0.5,
+      max_tokens: 800,
+      response_format: { type: "json_object" }
+    });
+
+    const content = response.choices[0].message.content || "{}";
+    let parsedResponse;
+    
+    try {
+      parsedResponse = JSON.parse(content);
+      // The response should have a "keywords" array property
+      // If it doesn't, we'll try to extract it from the response
+      if (!Array.isArray(parsedResponse.keywords) && !Array.isArray(parsedResponse)) {
+        // Fallback in case the AI didn't format as expected
+        const keywordsPattern = /\["([^"]+)"(?:,\s*"([^"]+)")*\]/;
+        const match = content.match(keywordsPattern);
+        if (match) {
+          const keywordsStr = match[0];
+          parsedResponse = { keywords: JSON.parse(keywordsStr) };
+        } else {
+          // If all else fails, extract words with # as hashtags
+          const hashtags = content.match(/#\w+/g) || [];
+          const keywords = content.match(/["']([^"']+)["']/g)?.map(k => k.replace(/["']/g, '')) || [];
+          parsedResponse = { keywords: [...hashtags, ...keywords].slice(0, 15) };
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing SEO keywords response:", error);
+      // Fallback to simple extraction if JSON parsing fails
+      const keywords = content.match(/["']([^"']+)["']/g)?.map(k => k.replace(/["']/g, '')) || [];
+      parsedResponse = { keywords };
+    }
+
+    return { 
+      keywords: Array.isArray(parsedResponse.keywords) 
+        ? parsedResponse.keywords 
+        : Array.isArray(parsedResponse) 
+          ? parsedResponse 
+          : ["content", "seo", "keywords"] // Fallback if nothing else works
+    };
+  } catch (error) {
+    console.error("Error generating SEO keywords:", error);
+    throw new Error("Failed to generate SEO keywords. Please try again later.");
+  }
 }

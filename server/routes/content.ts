@@ -1,6 +1,11 @@
 import { Router, Request, Response, Express } from "express";
 import { z } from "zod";
-import { ContentGenerationParams, generateContent } from "../services/openai";
+import { 
+  ContentGenerationParams, 
+  generateContent, 
+  SeoGenerationParams, 
+  generateSeoKeywords 
+} from "../services/openai";
 
 // Schema for content generation request
 const ContentGenerationRequestSchema = z.object({
@@ -22,6 +27,11 @@ const ContentGenerationRequestSchema = z.object({
  * Register content generation routes on the Express app
  * @param app Express application instance
  */
+// Schema for SEO keyword generation request
+const SeoGenerationRequestSchema = z.object({
+  content: z.string().min(1, "Content is required")
+});
+
 export function registerContentRoutes(app: Express) {
   /**
    * Generate content using OpenAI
@@ -79,6 +89,55 @@ export function registerContentRoutes(app: Express) {
       
       return res.status(500).json({
         error: "Content generation failed",
+        message: "An unknown error occurred"
+      });
+    }
+  });
+
+  /**
+   * Generate SEO keywords from content
+   * POST /api/generate-seo
+   */
+  app.post("/api/generate-seo", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = SeoGenerationRequestSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid request parameters",
+          details: validationResult.error.format()
+        });
+      }
+      
+      // Extract validated parameters
+      const params: SeoGenerationParams = validationResult.data;
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
+      }
+      
+      // Generate SEO keywords
+      const result = await generateSeoKeywords(params);
+      
+      // Return the generated keywords
+      return res.json(result);
+    } catch (error) {
+      console.error("SEO keyword generation error:", error);
+      
+      if (error instanceof Error) {
+        return res.status(500).json({
+          error: "SEO keyword generation failed",
+          message: error.message
+        });
+      }
+      
+      return res.status(500).json({
+        error: "SEO keyword generation failed",
         message: "An unknown error occurred"
       });
     }
