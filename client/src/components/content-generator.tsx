@@ -616,6 +616,13 @@ export default function ContentGenerator() {
                   <div className="bg-yellow-50 dark:bg-yellow-950 p-3 rounded-md border border-yellow-200 dark:border-yellow-800 text-sm">
                     <p className="font-bold mb-1 text-yellow-800 dark:text-yellow-400">IMPORTANT:</p>
                     <p>Our anti-AI detection system ensures your content is completely undetectable by third parties or Google as AI-written. This is a core feature of the WriteRIGHT system.</p>
+                    <div className="mt-2 pt-2 border-t border-yellow-200 dark:border-yellow-800">
+                      <p className="font-semibold text-yellow-700 dark:text-yellow-500 text-xs">Mode Selection:</p>
+                      <ul className="mt-1 space-y-1 list-disc list-inside text-xs">
+                        <li><span className="font-semibold">Speed Mode:</span> Faster generation with standard AI detection evasion (1 pass)</li>
+                        <li><span className="font-semibold">Undetectable Mode:</span> Maximum humanization with 3 processing passes for complete AI-detection evasion (takes 2-3x longer)</li>
+                      </ul>
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between pt-1 pb-2 px-2 border rounded-md">
