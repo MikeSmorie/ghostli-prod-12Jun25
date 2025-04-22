@@ -1,31 +1,40 @@
 import passport from "passport";
 import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
-import { type Express } from "express";
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { type Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import { users, insertUserSchema, type SelectUser } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
 
-const scryptAsync = promisify(scrypt);
+// JWT Configuration
+const JWT_SECRET = process.env.JWT_SECRET || "writeright-security-key";
+const JWT_EXPIRATION = '24h';
+
+// Bcrypt Configuration
+const SALT_ROUNDS = 10;
+
+// Authentication helpers
 const crypto = {
-  hash: async (password: string) => {
-    const salt = randomBytes(16).toString("hex");
-    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-    return `${buf.toString("hex")}.${salt}`;
+  hash: async (password: string): Promise<string> => {
+    return bcrypt.hash(password, SALT_ROUNDS);
   },
-  compare: async (suppliedPassword: string, storedPassword: string) => {
-    const [hashedPassword, salt] = storedPassword.split(".");
-    const hashedPasswordBuf = Buffer.from(hashedPassword, "hex");
-    const suppliedPasswordBuf = (await scryptAsync(
-      suppliedPassword,
-      salt,
-      64
-    )) as Buffer;
-    return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
+  compare: async (suppliedPassword: string, storedPassword: string): Promise<boolean> => {
+    return bcrypt.compare(suppliedPassword, storedPassword);
   },
+  generateToken: (user: { id: number; username: string; role: string }): string => {
+    return jwt.sign(
+      { id: user.id, username: user.username, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRATION }
+    );
+  },
+  verifyToken: (token: string): any => {
+    return jwt.verify(token, JWT_SECRET);
+  }
 };
 
 // extend express user object with our schema
@@ -34,6 +43,40 @@ declare global {
     interface User extends SelectUser { }
   }
 }
+
+// Middleware to authenticate with JWT
+export const authenticateJWT = (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('jwt', { session: false }, (err: Error, user: Express.User, info: any) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized: Invalid or expired token" });
+    }
+    req.user = user;
+    return next();
+  })(req, res, next);
+};
+
+// Middleware to require specific roles
+export const requireRole = (role: string) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized: Authentication required" });
+    }
+    
+    // Cast to our user type
+    const user = req.user as SelectUser;
+    
+    // Check if user has the required role
+    if (user.role !== role && 
+        !(role === 'admin' && user.role === 'supergod')) { // supergod has admin privileges
+      return res.status(403).json({ message: "Forbidden: Insufficient permissions" });
+    }
+    
+    next();
+  };
+};
 
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
@@ -58,6 +101,7 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Configure Local Strategy for traditional login
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -86,6 +130,33 @@ export function setupAuth(app: Express) {
         return done(err);
       }
     })
+  );
+
+  // Configure JWT Strategy for token-based authentication
+  passport.use(
+    new JwtStrategy(
+      {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        secretOrKey: JWT_SECRET
+      },
+      async (jwtPayload, done) => {
+        try {
+          const [user] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, jwtPayload.id))
+            .limit(1);
+
+          if (!user) {
+            return done(null, false, { message: "User not found" });
+          }
+
+          return done(null, user);
+        } catch (error) {
+          return done(error);
+        }
+      }
+    )
   );
 
   passport.serializeUser((user, done) => {
@@ -305,6 +376,13 @@ export function setupAuth(app: Express) {
         });
       }
 
+      // Generate JWT token
+      const token = crypto.generateToken({
+        id: user.id,
+        username: user.username,
+        role: user.role
+      });
+
       req.logIn(user, (err) => {
         if (err) {
           return res.status(500).json({
@@ -316,10 +394,55 @@ export function setupAuth(app: Express) {
         return res.json({
           message: "Login successful",
           user: { id: user.id, username: user.username, role: user.role },
+          token: token // Return the JWT token to the client
         });
       });
     };
     passport.authenticate("local", cb)(req, res, next);
+  });
+
+  // JWT token-based login route
+  app.post("/api/token", (req, res, next) => {
+    const result = insertUserSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        message: "Invalid input: " + result.error.issues.map(i => i.message).join(", ")
+      });
+    }
+
+    passport.authenticate("local", { session: false }, async (err: any, user: Express.User, info: IVerifyOptions) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Internal server error",
+          error: err.message
+        });
+      }
+
+      if (!user) {
+        return res.status(401).json({
+          message: info.message ?? "Authentication failed"
+        });
+      }
+
+      // Update last login timestamp
+      await db
+        .update(users)
+        .set({ lastLogin: new Date() })
+        .where(eq(users.id, user.id));
+
+      // Generate JWT token
+      const token = crypto.generateToken({
+        id: user.id,
+        username: user.username,
+        role: user.role
+      });
+
+      return res.json({
+        message: "Authentication successful",
+        user: { id: user.id, username: user.username, role: user.role },
+        token: token
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res) => {
@@ -341,5 +464,18 @@ export function setupAuth(app: Express) {
     }
 
     res.status(401).json({ message: "Not logged in" });
+  });
+  
+  // JWT-based protected user route
+  app.get("/api/jwt/user", authenticateJWT, (req, res) => {
+    return res.json(req.user);
+  });
+  
+  // Example of role-based protected route
+  app.get("/api/admin/protected", authenticateJWT, requireRole("admin"), (req, res) => {
+    return res.json({ 
+      message: "Admin access granted", 
+      user: req.user
+    });
   });
 }
