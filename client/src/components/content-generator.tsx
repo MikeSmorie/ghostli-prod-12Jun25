@@ -46,6 +46,12 @@ interface GenerationParams {
   addRhetoricalElements?: boolean;
   strictToneAdherence?: boolean;
   runSelfAnalysis?: boolean;
+  // Content specialization parameters
+  legalCompliance?: boolean;
+  technicalAccuracy?: boolean;
+  simplifyLanguage?: boolean;
+  inclusiveLanguage?: boolean;
+  addEmotionalImpact?: boolean;
   // Additional refinement options
   maxIterations?: number;
   wordCountTolerance?: number;
@@ -113,6 +119,13 @@ export default function ContentGenerator() {
   const [addRhetoricalElements, setAddRhetoricalElements] = useState(true);
   const [strictToneAdherence, setStrictToneAdherence] = useState(false);
   const [runSelfAnalysis, setRunSelfAnalysis] = useState(false);
+  
+  // Content specialization parameters
+  const [legalCompliance, setLegalCompliance] = useState(false);
+  const [technicalAccuracy, setTechnicalAccuracy] = useState(false);
+  const [simplifyLanguage, setSimplifyLanguage] = useState(false);
+  const [inclusiveLanguage, setInclusiveLanguage] = useState(false);
+  const [addEmotionalImpact, setAddEmotionalImpact] = useState(false);
   
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -390,6 +403,12 @@ export default function ContentGenerator() {
       addRhetoricalElements,
       strictToneAdherence,
       runSelfAnalysis,
+      // Include content specialization parameters
+      legalCompliance,
+      technicalAccuracy,
+      simplifyLanguage,
+      inclusiveLanguage,
+      addEmotionalImpact,
     };
     
     mutate(params);
@@ -513,6 +532,13 @@ export default function ContentGenerator() {
                       <SelectItem value="informative">Informative</SelectItem>
                       <SelectItem value="humorous">Humorous</SelectItem>
                       <SelectItem value="formal">Formal</SelectItem>
+                      <SelectItem value="polite">Polite</SelectItem>
+                      <SelectItem value="firm">Firm</SelectItem>
+                      <SelectItem value="legal">Legal</SelectItem>
+                      <SelectItem value="conversational">Conversational</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="compassionate">Compassionate</SelectItem>
+                      <SelectItem value="inspiring">Inspiring</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -868,6 +894,58 @@ export default function ContentGenerator() {
                       <div className="flex items-center space-x-2">
                         <Checkbox id="analysis" checked={runSelfAnalysis} onCheckedChange={(checked) => setRunSelfAnalysis(checked as boolean)} />
                         <Label htmlFor="analysis" className="text-sm">Run Self-Analysis</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content Specialization Controls */}
+                  <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-purple-800 dark:text-purple-400">Content Specialization</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-purple-600 dark:text-purple-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Content Specialization:</strong></p>
+                            <p className="mb-1">These options adapt your content for specific purposes and audiences.</p>
+                            <p className="mb-1"><strong>Legal Compliance:</strong> Ensure content adheres to legal standards and disclaimers.</p>
+                            <p className="mb-1"><strong>Technical Accuracy:</strong> Prioritize precision in technical or scientific content.</p>
+                            <p className="mb-1"><strong>Simplify Language:</strong> Make content more accessible with simpler language.</p>
+                            <p className="mb-1"><strong>Inclusive Language:</strong> Use diverse and inclusive terminology.</p>
+                            <p className="mb-1"><strong>Emotional Impact:</strong> Add compelling emotional elements to content.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="legal" checked={legalCompliance} onCheckedChange={(checked) => setLegalCompliance(checked as boolean)} />
+                        <Label htmlFor="legal" className="text-sm">Legal Compliance & Disclaimers</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="technical" checked={technicalAccuracy} onCheckedChange={(checked) => setTechnicalAccuracy(checked as boolean)} />
+                        <Label htmlFor="technical" className="text-sm">Technical Accuracy</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="simplify" checked={simplifyLanguage} onCheckedChange={(checked) => setSimplifyLanguage(checked as boolean)} />
+                        <Label htmlFor="simplify" className="text-sm">Simplify Language</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="inclusive" checked={inclusiveLanguage} onCheckedChange={(checked) => setInclusiveLanguage(checked as boolean)} />
+                        <Label htmlFor="inclusive" className="text-sm">Use Inclusive Language</Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="emotional" checked={addEmotionalImpact} onCheckedChange={(checked) => setAddEmotionalImpact(checked as boolean)} />
+                        <Label htmlFor="emotional" className="text-sm">Add Emotional Impact</Label>
                       </div>
                     </div>
                   </div>

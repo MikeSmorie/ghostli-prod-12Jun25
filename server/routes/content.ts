@@ -13,7 +13,9 @@ const ContentGenerationRequestSchema = z.object({
   tone: z.enum([
     "professional", "casual", "academic", 
     "enthusiastic", "authoritative", "persuasive", 
-    "informative", "humorous", "formal"
+    "informative", "humorous", "formal",
+    "polite", "firm", "legal", "conversational", 
+    "technical", "compassionate", "inspiring"
   ]),
   brandArchetype: z.enum([
     "sage", "hero", "outlaw", "explorer", 
@@ -37,6 +39,12 @@ const ContentGenerationRequestSchema = z.object({
   addRhetoricalElements: z.boolean().optional().default(true),
   strictToneAdherence: z.boolean().optional().default(false),
   runSelfAnalysis: z.boolean().optional().default(false),
+  // Content specialization parameters
+  legalCompliance: z.boolean().optional().default(false),
+  technicalAccuracy: z.boolean().optional().default(false),
+  simplifyLanguage: z.boolean().optional().default(false),
+  inclusiveLanguage: z.boolean().optional().default(false),
+  addEmotionalImpact: z.boolean().optional().default(false),
   // New refinement options
   maxIterations: z.number().int().min(1).max(10).optional().default(5),
   wordCountTolerance: z.number().min(0.01).max(0.5).optional().default(0.1),

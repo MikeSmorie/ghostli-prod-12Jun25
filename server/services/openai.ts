@@ -43,6 +43,12 @@ export interface ContentGenerationParams {
   addRhetoricalElements?: boolean;        // Whether to add rhetorical questions, analogies
   strictToneAdherence?: boolean;          // Whether to strictly adhere to selected tone throughout
   runSelfAnalysis?: boolean;              // Whether to run self-analysis for humanization
+  // Content specialization parameters
+  legalCompliance?: boolean;              // Whether to ensure legal compliance in content
+  technicalAccuracy?: boolean;            // Whether to prioritize technical accuracy
+  simplifyLanguage?: boolean;             // Whether to simplify complex language for accessibility
+  inclusiveLanguage?: boolean;            // Whether to use inclusive, diverse language
+  addEmotionalImpact?: boolean;           // Whether to enhance emotional impact of content
   // New refinement options
   maxIterations?: number;                 // Maximum number of refinement iterations
   wordCountTolerance?: number;            // Percentage tolerance for word count
