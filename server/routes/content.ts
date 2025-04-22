@@ -29,7 +29,11 @@ const ContentGenerationRequestSchema = z.object({
   // Additional generation options
   generateSEO: z.boolean().optional().default(true),
   generateHashtags: z.boolean().optional().default(true),
-  generateKeywords: z.boolean().optional().default(true)
+  generateKeywords: z.boolean().optional().default(true),
+  // New refinement options
+  maxIterations: z.number().int().min(1).max(10).optional().default(5),
+  wordCountTolerance: z.number().min(0.01).max(0.5).optional().default(0.1),
+  runAIDetectionTest: z.boolean().optional().default(false)
 });
 
 // Schema for SEO keyword generation request

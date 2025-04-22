@@ -123,7 +123,7 @@ async function simulateAIDetectionTest(content: string): Promise<{
   // For this simulation, we'll evaluate humanization factors in the content
   
   // Calculate various humanization factors
-  const typosAndGrammarRegex = /\b(?:teh|thier|thre|wich|alot|wiht|ahve|acn|adn|jsut)\b/gi;
+  const typosAndGrammarRegex = /(?:teh|thier|thre|wich|alot|ot he|wiht|ahve|acn|adn|fo r|nad|jsut)\b|(?:\b\w+(?:\s+\1\b)+)/gi;
   const selfCorrectionRegex = /\b(?:I mean|or rather|actually|on second thought|wait|hmm|come to think of it)\b/gi;
   const emotionalLanguageRegex = /\b(?:I feel|I think|personally|honestly|frankly|in my opinion|I believe|for me|frustrat(?:ing|ed)|excit(?:ing|ed)|annoy(?:ing|ed)|love[ds]?|hate[ds]?|amaz(?:ing|ed)|great|terrible|awful|wonder(?:ful|ed)|worr(?:ied|y|ies)|hope(?:ful|fully)?)\b/gi;
   const incompleteThoughtsRegex = /\.{3,}|\w+\.\.\./g;
