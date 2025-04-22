@@ -33,26 +33,48 @@ export function AIAssistant() {
     setIsLoading(true);
 
     try {
+      // Check for user authentication
+      if (!user || !user.id) {
+        throw new Error("You must be logged in to use the AI Assistant");
+      }
+
+      const requestBody = {
+        type: user.role === "admin" ? "admin" : "user",
+        query,
+        userId: user.id
+      };
+
+      console.log("AI Assistant Request:", requestBody);
+
       const res = await fetch("/api/ai/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: user?.role === "admin" ? "admin" : "user",
-          query,
-          userId: user?.id
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      // Check for HTTP errors
       if (!res.ok) {
-        throw new Error(await res.text());
+        const errorText = await res.text();
+        console.error("AI Assistant Error:", errorText);
+        throw new Error(errorText || "Failed to get response from AI assistant");
       }
 
-      const data = await res.json();
-      setResponse(data);
+      // Parse response data with error handling
+      const textData = await res.text();
+      
+      try {
+        const jsonData = JSON.parse(textData);
+        console.log("AI Assistant Response:", jsonData);
+        setResponse(jsonData);
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError, "Raw response:", textData);
+        throw new Error("Failed to parse AI assistant response");
+      }
     } catch (error) {
+      console.error("AI Assistant Error:", error);
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "AI Assistant Error",
         description: error instanceof Error ? error.message : "Failed to process query"
       });
     } finally {
