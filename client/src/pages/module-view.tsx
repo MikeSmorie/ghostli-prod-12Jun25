@@ -97,6 +97,10 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [typosPercentage, setTyposPercentage] = useState<number>(1.0);
   const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState<number>(1.0);
   const [humanMisErrorsPercentage, setHumanMisErrorsPercentage] = useState<number>(1.0);
+  // Additional generation options
+  const [generateSEO, setGenerateSEO] = useState<boolean>(true);
+  const [generateHashtags, setGenerateHashtags] = useState<boolean>(true);
+  const [generateKeywords, setGenerateKeywords] = useState<boolean>(true);
   
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -251,13 +255,17 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       const requestBody = {
         prompt: inputValue,
         tone: tone,
-        archetype: archetype,
-        targetWordCount: targetWordCount,
+        brandArchetype: archetype, // Fixed to match server schema name
+        wordCount: targetWordCount, // Fixed to match server schema name
         antiAIDetection: antiAIDetection,
         prioritizeUndetectable: prioritizeUndetectable,
         typosPercentage: antiAIDetection ? typosPercentage : 0,
         grammarMistakesPercentage: antiAIDetection ? grammarMistakesPercentage : 0,
-        humanMisErrorsPercentage: antiAIDetection ? humanMisErrorsPercentage : 0
+        humanMisErrorsPercentage: antiAIDetection ? humanMisErrorsPercentage : 0,
+        // Added additional generation options
+        generateSEO: generateSEO,
+        generateHashtags: generateHashtags,
+        generateKeywords: generateKeywords
       };
       
       const response = await fetch('/api/content/generate', {
@@ -280,8 +288,8 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       // Set metadata
       setGenerationMetadata({
         wordCount: data.metadata.wordCount,
-        iterationCount: data.metadata.iterationCount,
-        processingTimeMs: data.metadata.processingTimeMs
+        iterationCount: data.metadata.iterations, // Fixed to match server response field name
+        processingTimeMs: data.metadata.generationTime // Fixed to match server response field name
       });
       
       // Switch to output module
@@ -289,7 +297,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       
       toast({
         title: "Content generation successful",
-        description: `Generated ${data.metadata.wordCount} words in ${(data.metadata.processingTimeMs / 1000).toFixed(1)}s`,
+        description: `Generated ${data.metadata.wordCount} words in ${(data.metadata.generationTime / 1000).toFixed(1)}s`,
       });
     } catch (error) {
       toast({
@@ -787,6 +795,62 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Additional Generation Options */}
+                      <div className="p-3 mb-4 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center mb-2">
+                          <h3 className="text-sm font-bold text-blue-800 dark:text-blue-400">Additional Generation Options</h3>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <HelpCircleIcon className="h-4 w-4 ml-2 text-blue-600 dark:text-blue-500" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-md p-3">
+                                <p className="mb-1"><strong>Additional Generation Options:</strong></p>
+                                <p className="mb-1">These options allow you to generate supplementary content along with your main text.</p>
+                                <p className="mb-1"><strong>SEO:</strong> Generate search engine optimization suggestions tailored to your content.</p>
+                                <p className="mb-1"><strong>Hashtags:</strong> Generate relevant hashtags for social media promotion.</p>
+                                <p className="mb-1"><strong>Keywords:</strong> Generate a list of relevant keywords related to your content.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        
+                        <div className="space-y-2 mt-2">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="generateSEO"
+                              checked={generateSEO}
+                              onChange={(e) => setGenerateSEO(e.target.checked)}
+                              className="w-4 h-4 mr-2 rounded"
+                            />
+                            <label htmlFor="generateSEO" className="text-sm">Generate SEO Suggestions</label>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="generateHashtags"
+                              checked={generateHashtags}
+                              onChange={(e) => setGenerateHashtags(e.target.checked)}
+                              className="w-4 h-4 mr-2 rounded"
+                            />
+                            <label htmlFor="generateHashtags" className="text-sm">Generate Hashtags</label>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="generateKeywords"
+                              checked={generateKeywords}
+                              onChange={(e) => setGenerateKeywords(e.target.checked)}
+                              className="w-4 h-4 mr-2 rounded"
+                            />
+                            <label htmlFor="generateKeywords" className="text-sm">Generate Keywords</label>
+                          </div>
+                        </div>
+                      </div>
                       
                       {/* Humanization Parameters Section */}
                       {antiAIDetection && (
