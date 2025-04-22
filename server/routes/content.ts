@@ -72,7 +72,7 @@ export function registerContentRoutes(app: Express) {
       // Generate content
       const result = await generateContent(params);
       
-      // Return the generated content with metadata
+      // Return the generated content with metadata and any additional generated content
       return res.json({
         content: result.content,
         metadata: {
@@ -84,7 +84,11 @@ export function registerContentRoutes(app: Express) {
             completion: result.metadata.completionTokens,
             total: result.metadata.totalTokens
           }
-        }
+        },
+        // Include additional content if it was generated
+        ...(result.seo && { seo: result.seo }),
+        ...(result.hashtags && { hashtags: result.hashtags }),
+        ...(result.keywords && { keywords: result.keywords })
       });
     } catch (error) {
       console.error("Content generation error:", error);
