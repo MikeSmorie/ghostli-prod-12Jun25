@@ -214,18 +214,27 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
 
   // Simulate verification and save to localStorage
   const simulateVerification = () => {
-    // Save verification status and user data to localStorage
-    localStorage.setItem('user_email', email);
-    localStorage.setItem('user_phone', phoneNumber);
-    localStorage.setItem('user_verified', 'true');
-    localStorage.setItem('user_country', country);
-    
-    setShowVerificationDialog(false);
-    setIsVerified(true);
-    toast({
-      title: "Verification successful",
-      description: "Your account has been verified.",
-    });
+    try {
+      // Save verification status and user data to localStorage
+      localStorage.setItem('user_email', email);
+      localStorage.setItem('user_phone', phoneNumber);
+      localStorage.setItem('user_verified', 'true');
+      localStorage.setItem('user_country', country);
+      
+      setShowVerificationDialog(false);
+      setIsVerified(true);
+      toast({
+        title: "Verification successful",
+        description: "Your account has been verified.",
+      });
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast({
+        title: "Verification error",
+        description: "There was a problem verifying your account. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Process input and generate content
@@ -641,11 +650,19 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     )}
                   </div>
                   
-                  {isVerified && (
-                    <p className="text-green-600 text-sm">
-                      <CheckIcon className="h-4 w-4 inline mr-1" /> 
-                      Your contact information has been verified
-                    </p>
+                  {/* Verification Status Message */}
+                  {isVerified ? (
+                    <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-3 mt-2">
+                      <p className="text-green-600 dark:text-green-400 flex items-center">
+                        <CheckIcon className="h-4 w-4 mr-2" /> 
+                        Your contact information has been verified successfully
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 dark:text-gray-400 text-sm mt-2">
+                      <InfoIcon className="h-4 w-4 inline mr-1" />
+                      Please verify your contact information to continue
+                    </div>
                   )}
                 </div>
               </CardContent>
