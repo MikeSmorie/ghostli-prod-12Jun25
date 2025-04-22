@@ -18,6 +18,8 @@ import SubscriptionPage from "@/pages/subscriptions";
 import SubscriptionManager from "@/pages/subscription-manager";
 import SubscriptionFeatures from "@/pages/subscription-features";
 import SubscriptionManagement from "@/pages/subscription-management";
+import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
+import FeatureFlagsDemoPage from "@/pages/feature-flags-demo";
 import { useUser } from "@/hooks/use-user";
 import { Loader2, LogOut } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -163,6 +165,7 @@ function Router() {
         <Route path="/admin/logs" component={() => <ProtectedAdminRoute component={LogsDashboard} />} />
         <Route path="/admin/subscription-manager" component={() => <ProtectedAdminRoute component={SubscriptionManager} />} />
         <Route path="/admin/communications" component={() => <ProtectedAdminRoute component={AdminCommunications} />} />
+        <Route path="/admin/feature-flags" component={() => <ProtectedAdminRoute component={FeatureFlagsManagerPage} />} />
         
         {/* Supergod exclusive routes (high-security) */}
         <Route path="/supergod" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
@@ -175,6 +178,7 @@ function Router() {
         <Route path="/subscription" component={SubscriptionManagement} />
         <Route path="/subscription/plans" component={SubscriptionPlans} />
         <Route path="/subscription/features" component={SubscriptionFeatures} />
+        <Route path="/features-demo" component={FeatureFlagsDemoPage} />
         <Route component={NotFound} />
       </Switch>
 
