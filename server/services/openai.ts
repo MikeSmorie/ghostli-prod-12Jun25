@@ -33,6 +33,10 @@ export interface ContentGenerationParams {
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
   humanMisErrorsPercentage?: number;
+  // Additional generation options
+  generateSEO?: boolean;
+  generateHashtags?: boolean;
+  generateKeywords?: boolean;
 }
 
 export interface ContentGenerationResult {
@@ -46,6 +50,10 @@ export interface ContentGenerationResult {
     completionTokens: number;
     totalTokens: number;
   };
+  // Additional generated content (optional)
+  seo?: string[];
+  hashtags?: string[];
+  keywords?: string[];
 }
 
 /**
@@ -179,6 +187,68 @@ Make sure these changes feel natural within the flow of the text. Maintain the o
     
     const endTime = new Date();
     
+    // Generate additional content if requested
+    let seoSuggestions: string[] | undefined;
+    let hashtags: string[] | undefined;
+    let keywords: string[] | undefined;
+    
+    // Only generate these if requested to save API calls
+    if (params.generateSEO || params.generateHashtags || params.generateKeywords) {
+      try {
+        // Create a prompt for generating the additional content
+        const additionalPrompt = `Based on the following content, please generate:
+${params.generateSEO ? '1. 5-10 SEO suggestions to improve search engine ranking' : ''}
+${params.generateHashtags ? '2. 5-8 relevant hashtags for social media' : ''}
+${params.generateKeywords ? '3. 8-12 targeted keywords related to the content' : ''}
+
+Format your response as JSON with separate arrays for each requested element.
+For example: {"seo": ["suggestion1", "suggestion2"], "hashtags": ["#tag1", "#tag2"], "keywords": ["keyword1", "keyword2"]}
+
+Content to analyze:
+${finalContent.substring(0, 1500)}... [content truncated for brevity]`;
+
+        // Use a focused system message for this task
+        const additionalSystemMessage = `You are an SEO and content expert. Generate the requested elements based on the content. 
+Respond with a JSON object containing only the arrays requested. Do not include explanations or other text.`;
+
+        // Make the API call with JSON response format
+        const response = await openai.chat.completions.create({
+          model: MODEL,
+          messages: [
+            { role: "system", content: additionalSystemMessage },
+            { role: "user", content: additionalPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+          response_format: { type: "json_object" }
+        });
+
+        // Parse the JSON response
+        try {
+          const additionalContent = JSON.parse(response.choices[0].message.content || "{}");
+          
+          // Extract the arrays if they exist
+          if (params.generateSEO && Array.isArray(additionalContent.seo)) {
+            seoSuggestions = additionalContent.seo;
+          }
+          
+          if (params.generateHashtags && Array.isArray(additionalContent.hashtags)) {
+            hashtags = additionalContent.hashtags;
+          }
+          
+          if (params.generateKeywords && Array.isArray(additionalContent.keywords)) {
+            keywords = additionalContent.keywords;
+          }
+        } catch (error) {
+          console.error("Error parsing additional content:", error);
+          // If parsing fails, we'll return undefined for the requested arrays
+        }
+      } catch (error) {
+        console.error("Error generating additional content:", error);
+        // If API call fails, we'll return undefined for the requested arrays
+      }
+    }
+    
     // Return the result
     return {
       content: finalContent,
@@ -190,7 +260,11 @@ Make sure these changes feel natural within the flow of the text. Maintain the o
         promptTokens: usage?.prompt_tokens || 0,
         completionTokens: usage?.completion_tokens || 0,
         totalTokens: usage?.total_tokens || 0,
-      }
+      },
+      // Include additional content if it was generated
+      ...(seoSuggestions && { seo: seoSuggestions }),
+      ...(hashtags && { hashtags }),
+      ...(keywords && { keywords })
     };
   } catch (error) {
     console.error("Error generating content with OpenAI:", error);
@@ -257,6 +331,22 @@ ${humanizationInstructions}
     ) 
     : '';
   
+  // Additional generation options
+  const additionalOptions = [];
+  if (params.generateSEO) additionalOptions.push('SEO suggestions');
+  if (params.generateHashtags) additionalOptions.push('hashtags');
+  if (params.generateKeywords) additionalOptions.push('keywords');
+  
+  // Build additional generation instructions
+  const additionalGeneration = additionalOptions.length > 0 ? `
+ADDITIONAL GENERATION OPTIONS:
+${params.generateSEO ? '- Generate 5-10 SEO suggestions to help with search engine ranking' : ''}
+${params.generateHashtags ? '- Generate 5-8 relevant hashtags for social media sharing' : ''}
+${params.generateKeywords ? '- Generate 8-12 targeted keywords related to the content' : ''}
+
+Include these additional elements in a separate section at the end of your response, clearly labeled and formatted.
+` : '';
+
   return `
 You are a professional content creator with expertise in creating high-quality, engaging content.
 
@@ -270,6 +360,7 @@ CONTENT REQUIREMENTS:
 - Ensure content is factually accurate and appropriately researched
 - Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
 ${antiDetectionGuidance}
+${additionalGeneration}
 CONTENT STRUCTURE:
 - Include a compelling headline/title
 - Organize with clear sections and subheadings where appropriate

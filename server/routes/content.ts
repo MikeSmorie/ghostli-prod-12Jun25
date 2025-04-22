@@ -25,7 +25,11 @@ const ContentGenerationRequestSchema = z.object({
   // Humanization parameters
   typosPercentage: z.number().min(0).max(5).optional().default(1.0),
   grammarMistakesPercentage: z.number().min(0).max(5).optional().default(1.0),
-  humanMisErrorsPercentage: z.number().min(0).max(5).optional().default(1.0)
+  humanMisErrorsPercentage: z.number().min(0).max(5).optional().default(1.0),
+  // Additional generation options
+  generateSEO: z.boolean().optional().default(true),
+  generateHashtags: z.boolean().optional().default(true),
+  generateKeywords: z.boolean().optional().default(true)
 });
 
 /**
