@@ -17,26 +17,32 @@ export default function AppCentral() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-col gap-6">
-        <div className="flex justify-end">
+      <div className="section">
+        <h1>Application Modules</h1>
+        
+        <div className="instruction">
+          Select a module below to view its details and functionality.
+        </div>
+
+        <div className="flex justify-end my-4">
           <Button 
-            variant="outline" 
+            className="btn-primary"
             onClick={() => setLocation("/subscription")}
-            className="text-sm"
           >
             Manage Subscription
           </Button>
         </div>
 
-        <div className="w-64">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           {modules.map((module) => (
             <Card 
               key={module.id}
-              className="mb-2 hover:shadow-lg transition-shadow cursor-pointer"
+              className="hover:shadow-lg transition-shadow cursor-pointer bg-white border border-gray-200"
               onClick={() => setLocation(`/module/${module.id}`)}
             >
-              <div className="p-4">
-                <span className="text-lg">{module.name}</span>
+              <div className="p-5">
+                <h3 className="text-lg w-full text-center">{module.name}</h3>
+                <p className="mt-2 text-sm text-gray-600">Click to access module functionality</p>
               </div>
             </Card>
           ))}
