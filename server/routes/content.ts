@@ -21,7 +21,11 @@ const ContentGenerationRequestSchema = z.object({
   ]),
   wordCount: z.number().int().min(50).max(5000),
   antiAIDetection: z.boolean().default(false),
-  prioritizeUndetectable: z.boolean().optional().default(true)
+  prioritizeUndetectable: z.boolean().optional().default(true),
+  // Humanization parameters
+  typosPercentage: z.number().min(0).max(5).optional().default(1.0),
+  grammarMistakesPercentage: z.number().min(0).max(5).optional().default(1.0),
+  humanMisErrorsPercentage: z.number().min(0).max(5).optional().default(1.0)
 });
 
 /**

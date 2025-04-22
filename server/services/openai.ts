@@ -90,10 +90,27 @@ export async function generateContent(params: ContentGenerationParams): Promise<
 
     // Apply anti-AI detection treatment if requested
     if (params.antiAIDetection) {
+      // Get humanization parameters with defaults if not provided
+      const typosPercentage = params.typosPercentage !== undefined ? params.typosPercentage : 1.0;
+      const grammarMistakesPercentage = params.grammarMistakesPercentage !== undefined ? params.grammarMistakesPercentage : 1.0;
+      const humanMisErrorsPercentage = params.humanMisErrorsPercentage !== undefined ? params.humanMisErrorsPercentage : 1.0;
+      
       // Define the anti-AI prompt based on prioritizeUndetectable parameter
       let antiAIPrompt = params.prioritizeUndetectable 
-        ? "Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. Include occasional false starts, self-corrections, and emotionally charged language. Don't change the meaning or core message:"
-        : "Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent. Use more varied sentence structures and occasionally imperfect grammar patterns that humans typically use:";
+        ? `Rewrite the following content to make it completely undetectable by AI detection tools. Focus on maximum humanization over speed. 
+Add variations in sentence structure, use imperfect grammar occasionally, vary vocabulary significantly, and use more informal language where appropriate. 
+Include occasional false starts, self-corrections, and emotionally charged language. 
+Apply the following humanization parameters precisely:
+- Typos: ${typosPercentage.toFixed(1)}% (spelling mistakes and typographical errors)
+- Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% (minor grammatical issues like missing commas, wrong tense)
+- Human Mis-errors: ${humanMisErrorsPercentage.toFixed(1)}% (natural inconsistencies like punctuation variations or word choice errors)
+Don't change the meaning or core message:`
+        : `Rewrite the following content to make it less detectable by AI detection tools without changing the meaning or intent. 
+Use more varied sentence structures and occasionally imperfect grammar patterns that humans typically use.
+Apply the following humanization parameters precisely:
+- Typos: ${typosPercentage.toFixed(1)}% (spelling mistakes and typographical errors)
+- Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% (minor grammatical issues like missing commas, wrong tense)
+- Human Mis-errors: ${humanMisErrorsPercentage.toFixed(1)}% (natural inconsistencies like punctuation variations or word choice errors)`;
       
       // Use higher temperature for humanization to increase variability
       const humanizationTemperature = params.prioritizeUndetectable ? 0.85 : 0.75;
@@ -108,7 +125,19 @@ export async function generateContent(params: ContentGenerationParams): Promise<
       
       // If we're prioritizing undetectability, make an additional pass with more advanced techniques
       if (params.prioritizeUndetectable) {
-        const secondPassPrompt = "This content still has some AI-detection patterns. Apply a second humanization pass focusing on adding narrative inconsistencies, personal anecdotes, occasional minor typos (like 'teh' for 'the'), and more colloquial language. Add rhetorical questions, thinking evolution markers like 'Actually...' or 'On second thought...', and some emotional reactions. Make it extremely difficult for any AI detector to recognize this as AI-generated:";
+        // Get humanization parameters with defaults if not provided
+        const typosPercentage = params.typosPercentage !== undefined ? params.typosPercentage : 1.0;
+        const grammarMistakesPercentage = params.grammarMistakesPercentage !== undefined ? params.grammarMistakesPercentage : 1.0;
+        const humanMisErrorsPercentage = params.humanMisErrorsPercentage !== undefined ? params.humanMisErrorsPercentage : 1.0;
+        
+        // Second pass with humanization parameters explicitly specified
+        const secondPassPrompt = `This content still has some AI-detection patterns. Apply a second humanization pass with the following specific parameters:
+
+1. Typos: ${typosPercentage.toFixed(1)}% - Add spelling mistakes and typographical errors at this exact rate (e.g., 'teh' for 'the', 'thier' for 'their')
+2. Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% - Add minor grammatical issues like missing commas, wrong tense, subject-verb disagreement at this rate
+3. Human Mis-errors: ${humanMisErrorsPercentage.toFixed(1)}% - Add natural inconsistencies like punctuation variations, occasional word choice errors, or repeated words at this rate
+
+Also add narrative inconsistencies, personal anecdotes, and more colloquial language. Add rhetorical questions, thinking evolution markers like 'Actually...' or 'On second thought...', and some emotional reactions. Make it extremely difficult for any AI detector to recognize this as AI-generated:`;
         
         // Use even higher temperature for the second pass to maximize unpredictability
         const { content: deeplyHumanizedContent } = await generateWithOpenAI(
@@ -120,7 +149,19 @@ export async function generateContent(params: ContentGenerationParams): Promise<
         iterations++;
         
         // For maximum undetectability, apply a third pass with very specific human patterns
-        const thirdPassPrompt = "For this final pass, add these very specific human writing patterns to make the content completely undetectable by AI tools: 1) Add at least one incomplete sentence or thought that trails off with '...', 2) Include at least one place where you correct a previous statement with 'or rather' or 'I mean', 3) Use at least one intensifier like 'really' or 'very' that technically could be removed, 4) Add at least one brief personal opinion or aside in parentheses, and 5) Include one minor numerical inconsistency typical of human error (like mentioning 'three options' but listing four). Make these changes feel natural within the flow:";
+        // Adjust the third pass based on humanization parameter intensity
+        const patternIntensity = Math.max(typosPercentage, grammarMistakesPercentage, humanMisErrorsPercentage);
+        const patternCount = 1 + Math.floor(patternIntensity); // More patterns for higher humanization settings
+        
+        const thirdPassPrompt = `For this final pass, add these very specific human writing patterns to make the content completely undetectable by AI tools (introduce approximately ${patternCount} of each type):
+
+1) Add approximately ${patternCount} incomplete sentence(s) or thought(s) that trail off with '...'
+2) Include approximately ${patternCount} place(s) where you correct a previous statement with 'or rather' or 'I mean'
+3) Use approximately ${patternCount} intensifier(s) like 'really' or 'very' that technically could be removed
+4) Add approximately ${patternCount} brief personal opinion(s) or aside(s) in parentheses
+5) Include approximately ${patternCount} minor numerical inconsistency(/ies) typical of human error (like mentioning 'three options' but listing four)
+
+Make sure these changes feel natural within the flow of the text. Maintain the overall percentage of errors at: Typos ${typosPercentage.toFixed(1)}%, Grammar Mistakes ${grammarMistakesPercentage.toFixed(1)}%, Human Mis-errors ${humanMisErrorsPercentage.toFixed(1)}%:`;
         
         // Use maximum temperature for the final pass
         const { content: finalHumanizedContent } = await generateWithOpenAI(
@@ -166,6 +207,19 @@ function constructSystemMessage(params: ContentGenerationParams): string {
   const toneDescription = getToneDescription(params.tone);
   const archetypeDescription = getArchetypeDescription(params.brandArchetype);
   
+  // Get humanization parameters with defaults if not provided
+  const typosPercentage = params.typosPercentage !== undefined ? params.typosPercentage : 1.0;
+  const grammarMistakesPercentage = params.grammarMistakesPercentage !== undefined ? params.grammarMistakesPercentage : 1.0;
+  const humanMisErrorsPercentage = params.humanMisErrorsPercentage !== undefined ? params.humanMisErrorsPercentage : 1.0;
+  
+  // Build humanization instructions based on the parameters
+  const humanizationInstructions = params.antiAIDetection ? `
+HUMANIZATION PARAMETERS:
+- Typos: ${typosPercentage.toFixed(1)}% (Add spelling mistakes and typographical errors at this rate)
+- Grammar Mistakes: ${grammarMistakesPercentage.toFixed(1)}% (Add minor grammatical issues like missing commas, wrong tense, etc. at this rate)
+- Human Mis-errors: ${humanMisErrorsPercentage.toFixed(1)}% (Add natural inconsistencies like punctuation variations or word choice errors at this rate)
+` : '';
+
   // Additional anti-detection guidance based on prioritizeUndetectable setting
   const antiDetectionGuidance = params.antiAIDetection 
     ? (params.prioritizeUndetectable 
@@ -187,6 +241,7 @@ ADVANCED ANTI-DETECTION PRIORITY GUIDELINES:
 - Insert rhetorical questions and self-answers
 - Include conversational hedging (e.g., "perhaps", "it seems to me")
 - Add thinking evolution markers (e.g., "On second thought", "Actually")
+${humanizationInstructions}
 `
       : `
 STANDARD ANTI-DETECTION GUIDELINES:
@@ -197,6 +252,7 @@ STANDARD ANTI-DETECTION GUIDELINES:
 - Include occasional opinion statements and personal perspectives
 - Use varied transition words between paragraphs
 - Balance clarity with natural language flow
+${humanizationInstructions}
 `
     ) 
     : '';
