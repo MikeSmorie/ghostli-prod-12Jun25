@@ -90,7 +90,13 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [inputValue, setInputValue] = useState("");
   const [tone, setTone] = useState<string>("");
   const [archetype, setArchetype] = useState<string>("");
-  const [targetWordCount, setTargetWordCount] = useState<number>(500);
+  const [targetWordCount, setTargetWordCount] = useState<number>(1000);
+  // Anti-AI Detection and humanization parameters
+  const [antiAIDetection, setAntiAIDetection] = useState<boolean>(true);
+  const [prioritizeUndetectable, setPrioritizeUndetectable] = useState<boolean>(false);
+  const [typosPercentage, setTyposPercentage] = useState<number>(1.0);
+  const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState<number>(1.0);
+  const [humanMisErrorsPercentage, setHumanMisErrorsPercentage] = useState<number>(1.0);
   
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -246,7 +252,12 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
         prompt: inputValue,
         tone: tone,
         archetype: archetype,
-        targetWordCount: targetWordCount
+        targetWordCount: targetWordCount,
+        antiAIDetection: antiAIDetection,
+        prioritizeUndetectable: prioritizeUndetectable,
+        typosPercentage: antiAIDetection ? typosPercentage : 0,
+        grammarMistakesPercentage: antiAIDetection ? grammarMistakesPercentage : 0,
+        humanMisErrorsPercentage: antiAIDetection ? humanMisErrorsPercentage : 0
       };
       
       const response = await fetch('/api/content/generate', {
