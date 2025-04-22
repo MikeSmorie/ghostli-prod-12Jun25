@@ -38,6 +38,8 @@ import {
   ArrowLeftIcon,
   PencilIcon,
   SaveIcon,
+  ClockIcon,
+  RefreshCwIcon,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from 'react-phone-input-2';
@@ -613,6 +615,52 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     </Select>
                   </div>
                   
+                  {/* Word Count Input */}
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <label className="font-medium">Target Word Count</label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircleIcon className="h-4 w-4 ml-2 text-gray-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Specify the approximate number of words you want in your generated content (50-5000).</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="flex gap-3 items-center">
+                      <Input
+                        type="number"
+                        min={50}
+                        max={5000}
+                        value={targetWordCount}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (!isNaN(value) && value >= 50 && value <= 5000) {
+                            setTargetWordCount(value);
+                          }
+                        }}
+                        className="w-32"
+                      />
+                      <div className="flex-1">
+                        <input
+                          type="range"
+                          min={50}
+                          max={5000}
+                          step={50}
+                          value={targetWordCount}
+                          onChange={(e) => setTargetWordCount(parseInt(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                        />
+                      </div>
+                      <div className="w-24 text-sm text-gray-500 dark:text-gray-400">
+                        {targetWordCount} words
+                      </div>
+                    </div>
+                  </div>
+                  
                   {/* Input Text Area with resizing handle */}
                   <div>
                     <div className="flex items-center mb-1">
@@ -653,20 +701,24 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                     </div>
                     <div className="mt-4 flex gap-3">
                       <Button 
-                        onClick={() => {
-                          processInput();
-                          if (inputValue.trim()) {
-                            setActiveModule('output');
-                          }
-                        }}
+                        onClick={processInput}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={isGenerating}
                       >
-                        Generate Content
+                        {isGenerating ? (
+                          <>
+                            <RefreshCwIcon className="h-4 w-4 mr-2 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>Generate Content</>
+                        )}
                       </Button>
                       
                       <Button 
                         variant="outline" 
                         onClick={() => setActiveModule('verification')}
+                        disabled={isGenerating}
                       >
                         <ArrowLeftIcon className="h-4 w-4 mr-2" />
                         Back to Verification
@@ -683,6 +735,30 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
             <Card className="mb-8">
               <CardContent className="pt-6">
                 <h3 className="text-xl font-semibold mb-4">Generated Content</h3>
+                
+                {/* Metadata Display */}
+                {generationMetadata && (
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-md p-3 mb-4 flex flex-wrap gap-4">
+                    <div className="flex items-center">
+                      <ClockIcon className="h-4 w-4 mr-2 text-blue-500" />
+                      <span className="text-sm">
+                        Generated in <strong>{(generationMetadata.processingTimeMs / 1000).toFixed(1)}s</strong>
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <FileTextIcon className="h-4 w-4 mr-2 text-green-500" />
+                      <span className="text-sm">
+                        <strong>{generationMetadata.wordCount}</strong> words
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <RefreshCwIcon className="h-4 w-4 mr-2 text-purple-500" />
+                      <span className="text-sm">
+                        <strong>{generationMetadata.iterationCount}</strong> refinement iterations
+                      </span>
+                    </div>
+                  </div>
+                )}
                 
                 <div className={`border p-4 rounded-md mb-6 min-h-40 ${
                   isDarkMode 
