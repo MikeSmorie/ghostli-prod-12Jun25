@@ -23,6 +23,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { WriteInMyStyle } from "./write-in-my-style";
 
 // Types
 interface GenerationParams {
