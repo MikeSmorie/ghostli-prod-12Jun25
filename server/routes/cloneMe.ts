@@ -63,8 +63,8 @@ async function analyzeEssayStyle(
     });
 
     // Parse the response
-    const content = response.choices[0].message.content || "{}";
-    return JSON.parse(content) as Record<string, any>;
+    const responseContent = response.choices[0].message.content || "{}";
+    return JSON.parse(responseContent) as Record<string, any>;
   } catch (error) {
     console.error("Error analyzing essay style:", error);
     // Return a basic analysis object in case of API error
