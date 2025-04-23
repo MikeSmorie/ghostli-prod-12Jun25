@@ -394,6 +394,8 @@ export default function ContentGenerator() {
       wordCount,
       antiAIDetection,
       prioritizeUndetectable,
+      // Include "Write in My Style" option
+      usePersonalStyle,
       // Include humanization parameters
       typosPercentage,
       grammarMistakesPercentage,
@@ -496,12 +498,48 @@ export default function ContentGenerator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Write in My Style Banner */}
+      <div className="mb-4 p-4 bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-950/50 dark:to-blue-950/50 rounded-lg border border-purple-200 dark:border-purple-800 flex items-center justify-between shadow-sm">
+        <div className="flex items-center">
+          <span className="text-lg font-bold text-purple-900 dark:text-purple-300 mr-2">Write in My Style</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help">
+                  <AlertTriangle className="h-4 w-4 text-purple-700 dark:text-purple-400" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[350px] p-3">
+                <p className="font-bold mb-1">Write in My Style:</p>
+                <p className="mb-2">This feature uses your submitted essays to generate content that matches your unique writing style.</p>
+                <p className="mb-1">To use this feature:</p>
+                <ol className="list-decimal pl-5 space-y-1">
+                  <li>First submit 3+ essays in the "Clone Me" section</li>
+                  <li>Generate your writing style profile</li>
+                  <li>Toggle this option ON to write new content in your personal style</li>
+                </ol>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className={!usePersonalStyle ? "font-medium" : "text-gray-500"}>Generic Content</span>
+          <Switch
+            id="usePersonalStyle"
+            checked={usePersonalStyle}
+            onCheckedChange={setUsePersonalStyle}
+            className="data-[state=checked]:bg-purple-700"
+          />
+          <span className={usePersonalStyle ? "font-medium" : "text-gray-500"}>My Style</span>
+        </div>
+      </div>
+      
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {/* Left Column - Input Parameters */}
-            <div className="md:col-span-1 space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="prompt">What would you like me to write about?</Label>
                 <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
