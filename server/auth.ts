@@ -357,9 +357,17 @@ export function setupAuth(app: Express) {
         console.log("[DEBUG] Current user role:", newUser.role);
         console.log("[DEBUG] Super-God privileges unlocked");
         
+        // Generate JWT token
+        const token = crypto.generateToken({
+          id: newUser.id,
+          username: newUser.username,
+          role: newUser.role
+        });
+        
         return res.json({
           message: "Super-God registration successful",
           user: { id: newUser.id, username: newUser.username, role: newUser.role },
+          token // Return the JWT token to the client
         });
       });
     } catch (error: any) {
@@ -475,10 +483,43 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    // First check session-based authentication
     if (req.isAuthenticated()) {
       return res.json(req.user);
     }
+    
+    // Then try JWT authentication from Authorization header
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1]; // Bearer TOKEN
+        const decoded = crypto.verifyToken(token);
+        
+        if (decoded && decoded.id) {
+          // Get fresh user data from DB
+          db.select()
+            .from(users)
+            .where(eq(users.id, decoded.id))
+            .limit(1)
+            .then(([user]) => {
+              if (user) {
+                return res.json(user);
+              } else {
+                return res.status(401).json({ message: "Invalid user token" });
+              }
+            })
+            .catch(err => {
+              console.error("DB error during JWT auth:", err);
+              return res.status(500).json({ message: "Database error" });
+            });
+          return; // End response here as it will be handled by the promise
+        }
+      } catch (err) {
+        console.error("JWT verification error:", err);
+      }
+    }
 
+    // No valid authentication found
     res.status(401).json({ message: "Not logged in" });
   });
   
