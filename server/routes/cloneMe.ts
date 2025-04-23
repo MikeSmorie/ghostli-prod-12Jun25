@@ -521,6 +521,65 @@ export function registerCloneMeRoutes(app: Express): void {
   });
 
   /**
+   * Update an essay's metadata
+   * PATCH /api/clone-me/essays/:id
+   */
+  app.patch("/api/clone-me/essays/:id", authenticateJWT, checkCloneMeAccess, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const essayId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      if (isNaN(essayId)) {
+        return res.status(400).json({ error: "Invalid essay ID" });
+      }
+      
+      // Validate the request body has at least one valid field to update
+      const { tone } = req.body;
+      
+      if (!tone) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      // Check if the essay exists and belongs to the user
+      const [existingEssay] = await db
+        .select()
+        .from(userEssays)
+        .where(and(
+          eq(userEssays.id, essayId),
+          eq(userEssays.userId, userId)
+        ))
+        .execute();
+      
+      if (!existingEssay) {
+        return res.status(404).json({ error: "Essay not found" });
+      }
+      
+      // Update the essay
+      const [updatedEssay] = await db
+        .update(userEssays)
+        .set({ tone })
+        .where(and(
+          eq(userEssays.id, essayId),
+          eq(userEssays.userId, userId)
+        ))
+        .returning()
+        .execute();
+      
+      res.json(updatedEssay);
+    } catch (error) {
+      console.error("Error updating essay:", error);
+      res.status(500).json({
+        error: "Failed to update essay",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  /**
    * Delete an essay
    * DELETE /api/clone-me/essays/:id
    */

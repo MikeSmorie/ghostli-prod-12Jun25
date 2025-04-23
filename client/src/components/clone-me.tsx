@@ -174,7 +174,169 @@ export default function CloneMe() {
   const [contentRating, setContentRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
   
-  // References
+  // Essay Viewer Content Component
+type EssayViewerContentProps = {
+  essayId: number;
+};
+
+function EssayViewerContent({ essayId }: EssayViewerContentProps) {
+  const [editMode, setEditMode] = useState(false);
+  const [editTone, setEditTone] = useState("");
+  const { toast } = useToast();
+  
+  // Fetch the full essay content
+  const { 
+    data: essay, 
+    isLoading,
+    isError
+  } = useQuery({
+    queryKey: [`/api/clone-me/essays/${essayId}`],
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/clone-me/essays/${essayId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch essay');
+      }
+      return response.json();
+    },
+  });
+
+  // Update essay mutation
+  const updateEssayMutation = useMutation({
+    mutationFn: async (data: { tone: string }) => {
+      const response = await apiRequest('PATCH', `/api/clone-me/essays/${essayId}`, data);
+      if (!response.ok) {
+        throw new Error('Failed to update essay');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ 
+        title: "Essay updated",
+        description: "The essay tone has been successfully updated."
+      });
+      setEditMode(false);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/clone-me/essays/${essayId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/clone-me/essays'] });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Update failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Start edit mode with current tone
+  const handleStartEdit = () => {
+    if (essay) {
+      setEditTone(essay.tone);
+      setEditMode(true);
+    }
+  };
+
+  // Save changes
+  const handleSaveChanges = () => {
+    updateEssayMutation.mutate({ tone: editTone });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isError || !essay) {
+    return (
+      <div className="w-full py-4 text-center text-destructive">
+        <p>Failed to load essay content. Please try again.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full flex flex-col">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          {editMode ? (
+            <Select value={editTone} onValueChange={setEditTone}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select tone" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="conversational">Conversational</SelectItem>
+                <SelectItem value="academic">Academic</SelectItem>
+                <SelectItem value="enthusiastic">Enthusiastic</SelectItem>
+                <SelectItem value="persuasive">Persuasive</SelectItem>
+                <SelectItem value="informative">Informative</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Badge>{essay.tone}</Badge>
+          )}
+          <span className="text-sm">{essay.wordCount} words</span>
+        </div>
+        <div>
+          {editMode ? (
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setEditMode(false)}
+                disabled={updateEssayMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleSaveChanges}
+                disabled={updateEssayMutation.isPending}
+              >
+                {updateEssayMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                Save
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={handleStartEdit}>
+              Edit Tone
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto mt-2">
+        <div className="prose dark:prose-invert max-w-none">
+          {essay.content.split('\n').map((paragraph, idx) => (
+            <p key={idx}>{paragraph}</p>
+          ))}
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <Button 
+          variant="outline"
+          onClick={() => {
+            navigator.clipboard.writeText(essay.content);
+            toast({
+              title: "Copied to clipboard",
+              description: "Essay content has been copied to clipboard"
+            });
+          }}
+        >
+          <Copy className="h-4 w-4 mr-2" />
+          Copy
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// References
   const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -1346,16 +1508,12 @@ export default function CloneMe() {
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-                            {({ close }) => (
-                              <>
-                                <DialogHeader>
-                                  <DialogTitle>{essay.title}</DialogTitle>
-                                  <DialogDescription className="flex items-center gap-2">
-                                    <EssayViewerContent essayId={essay.id} />
-                                  </DialogDescription>
-                                </DialogHeader>
-                              </>
-                            )}
+                            <DialogHeader>
+                              <DialogTitle>{essay.title}</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex-1 overflow-y-auto mt-4">
+                              <EssayViewerContent essayId={essay.id} />
+                            </div>
                           </DialogContent>
                         </Dialog>
                       </div>
