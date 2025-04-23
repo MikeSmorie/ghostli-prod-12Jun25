@@ -28,8 +28,10 @@ import {
   StarHalf,
   Sparkles,
   File,
+  Pencil,
+  MoreHorizontal,
   Trash,
-  MoreHorizontal
+  Eye
 } from "lucide-react";
 import { 
   Tooltip,
