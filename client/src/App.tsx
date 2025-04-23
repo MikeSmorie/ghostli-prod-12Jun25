@@ -137,7 +137,10 @@ function Router() {
         <div className="container flex h-16 items-center px-4">
           <NavigationControls />
           <div className="flex items-center gap-4 ml-auto">
-            <AIAssistant />
+            <div className="flex items-center gap-2">
+              <AIAssistant />
+              <span className="text-sm font-medium hidden md:inline">AI Assistant</span>
+            </div>
             <span className="text-sm font-medium">
               {user.username}
             </span>

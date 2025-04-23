@@ -115,8 +115,9 @@ export function AIAssistant() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
+        <Button variant="outline" size="icon" className="h-8 w-8 relative" aria-label="AI Assistant">
           {user?.role === "admin" ? <Sparkles className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+          <span className="absolute -top-1 -right-1 bg-blue-500 rounded-full w-2 h-2"></span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
