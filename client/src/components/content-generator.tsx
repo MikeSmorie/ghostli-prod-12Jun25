@@ -506,11 +506,11 @@ export default function ContentGenerator() {
         setUsePersonalStyle={setUsePersonalStyle}
       />
       
-      <Card>
+      <Card className="w-full">
         <CardContent className="pt-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column - Input Parameters */}
-            <div className="lg:w-1/3 space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="prompt">What would you like me to write about?</Label>
                 <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
@@ -984,7 +984,7 @@ export default function ContentGenerator() {
             </div>
             
             {/* Right Column - Generated Content */}
-            <div className="lg:w-2/3">
+            <div className="lg:col-span-2">
               {isLoading ? (
                 <div className="h-full flex flex-col items-center justify-center space-y-4 p-8">
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
