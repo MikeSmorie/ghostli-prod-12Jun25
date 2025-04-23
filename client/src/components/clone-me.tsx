@@ -1346,24 +1346,16 @@ export default function CloneMe() {
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-                            <DialogHeader>
-                              <DialogTitle>{essay.title}</DialogTitle>
-                              <DialogDescription className="flex items-center gap-2">
-                                <Badge>{essay.tone}</Badge>
-                                <span className="text-sm">{essay.wordCount} words</span>
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto mt-4">
-                              {/* This would display the actual essay content */}
-                              <div className="prose dark:prose-invert max-w-none">
-                                <p>Essay content would be displayed here.</p>
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline">
-                                Download
-                              </Button>
-                            </DialogFooter>
+                            {({ close }) => (
+                              <>
+                                <DialogHeader>
+                                  <DialogTitle>{essay.title}</DialogTitle>
+                                  <DialogDescription className="flex items-center gap-2">
+                                    <EssayViewerContent essayId={essay.id} />
+                                  </DialogDescription>
+                                </DialogHeader>
+                              </>
+                            )}
                           </DialogContent>
                         </Dialog>
                       </div>
