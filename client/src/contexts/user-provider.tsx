@@ -52,14 +52,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
       
       const userData = await response.json();
-      setUser(userData);
+      
+      // Store the JWT token in localStorage for future API requests
+      if (userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+      }
+      
+      setUser(userData.user || userData);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.username}!`
+        description: `Welcome back, ${userData.user?.username || userData.username}!`
       });
       
-      return { ok: true, message: 'Login successful', user: userData };
+      return { ok: true, message: 'Login successful', user: userData.user || userData };
     } catch (err) {
       setError(err as Error);
       console.error("Login error:", err);
@@ -86,15 +92,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: errorData.message || 'Registration failed' };
       }
       
-      const newUser = await response.json();
-      setUser(newUser);
+      const userData = await response.json();
+      
+      // Store the JWT token in localStorage for future API requests
+      if (userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+      }
+      
+      setUser(userData.user || userData);
       
       toast({
         title: "Registration successful",
-        description: `Welcome, ${newUser.username}!`
+        description: `Welcome, ${userData.user?.username || userData.username}!`
       });
       
-      return { ok: true, message: 'Registration successful', user: newUser };
+      return { ok: true, message: 'Registration successful', user: userData.user || userData };
     } catch (err) {
       setError(err as Error);
       console.error("Registration error:", err);

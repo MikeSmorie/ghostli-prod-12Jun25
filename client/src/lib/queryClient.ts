@@ -22,6 +22,15 @@ export async function apiRequest(
     credentials: "include",
   };
 
+  // Get JWT token from localStorage if available
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    options.headers = {
+      ...options.headers,
+      "Authorization": `Bearer ${token}`
+    };
+  }
+
   if (body && method !== "GET") {
     options.body = JSON.stringify(body);
   }
@@ -37,8 +46,17 @@ export function getQueryFn(options: QueryFnOptions = {}) {
     const endpoint = queryKey[0] as string;
     
     try {
+      const headers: HeadersInit = {};
+      
+      // Get JWT token from localStorage if available
+      const token = localStorage.getItem('auth_token');
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
       const res = await fetch(endpoint, {
         credentials: "include",
+        headers
       });
 
       if (!res.ok) {
