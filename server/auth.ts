@@ -214,6 +214,13 @@ export function setupAuth(app: Express) {
         })
         .returning();
 
+      // Generate JWT token
+      const token = crypto.generateToken({
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role
+      });
+      
       req.login(newUser, (err) => {
         if (err) {
           return res.status(500).json({
@@ -223,6 +230,7 @@ export function setupAuth(app: Express) {
         return res.json({
           message: "Registration successful",
           user: { id: newUser.id, username: newUser.username, role: newUser.role },
+          token // Return the JWT token to the client
         });
       });
     } catch (error: any) {
@@ -271,6 +279,13 @@ export function setupAuth(app: Express) {
         })
         .returning();
 
+      // Generate JWT token
+      const token = crypto.generateToken({
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role
+      });
+      
       req.login(newUser, (err) => {
         if (err) {
           return res.status(500).json({
@@ -280,6 +295,7 @@ export function setupAuth(app: Express) {
         return res.json({
           message: "Admin registration successful",
           user: { id: newUser.id, username: newUser.username, role: newUser.role },
+          token // Return the JWT token to the client
         });
       });
     } catch (error: any) {

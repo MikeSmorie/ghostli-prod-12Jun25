@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Eye, EyeOff, HelpCircle, Loader2, Shield } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const authSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -24,7 +24,16 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const { login, register } = useUser();
+  const { login, register, user, isAuthenticated } = useUser();
+  const [, navigate] = useLocation();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("User already authenticated, redirecting to home");
+      navigate("/");
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const form = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
@@ -37,15 +46,25 @@ export default function AuthPage() {
   const onSubmit = async (data: AuthFormData, isLogin: boolean) => {
     setIsLoading(true);
     try {
+      console.log(`Attempting to ${isLogin ? 'login' : 'register'} user:`, data.username);
       const result = await (isLogin ? login(data) : register(data));
+      
       if (!result.ok) {
         throw new Error(result.message);
       }
+      
+      console.log(`${isLogin ? 'Login' : 'Registration'} successful, user:`, result.user);
+      
       toast({
         title: isLogin ? "Logged in successfully" : "Registered successfully",
         description: `Welcome ${data.username}!`,
       });
+      
+      // Redirect to home page after successful login/registration
+      console.log("Redirecting to home page");
+      navigate("/");
     } catch (error: any) {
+      console.error(`${isLogin ? 'Login' : 'Registration'} error:`, error);
       toast({
         variant: "destructive",
         title: "Error",
