@@ -14,13 +14,28 @@ export function UserProvider({ children }: { children: ReactNode }) {
     async function loadUser() {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/user');
+        
+        // Get JWT token from localStorage if available
+        const token = localStorage.getItem('auth_token');
+        const headers: HeadersInit = {};
+        
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch('/api/user', {
+          headers,
+          credentials: 'include'
+        });
         
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
         } else {
-          // Not logged in, that's OK
+          // Not logged in or invalid token, clear it
+          if (token) {
+            localStorage.removeItem('auth_token');
+          }
           setUser(null);
         }
       } catch (err) {
@@ -51,21 +66,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: errorData.message || 'Login failed' };
       }
       
-      const userData = await response.json();
+      const responseData = await response.json();
       
       // Store the JWT token in localStorage for future API requests
-      if (userData.token) {
-        localStorage.setItem('auth_token', userData.token);
+      if (responseData.token) {
+        localStorage.setItem('auth_token', responseData.token);
       }
       
-      setUser(userData.user || userData);
+      setUser(responseData.user || responseData);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.user?.username || userData.username}!`
+        description: `Welcome back, ${responseData.user?.username || responseData.username}!`
       });
       
-      return { ok: true, message: 'Login successful', user: userData.user || userData };
+      return { ok: true, message: 'Login successful', user: responseData.user || responseData };
     } catch (err) {
       setError(err as Error);
       console.error("Login error:", err);
@@ -92,21 +107,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: errorData.message || 'Registration failed' };
       }
       
-      const userData = await response.json();
+      const responseData = await response.json();
       
       // Store the JWT token in localStorage for future API requests
-      if (userData.token) {
-        localStorage.setItem('auth_token', userData.token);
+      if (responseData.token) {
+        localStorage.setItem('auth_token', responseData.token);
       }
       
-      setUser(userData.user || userData);
+      setUser(responseData.user || responseData);
       
       toast({
         title: "Registration successful",
-        description: `Welcome, ${userData.user?.username || userData.username}!`
+        description: `Welcome, ${responseData.user?.username || responseData.username}!`
       });
       
-      return { ok: true, message: 'Registration successful', user: userData.user || userData };
+      return { ok: true, message: 'Registration successful', user: responseData.user || responseData };
     } catch (err) {
       setError(err as Error);
       console.error("Registration error:", err);
@@ -128,6 +143,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         throw new Error('Logout failed');
       }
+      
+      // Clear the JWT token from localStorage
+      localStorage.removeItem('auth_token');
       
       setUser(null);
       
