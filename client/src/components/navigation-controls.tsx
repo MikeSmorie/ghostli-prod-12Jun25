@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Home, Settings, Users, Shield, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, Settings, Users, Shield, ShieldAlert, FileText, Sparkles } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/contexts/admin-context";
@@ -142,6 +142,58 @@ export function NavigationControls() {
           </NavigationMenuList>
         </NavigationMenu>
       )}
+      
+      {/* User Tools Menu */}
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Tools</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid gap-3 p-4 w-[400px]">
+                <li>
+                  <NavigationMenuLink asChild>
+                    <a
+                      className={cn(
+                        "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                        navigationMenuTriggerStyle()
+                      )}
+                      onClick={() => navigate("/content-generation")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        <div className="text-sm font-medium leading-none">Content Generator</div>
+                      </div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Generate high-quality content with customizable parameters
+                      </p>
+                    </a>
+                  </NavigationMenuLink>
+                </li>
+                <li>
+                  <NavigationMenuLink asChild>
+                    <a
+                      className={cn(
+                        "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                        navigationMenuTriggerStyle()
+                      )}
+                      onClick={() => navigate("/clone-me")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-purple-500" />
+                        <div className="text-sm font-medium leading-none">Clone Me</div>
+                        <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-0.5 rounded text-xs font-semibold">Premium</span>
+                      </div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Generate content that mimics your unique writing style
+                      </p>
+                    </a>
+                  </NavigationMenuLink>
+                </li>
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
       
       {/* Admin Navigation Menu */}
       {isGodModeAdmin && !isSuperGod && (

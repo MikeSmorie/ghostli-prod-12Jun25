@@ -8,6 +8,7 @@ import webhookRoutes from "./routes/webhook";
 import aiRoutes from "./routes/ai";
 import { registerFeatureRoutes } from "./routes/features";
 import { registerContentRoutes } from "./routes/content";
+import { registerCloneMeRoutes } from "./routes/cloneMe";
 import messagesRoutes from "./routes/announcements";
 import adminLogsRoutes from "./routes/admin-logs";
 import paymentRoutes from "./routes/payment";
@@ -67,6 +68,9 @@ export function registerRoutes(app: Express) {
   
   // Register content generation routes
   registerContentRoutes(app);
+  
+  // Register Clone Me feature routes
+  registerCloneMeRoutes(app);
 
   app.use("/api/messages", messagesRoutes);
   app.use("/api/admin", requireAdmin, adminLogsRoutes);

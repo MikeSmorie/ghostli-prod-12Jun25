@@ -52,7 +52,7 @@ async function analyzeEssayStyle(
           role: "system",
           content: `You are a writing style analysis expert. Analyze the following text and extract key stylistic features 
           including sentence structure, vocabulary choices, transition patterns, tone markers, and unique writing traits.
-          Provide the analysis as a structured JSON object suitable for style emulation. The tone is: ${tone}.`,
+          Provide the analysis as a structured JSON object suitable for style emulation. The tone is: ${tone || "neutral"}.`,
         },
         {
           role: "user",
@@ -63,7 +63,8 @@ async function analyzeEssayStyle(
     });
 
     // Parse the response
-    return JSON.parse(response.choices[0].message.content) as Record<string, any>;
+    const content = response.choices[0].message.content || "{}";
+    return JSON.parse(content) as Record<string, any>;
   } catch (error) {
     console.error("Error analyzing essay style:", error);
     // Return a basic analysis object in case of API error
@@ -125,7 +126,7 @@ async function updateUserWritingStyle(userId: number): Promise<Record<string, an
     const modelConfig = {
       baseModel: "gpt-4o",
       styleParameters: styleFeatures,
-      tones: [...new Set(tones)],
+      tones: Array.from(new Set(tones)),
       essaySamples: essays.length,
       lastUpdated: new Date().toISOString(),
     };
@@ -142,14 +143,14 @@ async function updateUserWritingStyle(userId: number): Promise<Record<string, an
       await db
         .update(userWritingStyles)
         .set({
-          styleFeatures,
-          avgSentenceLength,
-          avgParagraphLength,
-          vocabularyDiversity,
-          commonPhrases,
-          transitionWords,
-          sentenceStructures,
-          modelConfig,
+          styleFeatures: styleFeatures as any,
+          avgSentenceLength: avgSentenceLength.toString(),
+          avgParagraphLength: avgParagraphLength.toString(),
+          vocabularyDiversity: vocabularyDiversity.toString(),
+          commonPhrases: commonPhrases as any,
+          transitionWords: transitionWords as any,
+          sentenceStructures: sentenceStructures as any,
+          modelConfig: modelConfig as any,
           isActive: true,
           lastUpdated: new Date(),
         })
@@ -167,14 +168,14 @@ async function updateUserWritingStyle(userId: number): Promise<Record<string, an
         .insert(userWritingStyles)
         .values({
           userId,
-          styleFeatures,
-          avgSentenceLength,
-          avgParagraphLength,
-          vocabularyDiversity,
-          commonPhrases,
-          transitionWords,
-          sentenceStructures,
-          modelConfig,
+          styleFeatures: styleFeatures as any,
+          avgSentenceLength: avgSentenceLength.toString(),
+          avgParagraphLength: avgParagraphLength.toString(),
+          vocabularyDiversity: vocabularyDiversity.toString(),
+          commonPhrases: commonPhrases as any,
+          transitionWords: transitionWords as any,
+          sentenceStructures: sentenceStructures as any,
+          modelConfig: modelConfig as any,
           isActive: true,
         })
         .returning()

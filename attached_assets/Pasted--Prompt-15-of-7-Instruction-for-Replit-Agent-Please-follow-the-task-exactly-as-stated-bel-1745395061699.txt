@@ -1,0 +1,34 @@
+**Prompt 15 of 7**
+
+**Instruction for Replit Agent**:  
+Please follow the task exactly as stated below. Do **not** interpret, preempt, or go ahead with any actions beyond this prompt.
+
+**Task**:  
+Create the **frontend components** for the **"Clone Me"** feature in **WriteRIGHT-01/OM-7**:
+
+1. **Essay Submission Interface**:
+   - Implement a text input area where users can **submit essays** for style analysis (500-1000 words).
+   - Include an **upload button** allowing users to upload their essay as a **.txt, .docx, or .pdf file**.
+   - Add a **progress bar** or spinner to indicate that the essay is being analyzed for writing style.
+
+2. **Style Settings Interface**:
+   - Add **dropdown selectors** for the user to choose the **tone** of the content (e.g., Casual, Academic, Authoritative).
+   - Implement **sliders** for the user to adjust the **humanization parameters**:
+     - **Typos**: Adjust the percentage of typos.
+     - **Grammar mistakes**: Adjust the percentage of grammar mistakes.
+     - **Human mis-errors**: Adjust the percentage of typical human mistakes (e.g., missing punctuation, incorrect words).
+   - Provide a **"?" explainer** next to each setting to explain the function of each control.
+
+3. **Output Display**:
+   - Create a display area where the **generated content** is shown after it has been processed through the user’s cloned style.
+   - Include options for the user to **edit** the output, **copy** it to clipboard, and **download** it in various formats (PDF, Word, HTML).
+   - Display a **feedback system** allowing users to rate the output quality and refine the model.
+
+4. **Navigation & Layout**:
+   - Ensure the interface is user-friendly, with **consistent padding**, **spaced sections**, and **clear labels** for each component.
+   - Add a **step-by-step navigation** for users to progress through the system:
+     - Step 1: Submit essay for style analysis.
+     - Step 2: Adjust style settings.
+     - Step 3: Review generated content and provide feedback.
+
+Once these frontend components are in place, please confirm and test the functionality to ensure smooth user interaction.
