@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean, decimal, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, decimal, jsonb, varchar, index } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -384,3 +384,148 @@ export type InsertPlanFeature = typeof planFeatures.$inferInsert;
 export type SelectPlanFeature = typeof planFeatures.$inferSelect;
 export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
 export type SelectFeatureFlag = typeof featureFlags.$inferSelect;
+
+// Clone Me feature related tables and enums
+
+// Essay tone enum for categorizing user submitted essays
+export const essayToneEnum = z.enum([
+  "authoritative", 
+  "casual", 
+  "academic", 
+  "professional", 
+  "conversational", 
+  "formal", 
+  "technical", 
+  "persuasive",
+  "informative",
+  "humorous",
+  "inspirational",
+  "legal",
+  "placatory",
+  "firm"
+]);
+export type EssayTone = z.infer<typeof essayToneEnum>;
+
+// User writing style features and analysis
+export const userWritingStyles = pgTable("user_writing_styles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  // Serialized JSON data containing stylistic features
+  styleFeatures: jsonb("style_features").notNull(),
+  // Average metrics across all user essays
+  avgSentenceLength: decimal("avg_sentence_length", { precision: 5, scale: 2 }),
+  avgParagraphLength: decimal("avg_paragraph_length", { precision: 5, scale: 2 }),
+  vocabularyDiversity: decimal("vocabulary_diversity", { precision: 5, scale: 2 }),
+  // Extracted writing patterns
+  commonPhrases: jsonb("common_phrases"),
+  transitionWords: jsonb("transition_words"),
+  sentenceStructures: jsonb("sentence_structures"),
+  // A serialized representation of the user's fine-tuned model configuration
+  modelConfig: jsonb("model_config"),
+  isActive: boolean("is_active").default(false),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => {
+  return {
+    userIdIdx: index("user_writing_styles_user_id_idx").on(table.userId)
+  }
+});
+
+// User submitted essays for clone me feature
+export const userEssays = pgTable("user_essays", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  wordCount: integer("word_count").notNull(),
+  tone: text("tone").notNull(),
+  // NLP analysis results
+  analysisResults: jsonb("analysis_results"),
+  // Status tracking
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+}, (table) => {
+  return {
+    userIdIdx: index("user_essays_user_id_idx").on(table.userId),
+    toneIdx: index("user_essays_tone_idx").on(table.tone)
+  }
+});
+
+// Generated content using the clone me feature
+export const clonedContent = pgTable("cloned_content", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  styleId: integer("style_id").notNull().references(() => userWritingStyles.id),
+  prompt: text("prompt").notNull(),
+  content: text("content").notNull(),
+  requestedTone: text("requested_tone").notNull(),
+  wordCount: integer("word_count").notNull(),
+  // Quality metrics
+  userRating: integer("user_rating"), // 1-5 stars
+  feedback: text("feedback"),
+  createdAt: timestamp("created_at").defaultNow()
+}, (table) => {
+  return {
+    userIdIdx: index("cloned_content_user_id_idx").on(table.userId),
+    styleIdIdx: index("cloned_content_style_id_idx").on(table.styleId)
+  }
+});
+
+// Relations for Clone Me feature
+export const userWritingStylesRelations = relations(userWritingStyles, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userWritingStyles.userId],
+    references: [users.id]
+  }),
+  generatedContent: many(clonedContent)
+}));
+
+export const userEssaysRelations = relations(userEssays, ({ one }) => ({
+  user: one(users, {
+    fields: [userEssays.userId],
+    references: [users.id]
+  })
+}));
+
+export const clonedContentRelations = relations(clonedContent, ({ one }) => ({
+  user: one(users, {
+    fields: [clonedContent.userId],
+    references: [users.id]
+  }),
+  writingStyle: one(userWritingStyles, {
+    fields: [clonedContent.styleId],
+    references: [userWritingStyles.id]
+  })
+}));
+
+// Update user relations to include Clone Me features
+export const usersCloneMeRelations = relations(users, ({ many }) => ({
+  essays: many(userEssays),
+  writingStyles: many(userWritingStyles),
+  clonedContent: many(clonedContent)
+}));
+
+// Schemas for validation
+export const insertUserWritingStyleSchema = createInsertSchema(userWritingStyles);
+export const selectUserWritingStyleSchema = createSelectSchema(userWritingStyles);
+
+export const insertUserEssaySchema = createInsertSchema(userEssays, {
+  tone: essayToneEnum,
+});
+export const selectUserEssaySchema = createSelectSchema(userEssays);
+
+export const insertClonedContentSchema = createInsertSchema(clonedContent, {
+  requestedTone: essayToneEnum,
+  userRating: z.number().min(1).max(5).optional()
+});
+export const selectClonedContentSchema = createSelectSchema(clonedContent);
+
+// Types for Clone Me feature
+export type InsertUserWritingStyle = typeof userWritingStyles.$inferInsert;
+export type SelectUserWritingStyle = typeof userWritingStyles.$inferSelect;
+export type InsertUserEssay = typeof userEssays.$inferInsert;
+export type SelectUserEssay = typeof userEssays.$inferSelect;
+export type InsertClonedContent = typeof clonedContent.$inferInsert;
+export type SelectClonedContent = typeof clonedContent.$inferSelect;
