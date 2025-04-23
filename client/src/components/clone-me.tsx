@@ -27,7 +27,9 @@ import {
   Star,
   StarHalf,
   Sparkles,
-  File
+  File,
+  Trash,
+  MoreHorizontal
 } from "lucide-react";
 import { 
   Tooltip,
@@ -44,6 +46,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { jsPDF } from "jspdf";
@@ -375,6 +385,57 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
     },
   });
 
+  // Delete essay mutation
+  const deleteEssayMutation = useMutation({
+    mutationFn: async (essayId: number) => {
+      const response = await apiRequest('DELETE', `/api/clone-me/essays/${essayId}`);
+      if (!response.ok) {
+        throw new Error('Failed to delete essay');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Essay Deleted",
+        description: "The essay has been successfully deleted.",
+      });
+      refetchEssays();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Re-analyze essay mutation
+  const reanalyzeEssayMutation = useMutation({
+    mutationFn: async (essayId: number) => {
+      const response = await apiRequest('POST', `/api/clone-me/essays/${essayId}/reanalyze`);
+      if (!response.ok) {
+        throw new Error('Failed to re-analyze essay');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Essay Re-analyzed",
+        description: "The essay has been successfully re-analyzed.",
+      });
+      refetchEssays();
+      refetchStyle();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Re-analysis Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Submit essay mutation
   const submitEssayMutation = useMutation({
     mutationFn: async (essay: EssaySubmission) => {
@@ -1501,21 +1562,53 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           <span className="text-sm">Analyzed</span>
                         </div>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              View Essay
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-                            <DialogHeader>
-                              <DialogTitle>{essay.title}</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex-1 overflow-y-auto mt-4">
-                              <EssayViewerContent essayId={essay.id} />
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <div className="flex gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to re-analyze this essay? This will update the writing style assessment.")) {
+                                    reanalyzeEssayMutation.mutate(essay.id);
+                                  }
+                                }}
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Re-analyze
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (confirm("Are you sure you want to delete this essay? This action cannot be undone.")) {
+                                    deleteEssayMutation.mutate(essay.id);
+                                  }
+                                }}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                View Essay
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                              <DialogHeader>
+                                <DialogTitle>{essay.title}</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex-1 overflow-y-auto mt-4">
+                                <EssayViewerContent essayId={essay.id} />
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </div>
                     </Card>
                   ))}

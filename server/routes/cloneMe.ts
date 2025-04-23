@@ -580,6 +580,81 @@ export function registerCloneMeRoutes(app: Express): void {
   });
 
   /**
+   * Re-analyze an essay
+   * POST /api/clone-me/essays/:id/reanalyze
+   */
+  app.post("/api/clone-me/essays/:id/reanalyze", authenticateJWT, checkCloneMeAccess, async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      const essayId = parseInt(req.params.id);
+      
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      if (isNaN(essayId)) {
+        return res.status(400).json({ error: "Invalid essay ID" });
+      }
+      
+      // Get the essay
+      const [essay] = await db
+        .select()
+        .from(userEssays)
+        .where(and(
+          eq(userEssays.id, essayId),
+          eq(userEssays.userId, userId)
+        ))
+        .execute();
+      
+      if (!essay) {
+        return res.status(404).json({ error: "Essay not found" });
+      }
+      
+      // Re-analyze the essay style
+      const analysisResults = await analyzeEssayStyle(essay.content, essay.tone);
+      
+      // Update the essay with new analysis
+      const [updatedEssay] = await db
+        .update(userEssays)
+        .set({
+          analysisResults,
+          status: "completed",
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(userEssays.id, essayId),
+          eq(userEssays.userId, userId)
+        ))
+        .returning()
+        .execute();
+      
+      // Consider regenerating the writing style too
+      // This is optional, but better UX if we do this automatically
+      try {
+        await updateUserWritingStyle(userId);
+      } catch (styleUpdateError) {
+        console.error("Error updating writing style after essay re-analysis:", styleUpdateError);
+        // Continue anyway, as the essay was re-analyzed successfully
+      }
+      
+      res.json({
+        id: updatedEssay.id,
+        title: updatedEssay.title,
+        wordCount: updatedEssay.wordCount,
+        tone: updatedEssay.tone,
+        status: updatedEssay.status,
+        message: "Essay successfully re-analyzed"
+      });
+    } catch (error) {
+      console.error("Error re-analyzing essay:", error);
+      res.status(500).json({
+        error: "Failed to re-analyze essay",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  /**
    * Delete an essay
    * DELETE /api/clone-me/essays/:id
    */
