@@ -1010,10 +1010,10 @@ export default function ContentGenerator() {
                     </TabsList>
                     
                     <TabsContent value="preview" className="space-y-4">
-                      <div className="bg-green-50 dark:bg-green-950 p-4 rounded-md border">
+                      <div className="bg-green-50 dark:bg-green-950 p-6 rounded-md border border-green-200 dark:border-green-800 shadow-sm">
                         <div 
                           ref={contentRef} 
-                          className="whitespace-pre-wrap font-medium"
+                          className="whitespace-pre-wrap font-medium leading-relaxed"
                         >
                           {generatedContent}
                         </div>
@@ -1196,15 +1196,18 @@ export default function ContentGenerator() {
                   </Tabs>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center space-y-4 p-8 border-2 border-dashed rounded-lg">
+                <div className="h-full min-h-[400px] flex flex-col items-center justify-center space-y-4 p-8 border-2 border-dashed rounded-lg">
                   <div className="p-4 rounded-full bg-primary/10">
-                    <FileText className="h-8 w-8 text-primary" />
+                    <FileText className="h-10 w-10 text-primary" />
                   </div>
-                  <div className="text-center space-y-2">
-                    <h3 className="text-lg font-medium">No Content Generated Yet</h3>
-                    <p className="text-sm text-gray-500">
+                  <div className="text-center space-y-2 max-w-xl">
+                    <h3 className="text-xl font-medium">No Content Generated Yet</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       Fill out the form on the left and click "Generate Content" to create
                       AI-powered content based on your specifications.
+                    </p>
+                    <p className="text-xs text-primary/70 italic mt-4 border-t border-primary/10 pt-3">
+                      WriterRIGHT combines state-of-the-art content generation with AI detection evasion and human-like writing qualities.
                     </p>
                   </div>
                 </div>
