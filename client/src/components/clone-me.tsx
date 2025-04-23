@@ -192,6 +192,7 @@ type EssayViewerContentProps = {
 function EssayViewerContent({ essayId }: EssayViewerContentProps) {
   const [editMode, setEditMode] = useState(false);
   const [editTone, setEditTone] = useState("");
+  const [editContent, setEditContent] = useState("");
   const { toast } = useToast();
   
   // Fetch the full essay content
@@ -212,7 +213,7 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
 
   // Update essay mutation
   const updateEssayMutation = useMutation({
-    mutationFn: async (data: { tone: string }) => {
+    mutationFn: async (data: { tone: string, content?: string }) => {
       const response = await apiRequest('PATCH', `/api/clone-me/essays/${essayId}`, data);
       if (!response.ok) {
         throw new Error('Failed to update essay');
@@ -222,7 +223,7 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
     onSuccess: () => {
       toast({ 
         title: "Essay updated",
-        description: "The essay tone has been successfully updated."
+        description: "The essay has been successfully updated."
       });
       setEditMode(false);
       // Invalidate queries to refresh data
@@ -238,17 +239,21 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
     }
   });
 
-  // Start edit mode with current tone
+  // Start edit mode with current tone and content
   const handleStartEdit = () => {
     if (essay) {
       setEditTone(essay.tone);
+      setEditContent(essay.content);
       setEditMode(true);
     }
   };
 
   // Save changes
   const handleSaveChanges = () => {
-    updateEssayMutation.mutate({ tone: editTone });
+    updateEssayMutation.mutate({ 
+      tone: editTone,
+      content: editContent 
+    });
   };
 
   if (isLoading) {
@@ -315,17 +320,27 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
             </div>
           ) : (
             <Button variant="outline" size="sm" onClick={handleStartEdit}>
-              Edit Tone
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Essay & Tone
             </Button>
           )}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto mt-2">
-        <div className="prose dark:prose-invert max-w-none">
-          {essay.content.split('\n').map((paragraph, idx) => (
-            <p key={idx}>{paragraph}</p>
-          ))}
-        </div>
+        {editMode ? (
+          <Textarea 
+            className="min-h-[300px] w-full" 
+            value={editContent} 
+            onChange={(e) => setEditContent(e.target.value)}
+            placeholder="Edit your essay content here..."
+          />
+        ) : (
+          <div className="prose dark:prose-invert max-w-none">
+            {essay.content.split('\n').map((paragraph, idx) => (
+              <p key={idx}>{paragraph}</p>
+            ))}
+          </div>
+        )}
       </div>
       <div className="mt-4 flex justify-end">
         <Button 

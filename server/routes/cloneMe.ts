@@ -521,7 +521,7 @@ export function registerCloneMeRoutes(app: Express): void {
   });
 
   /**
-   * Update an essay's metadata
+   * Update an essay's metadata and content
    * PATCH /api/clone-me/essays/:id
    */
   app.patch("/api/clone-me/essays/:id", authenticateJWT, checkCloneMeAccess, async (req: Request, res: Response) => {
@@ -538,9 +538,9 @@ export function registerCloneMeRoutes(app: Express): void {
       }
       
       // Validate the request body has at least one valid field to update
-      const { tone } = req.body;
+      const { tone, content } = req.body;
       
-      if (!tone) {
+      if (!tone && !content) {
         return res.status(400).json({ error: "No valid fields to update" });
       }
       
@@ -558,16 +558,38 @@ export function registerCloneMeRoutes(app: Express): void {
         return res.status(404).json({ error: "Essay not found" });
       }
       
+      // Build the update object based on provided fields
+      const updateData: Record<string, any> = {};
+      if (tone) updateData.tone = tone;
+      if (content) {
+        updateData.content = content;
+        updateData.wordCount = content.split(/\s+/).length;
+        
+        // If the content changed, we should re-analyze the essay
+        const analysisResults = await analyzeEssayStyle(content, tone || existingEssay.tone);
+        updateData.analysisResults = analysisResults;
+      }
+      
       // Update the essay
       const [updatedEssay] = await db
         .update(userEssays)
-        .set({ tone })
+        .set(updateData)
         .where(and(
           eq(userEssays.id, essayId),
           eq(userEssays.userId, userId)
         ))
         .returning()
         .execute();
+      
+      // If the content changed, update the writing style too
+      if (content) {
+        try {
+          await updateUserWritingStyle(userId);
+        } catch (styleUpdateError) {
+          console.error("Error updating writing style after essay update:", styleUpdateError);
+          // Continue anyway
+        }
+      }
       
       res.json(updatedEssay);
     } catch (error) {
