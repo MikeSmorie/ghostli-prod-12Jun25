@@ -499,7 +499,7 @@ export default function ContentGenerator() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 w-full px-4">
       {/* Write in My Style Banner Component */}
       <WriteInMyStyle 
         usePersonalStyle={usePersonalStyle}
@@ -508,9 +508,9 @@ export default function ContentGenerator() {
       
       <Card className="w-full">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left Column - Input Parameters */}
-            <div className="space-y-6">
+            <div className="lg:col-span-4 space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="prompt">What would you like me to write about?</Label>
                 <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
@@ -984,7 +984,7 @@ export default function ContentGenerator() {
             </div>
             
             {/* Right Column - Generated Content */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-8">
               {isLoading ? (
                 <div className="h-full flex flex-col items-center justify-center space-y-4 p-8">
                   <Loader2 className="h-12 w-12 animate-spin text-primary" />
