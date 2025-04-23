@@ -499,7 +499,7 @@ export default function ContentGenerator() {
   };
 
   return (
-    <div className="space-y-6 w-full px-4">
+    <div className="space-y-6 w-full">
       {/* Write in My Style Banner Component */}
       <WriteInMyStyle 
         usePersonalStyle={usePersonalStyle}
@@ -508,7 +508,7 @@ export default function ContentGenerator() {
       
       <Card className="w-full">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column - Input Parameters */}
             <div className="lg:col-span-4 space-y-6">
               <div className="space-y-2">
