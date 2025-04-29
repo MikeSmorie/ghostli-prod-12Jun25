@@ -559,11 +559,11 @@ export function FeatureTabs({
               </div>
             </div>
             
-            {/* Bibliography Generation - FEATURE 3 */}
+            {/* Source Citations - FEATURE 3 */}
             <div className="border-b pb-4">
               <div className="flex items-center space-x-2 mb-3">
                 <BookMarked className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-800 dark:text-blue-400">Bibliography Generation</h3>
+                <h3 className="font-semibold text-blue-800 dark:text-blue-400">Source Citations</h3>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -572,7 +572,7 @@ export function FeatureTabs({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs">Generate a bibliography for your content</p>
+                      <p className="max-w-xs">Add citations and references with proper source attribution</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -580,7 +580,21 @@ export function FeatureTabs({
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="generateBibliography">Generate Bibliography</Label>
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="generateBibliography">Include Source List</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help">
+                            <HelpCircle className="h-3 w-3 text-gray-500" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-xs">Adds a formatted list of sources at the end of your content</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <Switch
                     id="generateBibliography"
                     checked={generateBibliography}
@@ -590,7 +604,21 @@ export function FeatureTabs({
                 
                 {generateBibliography && (
                   <div className="flex items-center justify-between ml-6">
-                    <Label htmlFor="useFootnotes">Use Footnotes</Label>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="useFootnotes">Use Footnotes</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help">
+                              <HelpCircle className="h-3 w-3 text-gray-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Adds numbered footnotes throughout the text with source references</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                     <Switch
                       id="useFootnotes"
                       checked={useFootnotes}

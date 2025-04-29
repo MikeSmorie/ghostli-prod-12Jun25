@@ -557,123 +557,46 @@ export default function ContentGeneratorNew() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="brandArchetype">Brand Archetype</Label>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="brandArchetype">Brand Archetype</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help">
+                          <HelpCircle className="h-3 w-3 text-gray-500" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" align="start" className="max-w-sm">
+                        <p className="text-sm font-medium">Brand Archetypes</p>
+                        <p className="text-xs">Choose an archetype that best represents your brand personality and voice.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
                 <Select value={brandArchetype} onValueChange={setBrandArchetype}>
                   <SelectTrigger className="bg-blue-50 dark:bg-blue-950">
                     <SelectValue placeholder="Select archetype" />
                   </SelectTrigger>
                   <SelectContent>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="sage">Sage</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-md">
-                          <p>Wise, thoughtful, and insightful. Focuses on knowledge, expertise, and truth.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="hero">Hero</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Courageous, triumphant, and inspiring. Aims to overcome challenges and improve the world.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="outlaw">Outlaw</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Rebellious, disruptive, and revolutionary. Breaks rules and challenges conventions.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="explorer">Explorer</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Adventurous, independent, and pioneering. Seeks discovery, freedom, and authenticity.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="creator">Creator</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Innovative, artistic, and imaginative. Values creativity, self-expression, and originality.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="ruler">Ruler</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Authoritative, structured, and commanding. Creates order, stability, and control.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="caregiver">Caregiver</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Nurturing, supportive, and empathetic. Protects, cares for, and helps others.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="innocent">Innocent</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Optimistic, pure, and straightforward. Values simplicity, goodness, and authenticity.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="everyman">Everyman</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Relatable, authentic, and down-to-earth. Seeks belonging and connection.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="jester">Jester</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Playful, entertaining, and humorous. Lives in the moment and brings joy.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="lover">Lover</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Passionate, indulgent, and appreciative. Focuses on relationships, pleasure, and beauty.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SelectItem value="magician">Magician</SelectItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right">
-                          <p>Transformative, visionary, and charismatic. Makes dreams into reality.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <SelectItem value="sage">Sage - Wise & Insightful</SelectItem>
+                    <SelectItem value="hero">Hero - Courageous & Inspiring</SelectItem>
+                    <SelectItem value="outlaw">Outlaw - Rebellious & Disruptive</SelectItem>
+                    <SelectItem value="explorer">Explorer - Adventurous & Free</SelectItem>
+                    <SelectItem value="creator">Creator - Innovative & Artistic</SelectItem>
+                    <SelectItem value="ruler">Ruler - Authoritative & Structured</SelectItem>
+                    <SelectItem value="caregiver">Caregiver - Nurturing & Supportive</SelectItem>
+                    <SelectItem value="innocent">Innocent - Optimistic & Pure</SelectItem>
+                    <SelectItem value="everyman">Everyman - Relatable & Authentic</SelectItem>
+                    <SelectItem value="jester">Jester - Playful & Humorous</SelectItem>
+                    <SelectItem value="lover">Lover - Passionate & Appreciative</SelectItem>
+                    <SelectItem value="magician">Magician - Transformative & Visionary</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                <div className="text-xs text-muted-foreground mt-1">
+                  <p>{getArchetypeDescription(brandArchetype)}</p>
+                </div>
               </div>
               
               <div className="space-y-2">
