@@ -33,6 +33,8 @@ interface GenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  // Language options
+  englishVariant?: 'us' | 'uk';
   // "Write in My Style" feature
   usePersonalStyle?: boolean;
   // Humanization parameters (percentages)
@@ -105,6 +107,9 @@ export default function ContentGenerator() {
   const [wordCount, setWordCount] = useState(1000);
   const [antiAIDetection, setAntiAIDetection] = useState(true); // Default to true for undetectable content
   const [prioritizeUndetectable, setPrioritizeUndetectable] = useState(false); // Toggle for speed vs undetectability (default to speed for better responsiveness)
+  
+  // Language options
+  const [englishVariant, setEnglishVariant] = useState<'us' | 'uk'>('us'); // Default to US English
   
   // "Write in My Style" option
   const [usePersonalStyle, setUsePersonalStyle] = useState(false); // Default to generic content generation

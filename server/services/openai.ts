@@ -29,6 +29,8 @@ export interface ContentGenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  // Language options
+  englishVariant?: 'us' | 'uk';           // US or UK English variant
   // Humanization parameters (percentages)
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
@@ -740,6 +742,16 @@ function constructSystemMessage(params: ContentGenerationParams): string {
   const grammarMistakesPercentage = params.grammarMistakesPercentage !== undefined ? params.grammarMistakesPercentage : 1.0;
   const humanMisErrorsPercentage = params.humanMisErrorsPercentage !== undefined ? params.humanMisErrorsPercentage : 1.0;
   
+  // Define English variant instructions
+  const englishVariantInstructions = params.englishVariant ? `
+LANGUAGE VARIANT: ${params.englishVariant === 'uk' ? 'British English' : 'American English'}
+- Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English spelling conventions (e.g., ${params.englishVariant === 'uk' ? 'colour, centre, analyse, programme, labour' : 'color, center, analyze, program, labor'})
+- Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English vocabulary (e.g., ${params.englishVariant === 'uk' ? 'lift vs. elevator, flat vs. apartment, holiday vs. vacation' : 'elevator vs. lift, apartment vs. flat, vacation vs. holiday'})
+- Follow ${params.englishVariant === 'uk' ? 'British' : 'American'} English punctuation and quotation styles
+- Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English date formats (${params.englishVariant === 'uk' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'})
+- Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English expressions and idioms when appropriate
+` : '';
+  
   // Build humanization instructions based on the parameters
   const humanizationInstructions = params.antiAIDetection ? `
 HUMANIZATION PARAMETERS:
@@ -857,6 +869,7 @@ CONTENT REQUIREMENTS:
 - Use active voice and engaging language
 - Ensure content is factually accurate and appropriately researched
 - Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
+${englishVariantInstructions}
 ${antiDetectionGuidance}
 ${eatComplianceInstructions}
 ${contentQualityInstructions}
