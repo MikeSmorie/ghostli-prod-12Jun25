@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe } from "lucide-react";
+import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe, BookOpen } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -1119,6 +1119,262 @@ export default function ContentGenerator() {
                   </div>
                   )}
 
+                  {/* NEW FEATURE 1: Keyword Frequency Controls */}
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-300 dark:border-amber-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400">Keyword Frequency Controls</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Keyword Controls:</strong></p>
+                            <p className="mb-1">Specify keywords that must appear in the content with a minimum number of occurrences.</p>
+                            <p className="mb-1">Useful for SEO-optimized content and ensuring key terms are adequately covered.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    {/* Keyword list */}
+                    {requiredKeywords.length > 0 ? (
+                      <div className="mb-3 space-y-2">
+                        {requiredKeywords.map((kw, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-md border border-amber-200 dark:border-amber-800">
+                            <div className="flex items-center">
+                              <KeySquare className="h-3 w-3 mr-2 text-amber-600 dark:text-amber-400" />
+                              <span className="text-sm font-medium">{kw.keyword}</span>
+                              <Badge variant="outline" className="ml-2 text-xs">Min: {kw.occurrences}×</Badge>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={() => removeKeyword(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">No required keywords added yet. Add keywords below.</p>
+                    )}
+                    
+                    {/* Add keyword form */}
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-7">
+                        <Input
+                          placeholder="Enter keyword"
+                          value={newKeyword}
+                          onChange={(e) => setNewKeyword(e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <Select value={newOccurrences.toString()} onValueChange={(val) => setNewOccurrences(parseInt(val))}>
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Min" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                              <SelectItem key={num} value={num.toString()}>{num}×</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2">
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          className="h-8 w-full bg-amber-600 hover:bg-amber-700" 
+                          onClick={addKeyword}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* NEW FEATURE 2: Required Source Selection */}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-300 dark:border-blue-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-blue-800 dark:text-blue-400">Required Source Selection</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-blue-600 dark:text-blue-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Source Controls:</strong></p>
+                            <p className="mb-1">Specify sources that must be referenced in the content generation.</p>
+                            <p className="mb-1">Set priority levels (1-5) to indicate the importance of each source.</p>
+                            <p className="mb-1">Optionally restrict generation to only use the specified sources.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    {/* Sources list */}
+                    {requiredSources.length > 0 ? (
+                      <div className="mb-3 space-y-2">
+                        {requiredSources.map((src, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-md border border-blue-200 dark:border-blue-800">
+                            <div className="flex items-center">
+                              <BookOpen className="h-3 w-3 mr-2 text-blue-600 dark:text-blue-400" />
+                              <div>
+                                <span className="text-sm font-medium">{src.source}</span>
+                                {src.url && (
+                                  <div className="text-xs text-blue-600 dark:text-blue-400 truncate max-w-[200px]">{src.url}</div>
+                                )}
+                              </div>
+                              <Badge variant="outline" className="ml-2 text-xs">Priority: {src.priority}</Badge>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={() => removeSource(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">No required sources added yet. Add sources below.</p>
+                    )}
+                    
+                    {/* Add source form */}
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Source name (e.g., 'Harvard Business Review')"
+                        value={newSource}
+                        onChange={(e) => setNewSource(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Input
+                        placeholder="Source URL (optional)"
+                        value={newSourceUrl}
+                        onChange={(e) => setNewSourceUrl(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <div className="grid grid-cols-12 gap-2">
+                        <div className="col-span-10">
+                          <Select value={newPriority.toString()} onValueChange={(val) => setNewPriority(parseInt(val))}>
+                            <SelectTrigger className="h-8 text-sm">
+                              <SelectValue placeholder="Priority" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">Priority 1 (Highest)</SelectItem>
+                              <SelectItem value="2">Priority 2</SelectItem>
+                              <SelectItem value="3">Priority 3</SelectItem>
+                              <SelectItem value="4">Priority 4</SelectItem>
+                              <SelectItem value="5">Priority 5 (Lowest)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            className="h-8 w-full bg-blue-600 hover:bg-blue-700" 
+                            onClick={addSource}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Checkbox 
+                          id="restrictSources" 
+                          checked={restrictToRequiredSources} 
+                          onCheckedChange={(checked) => setRestrictToRequiredSources(checked as boolean)} 
+                        />
+                        <Label htmlFor="restrictSources" className="text-sm">Restrict to these sources only</Label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* NEW FEATURE 3: Bibliography Generation */}
+                  <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-950/30 rounded-md border border-indigo-300 dark:border-indigo-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-indigo-800 dark:text-indigo-400">Bibliography Generation</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-indigo-600 dark:text-indigo-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Bibliography Options:</strong></p>
+                            <p className="mb-1">Generate a professionally formatted bibliography of all sources used.</p>
+                            <p className="mb-1">Optionally include footnotes throughout the text for academic credibility.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-3 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="generateBibliography" 
+                          checked={generateBibliography} 
+                          onCheckedChange={(checked) => setGenerateBibliography(checked as boolean)} 
+                        />
+                        <Label htmlFor="generateBibliography" className="text-sm">Generate bibliography of sources</Label>
+                      </div>
+                      
+                      {generateBibliography && (
+                        <div className="flex items-center space-x-2 ml-6">
+                          <Checkbox 
+                            id="useFootnotes" 
+                            checked={useFootnotes} 
+                            onCheckedChange={(checked) => setUseFootnotes(checked as boolean)} 
+                          />
+                          <Label htmlFor="useFootnotes" className="text-sm">Use footnotes for citations in text</Label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* NEW FEATURE 4: Regional/Geographic Focus */}
+                  <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-md border border-emerald-300 dark:border-emerald-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-400">Regional/Geographic Focus</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Regional Focus:</strong></p>
+                            <p className="mb-1">Specify a geographic region to focus on for statistics and examples.</p>
+                            <p className="mb-1">Content will include data and information relevant to the selected region.</p>
+                            <p className="mb-1">Examples: "United States", "European Union", "Asia Pacific", etc.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="mt-2">
+                      <Input
+                        placeholder="Enter region (e.g., 'United States', 'European Union', 'Asia Pacific')"
+                        value={regionFocus}
+                        onChange={(e) => setRegionFocus(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                  
                   {/* Additional Generation Options */}
                   <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-800">
                     <div className="flex items-center mb-2">
