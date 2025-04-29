@@ -7,6 +7,19 @@ import {
   generateSeoKeywords 
 } from "../services/openai";
 
+// Schema for keyword frequency requirements
+const KeywordFrequencySchema = z.object({
+  keyword: z.string().min(1, "Keyword is required"),
+  occurrences: z.number().int().min(1).max(50).default(1),
+});
+
+// Schema for required source specification
+const RequiredSourceSchema = z.object({
+  source: z.string().min(1, "Source name is required"),
+  url: z.string().url().optional(),
+  priority: z.number().int().min(1).max(5).default(3), // 1 = highest priority, 5 = lowest
+});
+
 // Schema for content generation request
 const ContentGenerationRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
@@ -33,6 +46,13 @@ const ContentGenerationRequestSchema = z.object({
   websiteUrl: z.string().url().optional().default(""),
   copyWebsiteStyle: z.boolean().optional().default(false),
   useWebsiteContent: z.boolean().optional().default(false),
+  // Keyword control options
+  requiredKeywords: z.array(KeywordFrequencySchema).optional().default([]),
+  // Source control options
+  requiredSources: z.array(RequiredSourceSchema).optional().default([]),
+  restrictToRequiredSources: z.boolean().optional().default(false),
+  // Geographic/Regional focus
+  regionFocus: z.string().optional().default(""),
   // Humanization parameters
   typosPercentage: z.number().min(0).max(15).optional().default(3.0),
   grammarMistakesPercentage: z.number().min(0).max(15).optional().default(3.0),
@@ -56,7 +76,10 @@ const ContentGenerationRequestSchema = z.object({
   // New refinement options
   maxIterations: z.number().int().min(1).max(10).optional().default(5),
   wordCountTolerance: z.number().min(0.01).max(0.5).optional().default(0.1),
-  runAIDetectionTest: z.boolean().optional().default(false)
+  runAIDetectionTest: z.boolean().optional().default(false),
+  // Bibliography options
+  generateBibliography: z.boolean().optional().default(false),
+  useFootnotes: z.boolean().optional().default(false)
 });
 
 // Schema for SEO keyword generation request
@@ -102,6 +125,9 @@ export function registerContentRoutes(app: Express) {
         
         return res.json({
           content: result.content,
+          contentWithFootnotes: result.contentWithFootnotes,
+          bibliography: result.bibliography || [],
+          keywordUsage: result.keywordUsage || [],
           metadata: {
             wordCount: result.metadata.wordCount,
             generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
@@ -110,7 +136,8 @@ export function registerContentRoutes(app: Express) {
               prompt: result.metadata.promptTokens,
               completion: result.metadata.completionTokens,
               total: result.metadata.totalTokens
-            }
+            },
+            regionStatistics: result.metadata.regionStatistics
           },
           seo: result.seo || [],
           hashtags: result.hashtags || [],
@@ -152,8 +179,75 @@ export function registerContentRoutes(app: Express) {
           "WriteRIGHT"
         ] : [];
         
+        // Create mock bibliography and keyword usage for demonstration
+        const mockBibliography = params.includeCitations || params.generateBibliography ? [
+          {
+            source: "Lorem Ipsum Research Institute",
+            url: "https://www.lipsum.com/",
+            authors: ["John Doe", "Jane Smith"],
+            publicationDate: "2023-05-15",
+            region: params.regionFocus || "Global",
+            accessDate: new Date().toISOString().split('T')[0],
+            quotesUsed: ["Lorem ipsum dolor sit amet, consectetur adipiscing elit."]
+          },
+          {
+            source: "Content Generation Quarterly",
+            url: "https://example.com/content-journal",
+            authors: ["Alan Johnson"],
+            publicationDate: "2024-01-22",
+            region: params.regionFocus || "Global",
+            accessDate: new Date().toISOString().split('T')[0],
+            quotesUsed: ["Advanced content generation techniques demonstrate significant improvements in engagement metrics."]
+          }
+        ] : [];
+        
+        // Mock keyword usage statistics
+        const mockKeywordUsage = (params.requiredKeywords && params.requiredKeywords.length > 0) ? 
+          params.requiredKeywords.map(keyword => ({
+            keyword: keyword.keyword,
+            occurrences: keyword.occurrences,
+            locations: Array.from({ length: keyword.occurrences }, (_, i) => i + 1)
+          })) :
+          [
+            {
+              keyword: "content creation",
+              occurrences: 3,
+              locations: [1, 3, 5]
+            },
+            {
+              keyword: "professional writing",
+              occurrences: 2,
+              locations: [2, 4]
+            }
+          ];
+          
+        // Mock content with footnotes if requested
+        const mockContentWithFootnotes = params.useFootnotes ? 
+          mockContent + "\n\n-----------\n1. Lorem Ipsum Research Institute, 2023\n2. Content Generation Quarterly, 2024" : 
+          null;
+          
+        // Mock region statistics
+        const mockRegionStats = params.regionFocus ? {
+          region: params.regionFocus,
+          statisticsUsed: [
+            {
+              statistic: "User engagement increased by 45% in this region",
+              source: "Regional Marketing Report",
+              year: "2024"
+            },
+            {
+              statistic: "72% of consumers in this region prefer visual content",
+              source: "Consumer Behavior Study",
+              year: "2023"
+            }
+          ]
+        } : undefined;
+
         return res.json({
           content: mockContent,
+          contentWithFootnotes: mockContentWithFootnotes,
+          bibliography: mockBibliography,
+          keywordUsage: mockKeywordUsage,
           metadata: {
             wordCount: mockContent.split(/\s+/).filter(Boolean).length,
             generationTime: 2500,
@@ -162,7 +256,8 @@ export function registerContentRoutes(app: Express) {
               prompt: 150,
               completion: 300,
               total: 450
-            }
+            },
+            regionStatistics: mockRegionStats
           },
           seo: mockSeo,
           hashtags: mockHashtags,

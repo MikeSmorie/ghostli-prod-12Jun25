@@ -23,6 +23,19 @@ export interface SeoGenerationResult {
   keywords: string[];
 }
 
+// Interface for keyword frequency requirements
+export interface KeywordFrequency {
+  keyword: string;      // The keyword or key phrase to include
+  occurrences: number;  // Minimum number of times the keyword should appear
+}
+
+// Interface for source specification
+export interface RequiredSource {
+  source: string;      // Name of the source (e.g., publication, website)
+  url?: string;        // Optional URL for the source
+  priority: number;    // Priority level (1-5, with 1 being highest)
+}
+
 export interface ContentGenerationParams {
   prompt: string;
   preferredHeadline?: string;             // Optional preferred headline
@@ -37,6 +50,13 @@ export interface ContentGenerationParams {
   websiteUrl?: string;                    // URL to scan for content or style
   copyWebsiteStyle?: boolean;             // Whether to copy the website's style/tone
   useWebsiteContent?: boolean;            // Whether to base output on website content
+  // Keyword control options
+  requiredKeywords?: KeywordFrequency[];  // Keywords that must appear with frequency requirements
+  // Source control options
+  requiredSources?: RequiredSource[];     // Sources that must be used in content generation
+  restrictToRequiredSources?: boolean;    // Whether to use ONLY the required sources
+  // Geographic/Regional focus
+  regionFocus?: string;                   // Geographic region to focus on for statistics/examples
   // Humanization parameters (percentages)
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
@@ -65,6 +85,24 @@ export interface ContentGenerationParams {
 
 export interface ContentGenerationResult {
   content: string;
+  // Bibliography for references used in content generation
+  bibliography?: {
+    source: string;                   // Source name
+    url?: string;                     // URL if available
+    authors?: string[];               // Authors if available
+    publicationDate?: string;         // Publication date if available
+    region?: string;                  // Region the source is associated with
+    accessDate: string;               // Date the source was accessed 
+    quotesUsed?: string[];            // Direct quotes or facts used from this source
+  }[];
+  // Keyword usage tracking
+  keywordUsage?: {
+    keyword: string;                  // The keyword/phrase used
+    occurrences: number;              // Number of times it appears in content
+    locations: number[];              // Paragraph numbers where it appears
+  }[];
+  // Formatted content with footnotes (optional)
+  contentWithFootnotes?: string;      // Same content but with footnote references
   metadata: {
     startTime: Date;
     endTime: Date;
@@ -98,6 +136,14 @@ export interface ContentGenerationResult {
       authors?: string[];               // Authors if available
       publicationDate?: string;         // Publication date if available
     }[];
+    regionStatistics?: {
+      region: string;                   // Geographic region
+      statisticsUsed: {
+        statistic: string;              // The statistic that was used
+        source: string;                 // Source of the statistic
+        year: string;                   // Year the statistic is from
+      }[];
+    };
   };
   // Additional generated content (optional)
   seo?: string[];
@@ -878,6 +924,70 @@ ${humanizationInstructions}
     ) 
     : '';
   
+  // Keyword frequency instructions
+  let keywordFrequencyInstructions = '';
+  if (params.requiredKeywords && params.requiredKeywords.length > 0) {
+    keywordFrequencyInstructions = `
+KEYWORD REQUIREMENTS:
+The following keywords MUST be included in the content with the specified minimum frequency:
+`;
+    
+    params.requiredKeywords.forEach(keyword => {
+      keywordFrequencyInstructions += `- "${keyword.keyword}" - minimum ${keyword.occurrences} ${keyword.occurrences === 1 ? 'occurrence' : 'occurrences'}\n`;
+    });
+    
+    keywordFrequencyInstructions += `
+Distribute these keywords naturally throughout the content and ensure they don't disrupt the flow or readability.
+Track usage of each keyword to ensure minimum requirements are met.
+`;
+  }
+
+  // Source requirements instructions
+  let sourceRequirementsInstructions = '';
+  if (params.requiredSources && params.requiredSources.length > 0) {
+    sourceRequirementsInstructions = `
+SOURCE REQUIREMENTS:
+You MUST use information from the following sources when creating the content:
+`;
+    
+    params.requiredSources.forEach(source => {
+      const priority = source.priority === 1 ? "HIGHEST PRIORITY" : 
+                        source.priority === 2 ? "HIGH PRIORITY" :
+                        source.priority === 3 ? "MEDIUM PRIORITY" :
+                        source.priority === 4 ? "LOW PRIORITY" : "LOWEST PRIORITY";
+      
+      sourceRequirementsInstructions += `- ${source.source}${source.url ? ` (${source.url})` : ''} - ${priority}\n`;
+    });
+    
+    if (params.restrictToRequiredSources) {
+      sourceRequirementsInstructions += `
+IMPORTANT: ONLY use the sources listed above. Do not introduce information from other sources.`;
+    } else {
+      sourceRequirementsInstructions += `
+Use these sources prominently but you may supplement with other authoritative sources as needed.`;
+    }
+  }
+
+  // Regional focus instructions
+  const regionalFocusInstructions = params.regionFocus ? `
+REGIONAL FOCUS:
+- Focus specifically on the ${params.regionFocus} region when providing examples, statistics, case studies, or other references
+- When citing statistics or trends, prioritize data specific to ${params.regionFocus}
+- Ensure cultural references and examples are appropriate and relevant to ${params.regionFocus}
+- Include region-specific insights where applicable
+` : '';
+
+  // Bibliography and citation format
+  const bibliographyInstructions = (params.generateBibliography || params.includeCitations) ? `
+BIBLIOGRAPHY AND CITATION REQUIREMENTS:
+- Keep track of all sources used in creating this content
+- For each source, note: source name, URL (if available), authors (if available), publication date (if available)
+- Document the specific information or quotes obtained from each source
+${params.useFootnotes ? '- Use footnote citations within the text (e.g., [1], [2]) and provide a bibliography at the end' : '- Provide a bibliography section at the end of the content listing all sources used'}
+- Include access date for all sources
+${params.regionFocus ? `- Note the region relevance for each source used, especially for ${params.regionFocus}-specific sources` : ''}
+` : '';
+
   // Additional generation options
   const additionalOptions = [];
   if (params.generateSEO) additionalOptions.push('SEO suggestions');
@@ -953,6 +1063,10 @@ CONTENT REQUIREMENTS:
 ${preferredHeadlineInstructions}
 ${websiteScanningInstructions}
 ${englishVariantInstructions}
+${keywordFrequencyInstructions}
+${sourceRequirementsInstructions}
+${regionalFocusInstructions}
+${bibliographyInstructions}
 ${antiDetectionGuidance}
 ${eatComplianceInstructions}
 ${contentQualityInstructions}
