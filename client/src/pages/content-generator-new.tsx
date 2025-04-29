@@ -679,6 +679,8 @@ export default function ContentGeneratorNew() {
                 // Regional focus
                 regionFocus={regionFocus}
                 setRegionFocus={setRegionFocus}
+                subRegion={subRegion}
+                setSubRegion={setSubRegion}
                 
                 // Professional options
                 includeCitations={includeCitations}
