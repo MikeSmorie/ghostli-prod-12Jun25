@@ -244,6 +244,7 @@ export default function ContentGeneratorNew() {
   
   // Regional focus - NEW FEATURE 4
   const [regionFocus, setRegionFocus] = useState("none");
+  const [subRegion, setSubRegion] = useState("");
   
   // Humanization parameters
   const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos

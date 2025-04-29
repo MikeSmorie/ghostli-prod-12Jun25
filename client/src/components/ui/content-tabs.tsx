@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 import { Card, CardContent } from "./card";
 import { Label } from "./label";
@@ -10,6 +10,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 import { HelpCircle, KeySquare, X, Plus, BookMarked, Library, Globe } from "lucide-react";
 import { Badge } from "./badge";
+
+// Helper function to get appropriate placeholder text based on selected region
+const getSubRegionPlaceholder = (region: string): string => {
+  const placeholders: Record<string, string> = {
+    usa: "e.g., California, New York, Midwest",
+    canada: "e.g., Ontario, British Columbia, Maritimes",
+    uk: "e.g., Scotland, London, Midlands",
+    eu: "e.g., Germany, France, Benelux",
+    australia: "e.g., Victoria, Queensland, Western Australia",
+    asia: "e.g., Japan, Southeast Asia, Middle East",
+    africa: "e.g., South Africa, West Africa, North Africa",
+    latam: "e.g., Mexico, Brazil, Caribbean"
+  };
+  
+  return placeholders[region] || "Enter a specific region";
+};
 
 interface FeatureTabsProps {
   // Anti-AI Detection props
@@ -71,6 +87,8 @@ interface FeatureTabsProps {
   // Regional focus
   regionFocus: string;
   setRegionFocus: (value: string) => void;
+  subRegion: string;
+  setSubRegion: (value: string) => void;
   
   // Professional options
   includeCitations: boolean;
@@ -143,6 +161,8 @@ export function FeatureTabs({
   // Regional focus
   regionFocus,
   setRegionFocus,
+  subRegion,
+  setSubRegion,
   
   // Professional options
   includeCitations,
@@ -642,34 +662,80 @@ export function FeatureTabs({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs">Focus your content on a specific region or country</p>
+                      <p className="max-w-xs">Focus your content on a specific region or country for relevant statistics and context</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               
               <div className="space-y-3">
-                <Select value={regionFocus} onValueChange={setRegionFocus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a region (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No specific region</SelectItem>
-                    <SelectItem value="usa">United States</SelectItem>
-                    <SelectItem value="canada">Canada</SelectItem>
-                    <SelectItem value="uk">United Kingdom</SelectItem>
-                    <SelectItem value="eu">European Union</SelectItem>
-                    <SelectItem value="australia">Australia</SelectItem>
-                    <SelectItem value="asia">Asia</SelectItem>
-                    <SelectItem value="africa">Africa</SelectItem>
-                    <SelectItem value="latam">Latin America</SelectItem>
-                    <SelectItem value="global">Global</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Main region selection */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="regionFocus" className="text-sm">Primary Region</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help">
+                            <HelpCircle className="h-3 w-3 text-gray-500" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="max-w-xs">Select a broad geographical region for content focus</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <Select value={regionFocus} onValueChange={setRegionFocus}>
+                    <SelectTrigger id="regionFocus">
+                      <SelectValue placeholder="Select a region (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No specific region</SelectItem>
+                      <SelectItem value="usa">United States</SelectItem>
+                      <SelectItem value="canada">Canada</SelectItem>
+                      <SelectItem value="uk">United Kingdom</SelectItem>
+                      <SelectItem value="eu">European Union</SelectItem>
+                      <SelectItem value="australia">Australia</SelectItem>
+                      <SelectItem value="asia">Asia</SelectItem>
+                      <SelectItem value="africa">Africa</SelectItem>
+                      <SelectItem value="latam">Latin America</SelectItem>
+                      <SelectItem value="global">Global</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 
-                <p className="text-sm text-gray-500">
-                  The system will include relevant regional data, statistics, references, and cultural context for your selected region.
-                </p>
+                {/* Specific sub-region input */}
+                {regionFocus !== "none" && regionFocus !== "global" && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="subRegion" className="text-sm">Specific Area (Optional)</Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help">
+                              <HelpCircle className="h-3 w-3 text-gray-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p className="max-w-xs">Add a more specific area within your selected region (e.g., "California" for USA)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input 
+                      id="subRegion"
+                      placeholder={getSubRegionPlaceholder(regionFocus)}
+                      className="bg-blue-50/50 dark:bg-blue-950/30"
+                      value={subRegion}
+                      onChange={(e) => setSubRegion(e.target.value)}
+                    />
+                  </div>
+                )}
+                
+                <div className="text-sm text-gray-500 mt-2">
+                  <p>The system will include relevant regional data, statistics, references, and cultural context for your selected region.</p>
+                </div>
               </div>
             </div>
           </CardContent>
