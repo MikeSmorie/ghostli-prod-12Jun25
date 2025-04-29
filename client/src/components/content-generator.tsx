@@ -400,6 +400,8 @@ export default function ContentGenerator() {
       wordCount,
       antiAIDetection,
       prioritizeUndetectable,
+      // Include language options
+      englishVariant,
       // Include "Write in My Style" option
       usePersonalStyle,
       // Include humanization parameters
@@ -744,6 +746,40 @@ export default function ContentGenerator() {
                         onCheckedChange={setPrioritizeUndetectable}
                       />
                       <span className={`text-xs ml-2 ${prioritizeUndetectable ? 'font-bold' : 'text-gray-500'}`}>Undetectable</span>
+                    </div>
+                  </div>
+                  
+                  {/* Language Options */}
+                  <div className="mt-4 bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-200 dark:border-blue-800 text-sm">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-blue-800 dark:text-blue-400">Language Options</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <HelpCircle className="h-3 w-3 text-blue-600 dark:text-blue-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>English Variant:</strong></p>
+                            <p>Select whether to use American English (US) or British English (UK) spelling, vocabulary, and expressions.</p>
+                            <ul className="mt-1 space-y-1 list-disc list-inside text-xs">
+                              <li><strong>US:</strong> color, center, analyze, program, apartment</li>
+                              <li><strong>UK:</strong> colour, centre, analyse, programme, flat</li>
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <span className={`text-xs mr-2 ${englishVariant === 'us' ? 'font-bold' : 'text-gray-500'}`}>American English</span>
+                      <Switch
+                        id="englishVariant"
+                        checked={englishVariant === 'uk'}
+                        onCheckedChange={(checked) => setEnglishVariant(checked ? 'uk' : 'us')}
+                      />
+                      <span className={`text-xs ml-2 ${englishVariant === 'uk' ? 'font-bold' : 'text-gray-500'}`}>British English</span>
                     </div>
                   </div>
                   
