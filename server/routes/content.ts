@@ -10,6 +10,8 @@ import {
 // Schema for content generation request
 const ContentGenerationRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
+  // New Preferred Headline parameter
+  preferredHeadline: z.string().optional().default(""),
   tone: z.enum([
     "professional", "casual", "academic", 
     "enthusiastic", "authoritative", "persuasive", 
@@ -25,6 +27,12 @@ const ContentGenerationRequestSchema = z.object({
   wordCount: z.number().int().min(50).max(5000),
   antiAIDetection: z.boolean().default(false),
   prioritizeUndetectable: z.boolean().optional().default(true),
+  // Language options
+  englishVariant: z.enum(["us", "uk"]).optional().default("us"),
+  // Website scanning options
+  websiteUrl: z.string().url().optional().default(""),
+  copyWebsiteStyle: z.boolean().optional().default(false),
+  useWebsiteContent: z.boolean().optional().default(false),
   // Humanization parameters
   typosPercentage: z.number().min(0).max(15).optional().default(3.0),
   grammarMistakesPercentage: z.number().min(0).max(15).optional().default(3.0),

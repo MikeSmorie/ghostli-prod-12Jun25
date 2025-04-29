@@ -348,7 +348,8 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
         generateHashtags: generateHashtags,
         generateKeywords: generateKeywords,
         // Language options
-        englishVariant: englishVariant
+        // Convert UI friendly values to API format
+        englishVariant: englishVariant === 'american' ? 'us' : 'uk'
       };
       
       const response = await fetch('/api/content/generate', {

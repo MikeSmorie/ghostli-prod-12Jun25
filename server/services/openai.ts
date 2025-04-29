@@ -24,13 +24,18 @@ export interface SeoGenerationResult {
 
 export interface ContentGenerationParams {
   prompt: string;
+  preferredHeadline?: string;             // Optional preferred headline
   tone: string;
   brandArchetype: string;
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
   // Language options
-  englishVariant?: 'us' | 'uk';           // US or UK English variant
+  englishVariant?: string;                // 'american' or 'british' English variant
+  // Website scanning options
+  websiteUrl?: string;                    // URL to scan for content or style
+  copyWebsiteStyle?: boolean;             // Whether to copy the website's style/tone
+  useWebsiteContent?: boolean;            // Whether to base output on website content
   // Humanization parameters (percentages)
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
