@@ -165,7 +165,7 @@ export function registerContentRoutes(app: Express) {
           "#AIWriting",
           "#ContentMarketing",
           "#DigitalContent",
-          "#WriteRIGHT"
+          "#GhostliAI"
         ] : [];
         
         const mockKeywords = params.generateKeywords ? [
@@ -176,7 +176,7 @@ export function registerContentRoutes(app: Express) {
           "SEO content",
           "professional writing",
           "content generation",
-          "WriteRIGHT"
+          "GhostliAI"
         ] : [];
         
         // Create mock bibliography and keyword usage for demonstration

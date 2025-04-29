@@ -543,7 +543,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
 
   return (
     <div className="container mx-auto py-6">
-      <h2 className="text-2xl font-bold mb-4">WriteRIGHT</h2>
+      <h2 className="text-2xl font-bold mb-4">GhostliAI</h2>
       
       <div className="instruction bg-gray-100 dark:bg-gray-800 p-4 rounded-md mb-6">
         This advanced content generation tool creates tailored content based on your preferences and brand identity. Follow the steps in the navigation menu to generate your content.
@@ -1035,7 +1035,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                             </TooltipTrigger>
                             <TooltipContent className="max-w-md p-3">
                               <p className="mb-2"><strong>Anti-AI Detection:</strong></p>
-                              <p className="mb-2">Our anti-AI detection system ensures your content is completely undetectable by third parties or Google as AI-written. This is a core feature of the WriteRIGHT system.</p>
+                              <p className="mb-2">Our anti-AI detection system ensures your content is completely undetectable by third parties or Google as AI-written. This is a core feature of the GhostliAI system.</p>
                               <p className="text-sm text-gray-500">When enabled, your content will be processed with specialized techniques to avoid AI detection.</p>
                             </TooltipContent>
                           </Tooltip>

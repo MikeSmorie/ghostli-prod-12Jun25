@@ -254,9 +254,9 @@ ${insights.latestError ? `\nLatest Error Alert:
     // Process specific user queries
     let answer = "";
     
-    // About WriteRIGHT
-    if (lcQuery.includes("what is writeright") || lcQuery.includes("about writeright") || lcQuery.includes("tell me about writeright")) {
-      answer = `WriteRIGHT is a sophisticated AI-powered content generation platform that creates intelligent, customizable, and high-quality content with advanced personalization capabilities.
+    // About GhostliAI
+    if (lcQuery.includes("what is ghostliai") || lcQuery.includes("about ghostliai") || lcQuery.includes("tell me about ghostliai") || lcQuery.includes("what is writeright") || lcQuery.includes("about writeright") || lcQuery.includes("tell me about writeright")) {
+      answer = `GhostliAI is a sophisticated AI-powered content generation platform that creates intelligent, customizable, and high-quality content with advanced personalization capabilities.
 
 Key features include:
 1. Advanced content generation with anti-AI detection
