@@ -114,6 +114,9 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   const [generateHashtags, setGenerateHashtags] = useState<boolean>(true);
   const [generateKeywords, setGenerateKeywords] = useState<boolean>(true);
   
+  // Language options
+  const [englishVariant, setEnglishVariant] = useState<string>("american");
+  
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -333,7 +336,9 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
         // Added additional generation options
         generateSEO: generateSEO,
         generateHashtags: generateHashtags,
-        generateKeywords: generateKeywords
+        generateKeywords: generateKeywords,
+        // Language options
+        englishVariant: englishVariant
       };
       
       const response = await fetch('/api/content/generate', {
@@ -965,6 +970,67 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                           </div>
                         </div>
                       )}
+                      
+                      {/* Language Options */}
+                      <div className="mt-6 mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center">
+                            <label htmlFor="englishVariant" className="font-medium">Language Options:</label>
+                          </div>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <HelpCircleIcon className="h-4 w-4 text-gray-400" />
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-md p-3">
+                                <p className="mb-2"><strong>Language Options:</strong></p>
+                                <p className="mb-2">Select between American English or British English for your content.</p>
+                                <p className="text-sm text-gray-500">The system will adapt spelling, vocabulary, and expressions based on your selection.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <div 
+                            className={`flex items-center cursor-pointer p-2 rounded-md ${
+                              englishVariant === 'american' 
+                                ? 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' 
+                                : 'bg-gray-100 dark:bg-gray-800'
+                            }`}
+                            onClick={() => setEnglishVariant('american')}
+                          >
+                            <input 
+                              type="radio" 
+                              id="american" 
+                              name="englishVariant" 
+                              value="american"
+                              checked={englishVariant === 'american'}
+                              onChange={() => setEnglishVariant('american')}
+                              className="mr-2"
+                            />
+                            <label htmlFor="american" className="cursor-pointer">American English</label>
+                          </div>
+                          <div 
+                            className={`flex items-center cursor-pointer p-2 rounded-md ${
+                              englishVariant === 'british' 
+                                ? 'bg-blue-100 dark:bg-blue-900 border-2 border-blue-500' 
+                                : 'bg-gray-100 dark:bg-gray-800'
+                            }`}
+                            onClick={() => setEnglishVariant('british')}
+                          >
+                            <input 
+                              type="radio" 
+                              id="british" 
+                              name="englishVariant" 
+                              value="british"
+                              checked={englishVariant === 'british'}
+                              onChange={() => setEnglishVariant('british')}
+                              className="mr-2"
+                            />
+                            <label htmlFor="british" className="cursor-pointer">British English</label>
+                          </div>
+                        </div>
+                      </div>
                       
                       {/* Additional Generation Options */}
                       <div className="p-3 mb-4 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800">
