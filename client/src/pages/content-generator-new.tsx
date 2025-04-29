@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe, BookOpen } from "lucide-react";
+import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -435,21 +435,74 @@ export default function ContentGeneratorNew() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column - Input Parameters */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="prompt">What would you like me to write about?</Label>
-                <div className="bg-gray-100 dark:bg-gray-800 p-3 mb-2 rounded-md border text-sm italic">
-                  <p className="font-medium mb-1">Please include in your request:</p>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>What or who is this writing for? (e.g., "for marketing professionals", "for our company blog")</li>
-                    <li>How will it be used? (e.g., "as a sales email", "for our website's about page")</li>
-                    <li>What reaction do you want from the reader? (e.g., "to feel confident in our expertise", "to sign up for a demo")</li>
-                    <li>Any key points you want to emphasize</li>
-                    <li>Specific format requirements (e.g., "as a blog post with headings and bullet points")</li>
-                  </ul>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="prompt" className="text-lg font-medium">What would you like me to write about?</Label>
+                  <div className="flex items-center">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                            <HelpCircle className="h-4 w-4" />
+                            <span className="sr-only">Tips</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end" className="max-w-xs">
+                          <p className="text-sm font-medium mb-1">Tips for Better Results:</p>
+                          <ul className="text-xs list-disc pl-4 space-y-1">
+                            <li>Be specific with details and requirements</li>
+                            <li>Specify audience and purpose</li>
+                            <li>Define tone, style, and format</li>
+                            <li>Include key points to emphasize</li>
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
+                
+                {/* Collapsible Tips */}
+                <div className="bg-blue-50/80 dark:bg-blue-950/30 p-4 rounded-md border border-blue-100 dark:border-blue-900">
+                  {(() => {
+                    const [tipsCollapsed, setTipsCollapsed] = useState(false);
+                    return (
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 flex items-center">
+                            <Info className="h-4 w-4 mr-1 text-blue-600 dark:text-blue-400" />
+                            Tips for Better Content Generation
+                          </h3>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0"
+                            onClick={() => setTipsCollapsed(!tipsCollapsed)}
+                          >
+                            {tipsCollapsed ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronUp className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {!tipsCollapsed && (
+                          <ul className="text-xs text-blue-700 dark:text-blue-400 list-disc pl-5 space-y-1">
+                            <li><span className="font-medium">Be specific about audience:</span> Who is this for? (e.g., "for marketing professionals", "for our company blog")</li>
+                            <li><span className="font-medium">Define purpose:</span> How will it be used? (e.g., "as a sales email", "for our website's about page")</li>
+                            <li><span className="font-medium">Specify desired outcome:</span> What reaction do you want? (e.g., "to build trust", "to sign up for a demo")</li>
+                            <li><span className="font-medium">Include key points:</span> What must be included? List specific points or information to cover</li>
+                            <li><span className="font-medium">Mention format:</span> Structure requirements (e.g., "blog post with headings and bullet points")</li>
+                          </ul>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+                
                 <Textarea
                   id="prompt"
-                  placeholder="What would you like to generate? Be specific with your requirements."
+                  placeholder="Describe what you'd like to generate with specific details about audience, purpose, key points, and format."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[120px] bg-blue-50 dark:bg-blue-950"
@@ -960,17 +1013,7 @@ export default function ContentGeneratorNew() {
                 </div>
               )}
               
-              {/* Tips and Instructions */}
-              <div className="mt-6 p-4 border rounded-md bg-gray-50 dark:bg-gray-900">
-                <h3 className="font-semibold mb-2">GhostliAI Tips:</h3>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                  <li>Use specific details in your prompt for better results.</li>
-                  <li>Adjust word count based on your content needs.</li>
-                  <li>Select a tone that matches your brand voice.</li>
-                  <li>Choose a brand archetype to give your content a consistent personality.</li>
-                  <li>Use Anti-AI Detection for content that needs to appear more human-written.</li>
-                </ul>
-              </div>
+
             </div>
           </div>
         </CardContent>
