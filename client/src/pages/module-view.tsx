@@ -100,6 +100,11 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
   
   // Content parameters
   const [inputValue, setInputValue] = useState("");
+  const [preferredHeadline, setPreferredHeadline] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [scanWebsite, setScanWebsite] = useState(false);
+  const [copyWebsiteStyle, setCopyWebsiteStyle] = useState(false);
+  const [useWebsiteContent, setUseWebsiteContent] = useState(false);
   const [tone, setTone] = useState<string>("");
   const [archetype, setArchetype] = useState<string>("");
   const [targetWordCount, setTargetWordCount] = useState<number>(1000);
@@ -325,6 +330,7 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
       // Request parameters
       const requestBody = {
         prompt: inputValue,
+        preferredHeadline: preferredHeadline,
         tone: tone,
         brandArchetype: archetype, // Fixed to match server schema name
         wordCount: targetWordCount, // Fixed to match server schema name
@@ -333,6 +339,10 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
         typosPercentage: antiAIDetection ? typosPercentage : 0,
         grammarMistakesPercentage: antiAIDetection ? grammarMistakesPercentage : 0,
         humanMisErrorsPercentage: antiAIDetection ? humanMisErrorsPercentage : 0,
+        // Website scanning options
+        websiteUrl: scanWebsite ? websiteUrl : "",
+        copyWebsiteStyle: scanWebsite && copyWebsiteStyle,
+        useWebsiteContent: scanWebsite && useWebsiteContent,
         // Added additional generation options
         generateSEO: generateSEO,
         generateHashtags: generateHashtags,
@@ -855,6 +865,104 @@ export default function ModuleView({ moduleId }: ModuleViewProps) {
                         {targetWordCount} words
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Preferred Headline Input */}
+                  <div className="mb-4">
+                    <div className="flex items-center mb-1">
+                      <label className="font-medium">Do you have a preferred headline?</label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircleIcon className="h-4 w-4 ml-2 text-gray-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-xs">Optionally provide a headline you'd like to use. GhostliAI will try to use this headline or create one that's similar.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Input
+                      value={preferredHeadline}
+                      onChange={(e) => setPreferredHeadline(e.target.value)}
+                      className={`w-full ${
+                        isDarkMode 
+                          ? 'bg-gray-800 text-white border-gray-700' 
+                          : 'bg-white text-gray-900 border-gray-300'
+                      }`}
+                      placeholder="Enter your preferred headline (optional)"
+                      style={{
+                        backgroundColor: isDarkMode ? 'var(--background, #1f2937)' : 'var(--background, #ffffff)',
+                        color: isDarkMode ? 'var(--foreground, #f9fafb)' : 'var(--foreground, #111827)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Website URL and Scanning Options */}
+                  <div className="mb-4 p-3 rounded-md bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center mb-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="scanWebsite"
+                          checked={scanWebsite}
+                          onChange={(e) => setScanWebsite(e.target.checked)}
+                          className="w-4 h-4 mr-2 rounded"
+                        />
+                        <label htmlFor="scanWebsite" className="font-medium text-green-800 dark:text-green-400">URL - GhostliAI Website Scan</label>
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <HelpCircleIcon className="h-4 w-4 ml-2 text-green-600 dark:text-green-500" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-md p-3">
+                            <p className="mb-2"><strong>Website Scan:</strong></p>
+                            <p className="mb-2">GhostliAI can scan a website to extract information and style patterns.</p>
+                            <p className="text-sm text-gray-500">Provide a URL and select how the information should be used.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    {scanWebsite && (
+                      <>
+                        <div className="mb-3">
+                          <Input
+                            value={websiteUrl}
+                            onChange={(e) => setWebsiteUrl(e.target.value)}
+                            className="w-full"
+                            placeholder="Enter website URL (e.g., https://example.com)"
+                          />
+                        </div>
+                        
+                        <p className="text-sm mb-2 text-green-800 dark:text-green-400">How this URL will be used:</p>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="copyWebsiteStyle"
+                              checked={copyWebsiteStyle}
+                              onChange={(e) => setCopyWebsiteStyle(e.target.checked)}
+                              className="w-4 h-4 mr-2 rounded"
+                            />
+                            <label htmlFor="copyWebsiteStyle" className="text-sm">Copy website style/tone</label>
+                          </div>
+                          
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id="useWebsiteContent"
+                              checked={useWebsiteContent}
+                              onChange={(e) => setUseWebsiteContent(e.target.checked)}
+                              className="w-4 h-4 mr-2 rounded"
+                            />
+                            <label htmlFor="useWebsiteContent" className="text-sm">Base output on the information at URL</label>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   {/* Input Text Area with resizing handle */}
