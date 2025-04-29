@@ -186,6 +186,57 @@ export default function ContentGenerator() {
   const [newPriority, setNewPriority] = useState(3);
   const [restrictToRequiredSources, setRestrictToRequiredSources] = useState(false);
   
+  // Handler functions for keyword and source controls
+  const addKeyword = () => {
+    if (!newKeyword.trim()) {
+      toast({
+        title: "Missing Keyword",
+        description: "Please enter a keyword to add.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setRequiredKeywords([...requiredKeywords, { 
+      keyword: newKeyword.trim(), 
+      occurrences: newOccurrences 
+    }]);
+    setNewKeyword("");
+    setNewOccurrences(1);
+  };
+  
+  const removeKeyword = (index: number) => {
+    const updatedKeywords = [...requiredKeywords];
+    updatedKeywords.splice(index, 1);
+    setRequiredKeywords(updatedKeywords);
+  };
+  
+  const addSource = () => {
+    if (!newSource.trim()) {
+      toast({
+        title: "Missing Source",
+        description: "Please enter a source to add.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setRequiredSources([...requiredSources, {
+      source: newSource.trim(),
+      url: newSourceUrl.trim(),
+      priority: newPriority
+    }]);
+    
+    setNewSource("");
+    setNewSourceUrl("");
+    setNewPriority(3);
+  };
+  
+  const removeSource = (index: number) => {
+    const updatedSources = [...requiredSources];
+    updatedSources.splice(index, 1);
+    setRequiredSources(updatedSources);
+  };
+  
   // Bibliography options - NEW FEATURE 3
   const [generateBibliography, setGenerateBibliography] = useState(false);
   const [useFootnotes, setUseFootnotes] = useState(false);
@@ -552,59 +603,8 @@ export default function ContentGenerator() {
     }
   };
 
-  // Keyword management helpers
-  const addKeyword = () => {
-    if (newKeyword.trim() === '') {
-      toast({
-        title: "Missing Keyword",
-        description: "Please enter a keyword to add.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setRequiredKeywords([...requiredKeywords, {
-      keyword: newKeyword.trim(),
-      occurrences: newOccurrences
-    }]);
-    
-    setNewKeyword("");
-    setNewOccurrences(1);
-  };
-  
-  const removeKeyword = (index: number) => {
-    const updatedKeywords = [...requiredKeywords];
-    updatedKeywords.splice(index, 1);
-    setRequiredKeywords(updatedKeywords);
-  };
-  
-  // Source management helpers
-  const addSource = () => {
-    if (newSource.trim() === '') {
-      toast({
-        title: "Missing Source",
-        description: "Please enter a source to add.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setRequiredSources([...requiredSources, {
-      source: newSource.trim(),
-      url: newSourceUrl.trim(),
-      priority: newPriority
-    }]);
-    
-    setNewSource("");
-    setNewSourceUrl("");
-    setNewPriority(3);
-  };
-  
-  const removeSource = (index: number) => {
-    const updatedSources = [...requiredSources];
-    updatedSources.splice(index, 1);
-    setRequiredSources(updatedSources);
-  };
+  // Update our handler functions with improved error handling
+  // (We already have basic addKeyword and removeKeyword functions declared earlier)
   
   // Generate fallback content for API failures (for testing only - will be removed)
   const generateFallbackContent = (params: GenerationParams): string => {
@@ -1026,7 +1026,7 @@ export default function ContentGenerator() {
                       {websiteUrl && (
                         <div className="text-xs text-cyan-700 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 p-2 rounded-md">
                           <p className="flex items-center">
-                            <InfoIcon className="h-3 w-3 mr-1 inline" />
+                            <Info className="h-3 w-3 mr-1 inline" />
                             {copyWebsiteStyle && useWebsiteContent 
                               ? "Will analyze and copy both style and content from the website." 
                               : copyWebsiteStyle 
