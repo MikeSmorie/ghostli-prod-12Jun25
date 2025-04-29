@@ -444,24 +444,28 @@ export function FeatureTabs({
                   )}
                 </div>
                 
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter keyword"
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    className="flex-1"
-                  />
-                  <div className="flex items-center gap-2 w-40">
-                    <Label htmlFor="newOccurrences" className="whitespace-nowrap">Min. occurrences:</Label>
-                    <Input
-                      id="newOccurrences"
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={newOccurrences}
-                      onChange={(e) => setNewOccurrences(parseInt(e.target.value) || 1)}
-                      className="w-16"
-                    />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <Label htmlFor="newKeyword" className="mb-1.5 block">Keyword</Label>
+                      <Input
+                        id="newKeyword"
+                        placeholder="Enter keyword to include in content"
+                        value={newKeyword}
+                        onChange={(e) => setNewKeyword(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newOccurrences" className="mb-1.5 block">Min. occurrences</Label>
+                      <Input
+                        id="newOccurrences"
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={newOccurrences}
+                        onChange={(e) => setNewOccurrences(parseInt(e.target.value) || 1)}
+                      />
+                    </div>
                   </div>
                   <Button 
                     size="sm" 
@@ -513,16 +517,19 @@ export function FeatureTabs({
                   )}
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Source name"
-                      value={newSource}
-                      onChange={(e) => setNewSource(e.target.value)}
-                      className="flex-1"
-                    />
-                    <div className="flex items-center gap-2 w-40">
-                      <Label htmlFor="newPriority" className="whitespace-nowrap">Priority (1-5):</Label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <Label htmlFor="newSource" className="mb-1.5 block">Source Name</Label>
+                      <Input
+                        id="newSource"
+                        placeholder="Enter source title or author name"
+                        value={newSource}
+                        onChange={(e) => setNewSource(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newPriority" className="mb-1.5 block">Priority (1-5)</Label>
                       <Input
                         id="newPriority"
                         type="number"
@@ -530,27 +537,32 @@ export function FeatureTabs({
                         max={5}
                         value={newPriority}
                         onChange={(e) => setNewPriority(parseInt(e.target.value) || 1)}
-                        className="w-16"
                       />
+                      <div className="text-xs text-muted-foreground mt-1">Higher = more important</div>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Source URL (optional)"
-                      value={newSourceUrl}
-                      onChange={(e) => setNewSourceUrl(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      size="sm" 
-                      onClick={addSource}
-                      disabled={!newSource.trim()}
-                      className="whitespace-nowrap"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Source
-                    </Button>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label htmlFor="newSourceUrl" className="mb-1.5 block">Source URL (optional)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="newSourceUrl"
+                          placeholder="https://example.com/article"
+                          value={newSourceUrl}
+                          onChange={(e) => setNewSourceUrl(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button 
+                          onClick={addSource}
+                          disabled={!newSource.trim()}
+                          className="whitespace-nowrap"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add Source
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 

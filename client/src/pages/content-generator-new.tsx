@@ -435,9 +435,9 @@ export default function ContentGeneratorNew() {
       
       <Card className="w-full">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column - Input Parameters */}
-            <div className="lg:col-span-4 space-y-6">
+          <div className="space-y-6">
+            {/* Content Parameters - Full Width */}
+            <div className="w-full space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="prompt" className="text-lg font-medium">What would you like me to write about?</Label>
@@ -718,8 +718,8 @@ export default function ContentGeneratorNew() {
               )}
             </div>
             
-            {/* Right Column - Generated Content and Results */}
-            <div className="lg:col-span-8">
+            {/* Generated Content Section - Now displayed below settings */}
+            <div className="mt-8 pt-8 border-t border-border">
               {generatedContent ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
