@@ -28,35 +28,62 @@ import { WriteInMyStyle } from "./write-in-my-style";
 // Types
 interface GenerationParams {
   prompt: string;
+  preferredHeadline?: string;
   tone: string;
   brandArchetype: string;
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  
   // Language options
   englishVariant?: 'us' | 'uk';
+  
+  // Website scanning options
+  websiteUrl?: string;
+  copyWebsiteStyle?: boolean;
+  useWebsiteContent?: boolean;
+  
   // "Write in My Style" feature
   usePersonalStyle?: boolean;
+  
+  // Keyword control options - NEW FEATURE 1
+  requiredKeywords?: {keyword: string, occurrences: number}[];
+  
+  // Source control options - NEW FEATURE 2
+  requiredSources?: {source: string, url: string, priority: number}[];
+  restrictToRequiredSources?: boolean;
+  
+  // Bibliography options - NEW FEATURE 3
+  generateBibliography?: boolean;
+  useFootnotes?: boolean;
+  
+  // Regional focus - NEW FEATURE 4
+  regionFocus?: string;
+  
   // Humanization parameters (percentages)
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
   humanMisErrorsPercentage?: number;
+  
   // Additional generation options
   generateSEO?: boolean;
   generateHashtags?: boolean;
   generateKeywords?: boolean;
+  
   // E-A-T and content quality parameters
   includeCitations?: boolean;
   checkDuplication?: boolean;
   addRhetoricalElements?: boolean;
   strictToneAdherence?: boolean;
   runSelfAnalysis?: boolean;
+  
   // Content specialization parameters
   legalCompliance?: boolean;
   technicalAccuracy?: boolean;
   simplifyLanguage?: boolean;
   inclusiveLanguage?: boolean;
   addEmotionalImpact?: boolean;
+  
   // Additional refinement options
   maxIterations?: number;
   wordCountTolerance?: number;
@@ -76,7 +103,34 @@ interface GenerationMetadata {
 
 interface GenerationResult {
   content: string;
-  metadata: GenerationMetadata;
+  contentWithFootnotes?: string; // For bibliography with footnotes
+  bibliography?: {
+    source: string;
+    url?: string;
+    authors?: string[];
+    publicationDate?: string;
+    region?: string;
+    accessDate: string;
+    quotesUsed?: string[];
+  }[];
+  keywordUsage?: {
+    keyword: string;
+    occurrences: number;
+    locations: number[];
+  }[];
+  metadata: GenerationMetadata & {
+    regionStatistics?: {
+      region: string;
+      statisticsUsed: {
+        statistic: string;
+        source: string;
+        year: string;
+      }[];
+    };
+  };
+  seo?: string[];
+  hashtags?: string[];
+  keywords?: string[];
 }
 
 // Helper functions for brand archetype descriptions
@@ -102,6 +156,7 @@ const getArchetypeDescription = (archetype: string): string => {
 export default function ContentGenerator() {
   // Form state
   const [prompt, setPrompt] = useState("");
+  const [preferredHeadline, setPreferredHeadline] = useState(""); // Optional preferred headline
   const [tone, setTone] = useState("professional");
   const [brandArchetype, setBrandArchetype] = useState("sage");
   const [wordCount, setWordCount] = useState(1000);
@@ -111,8 +166,32 @@ export default function ContentGenerator() {
   // Language options
   const [englishVariant, setEnglishVariant] = useState<'us' | 'uk'>('us'); // Default to US English
   
+  // Website scanning options
+  const [websiteUrl, setWebsiteUrl] = useState(""); // URL to scan
+  const [copyWebsiteStyle, setCopyWebsiteStyle] = useState(false); // Whether to copy style/tone
+  const [useWebsiteContent, setUseWebsiteContent] = useState(false); // Whether to use content
+  
   // "Write in My Style" option
   const [usePersonalStyle, setUsePersonalStyle] = useState(false); // Default to generic content generation
+  
+  // Keyword control options - NEW FEATURE 1
+  const [requiredKeywords, setRequiredKeywords] = useState<{keyword: string, occurrences: number}[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [newOccurrences, setNewOccurrences] = useState(1);
+  
+  // Source control options - NEW FEATURE 2
+  const [requiredSources, setRequiredSources] = useState<{source: string, url: string, priority: number}[]>([]);
+  const [newSource, setNewSource] = useState("");
+  const [newSourceUrl, setNewSourceUrl] = useState("");
+  const [newPriority, setNewPriority] = useState(3);
+  const [restrictToRequiredSources, setRestrictToRequiredSources] = useState(false);
+  
+  // Bibliography options - NEW FEATURE 3
+  const [generateBibliography, setGenerateBibliography] = useState(false);
+  const [useFootnotes, setUseFootnotes] = useState(false);
+  
+  // Regional focus - NEW FEATURE 4
+  const [regionFocus, setRegionFocus] = useState("");
   
   // Humanization parameters
   const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos
@@ -395,29 +474,55 @@ export default function ContentGenerator() {
 
     const params: GenerationParams = {
       prompt,
+      preferredHeadline,
       tone,
       brandArchetype,
       wordCount,
       antiAIDetection,
       prioritizeUndetectable,
+      
       // Include language options
       englishVariant,
+      
+      // Include website scanning options
+      websiteUrl: websiteUrl.trim(),
+      copyWebsiteStyle,
+      useWebsiteContent,
+      
       // Include "Write in My Style" option
       usePersonalStyle,
+      
+      // Include keyword control options - NEW FEATURE 1
+      requiredKeywords: requiredKeywords.length > 0 ? requiredKeywords : undefined,
+      
+      // Include source control options - NEW FEATURE 2
+      requiredSources: requiredSources.length > 0 ? requiredSources : undefined,
+      restrictToRequiredSources,
+      
+      // Include bibliography options - NEW FEATURE 3
+      generateBibliography,
+      useFootnotes,
+      
+      // Include regional focus - NEW FEATURE 4
+      regionFocus: regionFocus.trim(),
+      
       // Include humanization parameters
       typosPercentage,
       grammarMistakesPercentage,
       humanMisErrorsPercentage,
+      
       // Include additional generation options
       generateSEO,
       generateHashtags,
       generateKeywords,
+      
       // Include E-A-T and content quality parameters
       includeCitations,
       checkDuplication,
       addRhetoricalElements,
       strictToneAdherence,
       runSelfAnalysis,
+      
       // Include content specialization parameters
       legalCompliance,
       technicalAccuracy,
@@ -447,6 +552,60 @@ export default function ContentGenerator() {
     }
   };
 
+  // Keyword management helpers
+  const addKeyword = () => {
+    if (newKeyword.trim() === '') {
+      toast({
+        title: "Missing Keyword",
+        description: "Please enter a keyword to add.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setRequiredKeywords([...requiredKeywords, {
+      keyword: newKeyword.trim(),
+      occurrences: newOccurrences
+    }]);
+    
+    setNewKeyword("");
+    setNewOccurrences(1);
+  };
+  
+  const removeKeyword = (index: number) => {
+    const updatedKeywords = [...requiredKeywords];
+    updatedKeywords.splice(index, 1);
+    setRequiredKeywords(updatedKeywords);
+  };
+  
+  // Source management helpers
+  const addSource = () => {
+    if (newSource.trim() === '') {
+      toast({
+        title: "Missing Source",
+        description: "Please enter a source to add.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setRequiredSources([...requiredSources, {
+      source: newSource.trim(),
+      url: newSourceUrl.trim(),
+      priority: newPriority
+    }]);
+    
+    setNewSource("");
+    setNewSourceUrl("");
+    setNewPriority(3);
+  };
+  
+  const removeSource = (index: number) => {
+    const updatedSources = [...requiredSources];
+    updatedSources.splice(index, 1);
+    setRequiredSources(updatedSources);
+  };
+  
   // Generate fallback content for API failures (for testing only - will be removed)
   const generateFallbackContent = (params: GenerationParams): string => {
     return `This is sample content generated based on your prompt: "${params.prompt}". It would be written in a ${params.tone} tone, using the ${params.brandArchetype} brand archetype, and would be approximately ${params.wordCount} words long. ${params.antiAIDetection ? "Content would be optimized to bypass AI detection." : ""}`;
