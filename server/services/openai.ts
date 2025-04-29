@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import axios from 'axios';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -237,12 +238,72 @@ async function simulateAIDetectionTest(content: string): Promise<{
 }
 
 /**
+ * Fetches and extracts content from a website URL
+ * @param url The website URL to scan
+ * @returns The extracted text content
+ */
+async function scanWebsite(url: string): Promise<string> {
+  try {
+    // Fetch website content
+    const response = await axios.get(url, {
+      timeout: 10000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GhostliAI/1.0; +https://ghostli.ai/bot)'
+      }
+    });
+
+    // Extract content from HTML (simplified version)
+    const html = response.data;
+    
+    // Basic extraction - remove HTML tags and decode entities
+    let content = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    // Truncate if too long
+    if (content.length > 10000) {
+      content = content.substring(0, 10000) + "... [content truncated]";
+    }
+    
+    return content;
+  } catch (error) {
+    console.error("Error scanning website:", error);
+    return "Failed to scan website. Please check the URL and try again.";
+  }
+}
+
+/**
  * Generates content using OpenAI's GPT model
  * @param params Content generation parameters
  * @returns Generated content with metadata
  */
 export async function generateContent(params: ContentGenerationParams): Promise<ContentGenerationResult> {
   const startTime = new Date();
+  
+  // Process website content if URL is provided and relevant options are enabled
+  let websiteContent = "";
+  if (params.websiteUrl && (params.copyWebsiteStyle || params.useWebsiteContent)) {
+    try {
+      websiteContent = await scanWebsite(params.websiteUrl);
+      
+      if (websiteContent && params.useWebsiteContent) {
+        // If we're using website content, append it to the prompt with context
+        params.prompt += `\n\nReference content from ${params.websiteUrl}:\n${websiteContent}`;
+      }
+    } catch (error) {
+      console.error("Error processing website content:", error);
+    }
+  }
+  
   const systemMessage = constructSystemMessage(params);
   
   // Initialize refinement steps array for tracking iterations
@@ -747,6 +808,21 @@ function constructSystemMessage(params: ContentGenerationParams): string {
   const grammarMistakesPercentage = params.grammarMistakesPercentage !== undefined ? params.grammarMistakesPercentage : 1.0;
   const humanMisErrorsPercentage = params.humanMisErrorsPercentage !== undefined ? params.humanMisErrorsPercentage : 1.0;
   
+  // Define preferred headline instructions
+  const preferredHeadlineInstructions = params.preferredHeadline && params.preferredHeadline.trim() !== '' ? `
+PREFERRED HEADLINE:
+- Use this headline as the basis for your content: "${params.preferredHeadline}"
+- If you need to modify it slightly for better SEO or readability, you may do so while preserving the core meaning
+` : '';
+
+  // Define website scanning instructions
+  const websiteScanningInstructions = params.websiteUrl && params.websiteUrl.trim() !== '' ? `
+WEBSITE REFERENCE:
+- Website URL: ${params.websiteUrl}
+${params.copyWebsiteStyle ? '- Analyze and copy the writing style, tone, and voice from this website\n- Match the level of formality, sentence structure patterns, and typical vocabulary used on the site' : ''}
+${params.useWebsiteContent ? '- Use information from this website as a reference for your content\n- Extract relevant facts, data points, and information to inform your writing\n- Do not directly copy content but use it to ensure factual accuracy' : ''}
+` : '';
+  
   // Define English variant instructions
   const englishVariantInstructions = params.englishVariant ? `
 LANGUAGE VARIANT: ${params.englishVariant === 'uk' ? 'British English' : 'American English'}
@@ -874,6 +950,8 @@ CONTENT REQUIREMENTS:
 - Use active voice and engaging language
 - Ensure content is factually accurate and appropriately researched
 - Avoid using AI-detection triggering patterns (varied sentence structure, natural language flow)
+${preferredHeadlineInstructions}
+${websiteScanningInstructions}
 ${englishVariantInstructions}
 ${antiDetectionGuidance}
 ${eatComplianceInstructions}
