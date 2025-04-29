@@ -25,7 +25,7 @@ export default function AppCentral() {
       id: 1,
       name: "Content Generator",
       description: "Generate AI content with anti-detection capabilities",
-      path: "/module/1",
+      path: "/content-generator-new",
       icon: <PenSquare className="h-6 w-6 text-blue-600" />,
       primary: true
     },
@@ -75,38 +75,52 @@ export default function AppCentral() {
         </p>
       </div>
       
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-5 mb-8">
-        <div className="flex items-start space-x-4">
-          <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400 mt-1" />
+      <div className="bg-gradient-to-br from-blue-100 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
+          <Sparkles className="h-10 w-10 text-blue-600 dark:text-blue-400 mb-3 md:mb-0 md:mt-1" />
           <div>
-            <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-lg mb-1">
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300 text-xl mb-2">
               Welcome to GhostliAI
             </h3>
-            <p className="text-blue-700 dark:text-blue-400">
-              This system creates human-like content that bypasses AI detection. 
-              Start with the Content Generator module for quick creation, or explore 
-              other modules for advanced configuration and management.
+            <p className="text-blue-700 dark:text-blue-400 mb-4">
+              This system creates human-like content that bypasses AI detection. Our newly redesigned 
+              interface provides a better experience with all features in one place.
             </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                className="flex items-center gap-2"
+                size="lg"
+                onClick={() => setLocation("/content-generator-new")}
+              >
+                <Sparkles className="h-5 w-5" />
+                Launch New Interface
+              </Button>
+              <Button 
+                className="flex items-center gap-2"
+                variant="outline"
+                onClick={() => setLocation("/subscription")}
+              >
+                <BadgeCheck className="h-5 w-5" />
+                Manage Subscription
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-
-      <div className="flex justify-end gap-4 mb-6">
-        <Button 
-          className="flex items-center gap-2"
-          variant="outline"
-          onClick={() => setLocation("/content-generator-new")}
-        >
-          <RefreshCw className="h-4 w-4" />
-          New Tabbed Interface (Beta)
-        </Button>
-        <Button 
-          className="flex items-center gap-2"
-          onClick={() => setLocation("/subscription")}
-        >
-          <BadgeCheck className="h-4 w-4" />
-          Manage Subscription
-        </Button>
+      
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-medium">All Modules</h2>
+        <div className="flex items-center text-sm text-muted-foreground">
+          <span>We recommend using our </span>
+          <Button 
+            variant="link" 
+            className="px-1 h-auto" 
+            onClick={() => setLocation("/content-generator-new")}
+          >
+            new interface
+          </Button>
+          <span> for the best experience</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

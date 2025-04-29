@@ -178,6 +178,7 @@ function Router() {
         
         {/* Normal routes */}
         <Route path="/" component={AppCentral} />
+        <Route path="/dashboard" component={AppCentral} />
         <Route path="/module/:id" component={ModuleView} />
         <Route path="/mock-dashboard" component={MockDashboard} />
         <Route path="/mock-settings" component={MockSettings} />
