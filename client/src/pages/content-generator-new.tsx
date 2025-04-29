@@ -60,6 +60,7 @@ interface GenerationParams {
   
   // Regional focus - NEW FEATURE 4
   regionFocus?: string;
+  subRegion?: string;
   
   // Humanization parameters (percentages)
   typosPercentage?: number;
@@ -374,6 +375,7 @@ export default function ContentGeneratorNew() {
       generateBibliography,
       useFootnotes,
       regionFocus: regionFocus === "none" ? undefined : regionFocus,
+      subRegion: subRegion.trim() || undefined,
       typosPercentage,
       grammarMistakesPercentage,
       humanMisErrorsPercentage,

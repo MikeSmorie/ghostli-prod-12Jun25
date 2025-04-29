@@ -62,6 +62,8 @@ interface FeatureSectionProps {
   // Regional focus
   regionFocus: string;
   setRegionFocus: (value: string) => void;
+  subRegion: string;
+  setSubRegion: (value: string) => void;
   
   // Professional options
   includeCitations: boolean;
@@ -134,6 +136,8 @@ export function FeatureSection({
   // Regional focus
   regionFocus,
   setRegionFocus,
+  subRegion,
+  setSubRegion,
   
   // Professional options
   includeCitations,
@@ -209,6 +213,8 @@ export function FeatureSection({
           // Regional focus
           regionFocus={regionFocus}
           setRegionFocus={setRegionFocus}
+          subRegion={subRegion}
+          setSubRegion={setSubRegion}
           
           // Professional options
           includeCitations={includeCitations}
