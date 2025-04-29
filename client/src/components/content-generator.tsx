@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle } from "lucide-react";
+import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -696,6 +696,31 @@ export default function ContentGenerator() {
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[120px] bg-blue-50 dark:bg-blue-950"
                 />
+                
+                {/* Preferred Headline Input - NEW FEATURE */}
+                <div className="mt-3">
+                  <Label htmlFor="preferredHeadline">Preferred Headline (Optional)</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="ml-1 cursor-help">
+                          <HelpCircle className="h-3 w-3 text-gray-500" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[300px] p-3">
+                        <p className="mb-1"><strong>Preferred Headline:</strong></p>
+                        <p className="mb-1">Enter your ideal headline or title for the content. The system will use this as a basis for generating your content.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <Input
+                    id="preferredHeadline"
+                    placeholder="Enter your preferred headline or title"
+                    value={preferredHeadline}
+                    onChange={(e) => setPreferredHeadline(e.target.value)}
+                    className="mt-1 bg-blue-50 dark:bg-blue-950"
+                  />
+                </div>
               </div>
               
               <div className="space-y-4">
@@ -942,6 +967,79 @@ export default function ContentGenerator() {
                     </div>
                   </div>
                   
+                  {/* Website Scanning Options */}
+                  <div className="mt-4 bg-cyan-50 dark:bg-cyan-950/30 p-3 rounded-md border border-cyan-200 dark:border-cyan-800 text-sm">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-cyan-800 dark:text-cyan-400">Website Scanning</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <HelpCircle className="h-3 w-3 text-cyan-600 dark:text-cyan-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Website Scanning:</strong></p>
+                            <p className="mb-1">Analyze an existing website to generate content similar to it or based on it.</p>
+                            <p className="mb-1"><strong>Copy Style:</strong> Mimics the tone and style of the website</p>
+                            <p className="mb-1"><strong>Use Content:</strong> Extracts information from the website to use in generation</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Input
+                        id="websiteUrl"
+                        placeholder="Enter website URL (e.g., https://example.com)"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="copyWebsiteStyle" 
+                            checked={copyWebsiteStyle} 
+                            onCheckedChange={(checked) => setCopyWebsiteStyle(checked === true)}
+                            disabled={!websiteUrl} 
+                          />
+                          <Label htmlFor="copyWebsiteStyle" className={`text-xs ${!websiteUrl ? 'text-gray-400' : ''}`}>
+                            Copy website style & tone
+                          </Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="useWebsiteContent" 
+                            checked={useWebsiteContent} 
+                            onCheckedChange={(checked) => setUseWebsiteContent(checked === true)}
+                            disabled={!websiteUrl} 
+                          />
+                          <Label htmlFor="useWebsiteContent" className={`text-xs ${!websiteUrl ? 'text-gray-400' : ''}`}>
+                            Use website content
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      {websiteUrl && (
+                        <div className="text-xs text-cyan-700 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/30 p-2 rounded-md">
+                          <p className="flex items-center">
+                            <InfoIcon className="h-3 w-3 mr-1 inline" />
+                            {copyWebsiteStyle && useWebsiteContent 
+                              ? "Will analyze and copy both style and content from the website." 
+                              : copyWebsiteStyle 
+                                ? "Will analyze and copy only the writing style from the website." 
+                                : useWebsiteContent 
+                                  ? "Will extract and use information from the website." 
+                                  : "Website URL provided but no scanning options selected."}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   {/* Humanization Parameters - Only shown when Anti-AI Detection is enabled */}
                   {antiAIDetection && (
                   <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
@@ -1057,6 +1155,86 @@ export default function ContentGenerator() {
                       <div className="flex items-center space-x-2">
                         <Checkbox id="keywords" checked={generateKeywords} onCheckedChange={(checked) => setGenerateKeywords(checked as boolean)} />
                         <Label htmlFor="keywords" className="text-sm">Generate Keywords</Label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* NEW FEATURE 1: Keyword Controls */}
+                  <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-amber-800 dark:text-amber-400">Keyword Frequency Controls</h3>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[300px] p-3">
+                            <p className="mb-1"><strong>Keyword Controls:</strong></p>
+                            <p className="mb-1">Specify keywords that must appear in the content with a minimum number of occurrences.</p>
+                            <p className="mb-1">Useful for SEO-optimized content and ensuring key terms are adequately covered.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    {/* Keyword list */}
+                    {requiredKeywords.length > 0 ? (
+                      <div className="mb-3 space-y-2">
+                        {requiredKeywords.map((kw, index) => (
+                          <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded-md border border-amber-200 dark:border-amber-800">
+                            <div className="flex items-center">
+                              <KeySquare className="h-3 w-3 mr-2 text-amber-600 dark:text-amber-400" />
+                              <span className="text-sm font-medium">{kw.keyword}</span>
+                              <Badge variant="outline" className="ml-2 text-xs">Min: {kw.occurrences}×</Badge>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={() => removeKeyword(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">No required keywords added yet. Add keywords below.</p>
+                    )}
+                    
+                    {/* Add keyword form */}
+                    <div className="grid grid-cols-12 gap-2">
+                      <div className="col-span-7">
+                        <Input
+                          placeholder="Enter keyword"
+                          value={newKeyword}
+                          onChange={(e) => setNewKeyword(e.target.value)}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <Select value={newOccurrences.toString()} onValueChange={(val) => setNewOccurrences(parseInt(val))}>
+                          <SelectTrigger className="h-8 text-sm">
+                            <SelectValue placeholder="Min" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                              <SelectItem key={num} value={num.toString()}>{num}×</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2">
+                        <Button 
+                          type="button" 
+                          size="sm" 
+                          className="h-8 w-full" 
+                          onClick={addKeyword}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
