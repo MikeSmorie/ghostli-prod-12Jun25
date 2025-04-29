@@ -21,6 +21,7 @@ import SubscriptionManagement from "@/pages/subscription-management";
 import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
 import FeatureFlagsDemoPage from "@/pages/feature-flags-demo";
 import ContentGenerationPage from "./pages/content-generation";
+import ContentGeneratorNewPage from "./pages/content-generator-new";
 import CloneMePage from "./pages/clone-me";
 import { useUser } from "@/hooks/use-user";
 import { Loader2, LogOut } from "lucide-react";
@@ -185,6 +186,7 @@ function Router() {
         <Route path="/subscription/features" component={SubscriptionFeatures} />
         <Route path="/features-demo" component={FeatureFlagsDemoPage} />
         <Route path="/content-generation" component={ContentGenerationPage} />
+        <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
         <Route path="/clone-me" component={CloneMePage} />
         <Route component={NotFound} />
       </Switch>

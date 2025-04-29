@@ -91,7 +91,15 @@ export default function AppCentral() {
         </div>
       </div>
 
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end gap-4 mb-6">
+        <Button 
+          className="flex items-center gap-2"
+          variant="outline"
+          onClick={() => setLocation("/content-generator-new")}
+        >
+          <RefreshCw className="h-4 w-4" />
+          New Tabbed Interface (Beta)
+        </Button>
         <Button 
           className="flex items-center gap-2"
           onClick={() => setLocation("/subscription")}
