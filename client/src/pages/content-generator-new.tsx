@@ -243,7 +243,7 @@ export default function ContentGeneratorNew() {
   const [useFootnotes, setUseFootnotes] = useState(false);
   
   // Regional focus - NEW FEATURE 4
-  const [regionFocus, setRegionFocus] = useState("");
+  const [regionFocus, setRegionFocus] = useState("none");
   
   // Humanization parameters
   const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos
@@ -372,7 +372,7 @@ export default function ContentGeneratorNew() {
       restrictToRequiredSources,
       generateBibliography,
       useFootnotes,
-      regionFocus: regionFocus || undefined,
+      regionFocus: regionFocus === "none" ? undefined : regionFocus,
       typosPercentage,
       grammarMistakesPercentage,
       humanMisErrorsPercentage,

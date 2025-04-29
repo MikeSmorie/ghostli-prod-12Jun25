@@ -626,7 +626,7 @@ export function FeatureTabs({
                     <SelectValue placeholder="Select a region (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific region</SelectItem>
+                    <SelectItem value="none">No specific region</SelectItem>
                     <SelectItem value="usa">United States</SelectItem>
                     <SelectItem value="canada">Canada</SelectItem>
                     <SelectItem value="uk">United Kingdom</SelectItem>
