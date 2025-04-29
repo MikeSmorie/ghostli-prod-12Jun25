@@ -277,7 +277,7 @@ The platform is designed to help you create content that appears completely huma
       
     // About Anti-AI Detection  
     } else if (lcQuery.includes("anti-ai") || lcQuery.includes("detection") || lcQuery.includes("undetectable")) {
-      answer = `WriteRIGHT's anti-AI detection system ensures your content is completely undetectable by third parties or search engines as AI-written.
+      answer = `GhostliAI's anti-AI detection system ensures your content is completely undetectable by third parties or search engines as AI-written.
 
 It works by:
 1. Introducing controlled natural variations in writing style
@@ -317,7 +317,7 @@ This feature is especially valuable for maintaining consistent brand voice or pe
       
     // About Content Generation
     } else if (lcQuery.includes("generate") || lcQuery.includes("content") || lcQuery.includes("how to use")) {
-      answer = `To generate content in WriteRIGHT:
+      answer = `To generate content in GhostliAI:
 
 1. Navigate to the Content Generation page
 2. Enter your topic and requirements in the prompt field
@@ -342,7 +342,7 @@ For best results, be specific in your prompt about the audience, purpose, and ke
       
     // About Subscription Tiers
     } else if (lcQuery.includes("subscription") || lcQuery.includes("pricing") || lcQuery.includes("plans") || lcQuery.includes("tier")) {
-      answer = `WriteRIGHT offers four subscription tiers:
+      answer = `GhostliAI offers four subscription tiers:
 
 1. Free: Basic content generation with limited word count
 2. Basic: Extended word count + standard anti-AI detection
@@ -366,7 +366,7 @@ Each tier progressively unlocks more features, higher word count limits, and enh
         "You might want to check out our subscription plans for additional features."}
 
 You can ask me about:
-• What is WriteRIGHT
+• What is GhostliAI
 • How to generate content
 • Anti-AI detection features
 • The Clone Me feature
