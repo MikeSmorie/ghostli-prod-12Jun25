@@ -1470,10 +1470,14 @@ RESPONSE FORMAT:
       response_format: { type: "json_object" }
     });
 
-    const content = response.choices[0].message.content || "{}";
+    // Get the raw content and prepare for safer JSON parsing
+    let content = response.choices[0].message.content || "{}";
     let parsedResponse;
     
     try {
+      // Clean up content by removing markdown code blocks and unwanted characters
+      content = content.replace(/```json|```/g, "").trim();
+      console.log("[OpenAI] Parsing SEO keywords JSON response");
       parsedResponse = JSON.parse(content);
       
       // If the response doesn't have a keywords array, create a default one
