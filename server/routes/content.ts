@@ -100,6 +100,11 @@ const testOpenAI = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Log OpenAI configuration on startup
+console.log(`[CONFIG] OpenAI API Key exists: ${Boolean(process.env.OPENAI_API_KEY)}`);
+console.log(`[CONFIG] OpenAI API Key prefix: ${process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 5) + '...' : 'N/A'}`);
+console.log(`[CONFIG] Node environment: ${process.env.NODE_ENV || 'development'}`);
+
 export function registerContentRoutes(app: Express) {
   /**
    * Test OpenAI API connection directly
@@ -192,6 +197,8 @@ export function registerContentRoutes(app: Express) {
       // Let's do a simple direct call to OpenAI that bypasses our complex logic
       try {
         console.log("[INFO] Starting direct OpenAI call for content generation");
+        console.log("[CONFIG] Using API key prefix:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 5) + '...' : 'N/A');
+        console.log("[CONFIG] Is production:", process.env.NODE_ENV === 'production');
         
         // Create a simplified prompt
         let prompt = `Write content about: ${params.prompt}\n\n`;
@@ -204,76 +211,176 @@ export function registerContentRoutes(app: Express) {
         
         console.log("[INFO] Using direct OpenAI call with prompt:", prompt);
         
+        // Verify OpenAI client configuration
+        if (!testOpenAI.apiKey) {
+          console.error("[ERROR] OpenAI client has no API key configured");
+          throw new Error("OpenAI client is not properly configured with an API key");
+        }
+        
         // Create a direct API call
-        const response = await testOpenAI.chat.completions.create({
-          model: "gpt-3.5-turbo", // Use the most reliable model
-          messages: [
-            { 
-              role: "system", 
-              content: `You are an expert content writer who specializes in creating high-quality, engaging content.
-                       Your task is to generate content based on the user's specifications.` 
+        try {
+          console.log("[INFO] Attempting OpenAI completion with model: gpt-3.5-turbo");
+          const response = await testOpenAI.chat.completions.create({
+            model: "gpt-3.5-turbo", // Use the most reliable model
+            messages: [
+              { 
+                role: "system", 
+                content: `You are an expert content writer who specializes in creating high-quality, engaging content.
+                         Your task is to generate content based on the user's specifications.` 
+              },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+          });
+          
+          console.log("[INFO] Direct OpenAI call succeeded");
+          
+          const generatedContent = response.choices[0].message.content || "";
+          const wordCount = generatedContent.split(/\s+/).filter(Boolean).length;
+          
+          const now = new Date();
+          const startTime = new Date(now.getTime() - 2000); // 2 seconds ago
+          
+          const result = {
+            content: generatedContent,
+            contentWithFootnotes: null,
+            bibliography: [],
+            keywordUsage: [],
+            metadata: {
+              wordCount: wordCount,
+              generationTime: 2000,
+              iterations: 1,
+              tokens: {
+                prompt: response.usage?.prompt_tokens || 0,
+                completion: response.usage?.completion_tokens || 0,
+                total: response.usage?.total_tokens || 0
+              },
+              startTime: startTime,
+              endTime: now,
+              promptTokens: response.usage?.prompt_tokens || 0,
+              completionTokens: response.usage?.completion_tokens || 0,
+              totalTokens: response.usage?.total_tokens || 0
             },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        });
-        
-        console.log("[INFO] Direct OpenAI call succeeded");
-        
-        const generatedContent = response.choices[0].message.content || "";
-        const wordCount = generatedContent.split(/\s+/).filter(Boolean).length;
-        
-        const now = new Date();
-        const startTime = new Date(now.getTime() - 2000); // 2 seconds ago
-        
-        const result = {
-          content: generatedContent,
-          contentWithFootnotes: null,
-          bibliography: [],
-          keywordUsage: [],
-          metadata: {
-            wordCount: wordCount,
-            generationTime: 2000,
-            iterations: 1,
-            tokens: {
-              prompt: response.usage?.prompt_tokens || 0,
-              completion: response.usage?.completion_tokens || 0,
-              total: response.usage?.total_tokens || 0
+            seo: [],
+            hashtags: [],
+            keywords: []
+          };
+          
+          // Ensure the response is properly formatted JSON and sanitize any potentially problematic characters
+          const responseObj = {
+            content: result.content ? String(result.content).replace(/^\uFEFF/, '') : "",
+            contentWithFootnotes: result.contentWithFootnotes ? String(result.contentWithFootnotes).replace(/^\uFEFF/, '') : null,
+            bibliography: Array.isArray(result.bibliography) ? result.bibliography : [],
+            keywordUsage: Array.isArray(result.keywordUsage) ? result.keywordUsage : [],
+            metadata: {
+              wordCount: result.metadata.wordCount || 0,
+              generationTime: (result.metadata.endTime.getTime() - result.metadata.startTime.getTime()) || 0,
+              iterations: result.metadata.iterations || 1,
+              tokens: {
+                prompt: result.metadata.promptTokens || 0,
+                completion: result.metadata.completionTokens || 0,
+                total: result.metadata.totalTokens || 0
+              }
             },
-            startTime: startTime,
-            endTime: now,
-            promptTokens: response.usage?.prompt_tokens || 0,
-            completionTokens: response.usage?.completion_tokens || 0,
-            totalTokens: response.usage?.total_tokens || 0
-          },
-          seo: [],
-          hashtags: [],
-          keywords: []
-        };
-        
-        // Return the generated content
-        return res.json({
-          content: result.content,
-          contentWithFootnotes: result.contentWithFootnotes,
-          bibliography: result.bibliography || [],
-          keywordUsage: result.keywordUsage || [],
-          metadata: {
-            wordCount: result.metadata.wordCount,
-            generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
-            iterations: result.metadata.iterations,
-            tokens: {
-              prompt: result.metadata.promptTokens,
-              completion: result.metadata.completionTokens,
-              total: result.metadata.totalTokens
-            }
-          },
-          seo: result.seo || [],
-          hashtags: result.hashtags || [],
-          keywords: result.keywords || []
-        });
+            seo: Array.isArray(result.seo) ? result.seo : [],
+            hashtags: Array.isArray(result.hashtags) ? result.hashtags : [],
+            keywords: Array.isArray(result.keywords) ? result.keywords : []
+          };
+          
+          // Set proper content type and send response
+          res.setHeader('Content-Type', 'application/json');
+          return res.json(responseObj);
+        } catch (apiCallError) {
+          console.error("[ERROR] OpenAI API call failed:", apiCallError);
+          // Try fallback model if primary fails
+          try {
+            console.log("[INFO] Attempting fallback to model: gpt-4");
+            const fallbackResponse = await testOpenAI.chat.completions.create({
+              model: "gpt-4", // Fallback to different model
+              messages: [
+                { 
+                  role: "system", 
+                  content: `You are an expert content writer who specializes in creating high-quality, engaging content.
+                           Your task is to generate content based on the user's specifications.` 
+                },
+                { role: "user", content: prompt }
+              ],
+              temperature: 0.7,
+              max_tokens: 2000
+            });
+            
+            console.log("[INFO] Fallback OpenAI call succeeded with gpt-4");
+            
+            const generatedContent = fallbackResponse.choices[0].message.content || "";
+            const wordCount = generatedContent.split(/\s+/).filter(Boolean).length;
+            
+            const now = new Date();
+            const startTime = new Date(now.getTime() - 2000); // 2 seconds ago
+            
+            const result = {
+              content: generatedContent,
+              contentWithFootnotes: null,
+              bibliography: [],
+              keywordUsage: [],
+              metadata: {
+                wordCount: wordCount,
+                generationTime: 2000,
+                iterations: 1,
+                tokens: {
+                  prompt: fallbackResponse.usage?.prompt_tokens || 0,
+                  completion: fallbackResponse.usage?.completion_tokens || 0,
+                  total: fallbackResponse.usage?.total_tokens || 0
+                },
+                startTime: startTime,
+                endTime: now,
+                promptTokens: fallbackResponse.usage?.prompt_tokens || 0,
+                completionTokens: fallbackResponse.usage?.completion_tokens || 0,
+                totalTokens: fallbackResponse.usage?.total_tokens || 0
+              },
+              seo: [],
+              hashtags: [],
+              keywords: []
+            };
+            
+            // Ensure the response is properly formatted JSON and sanitize any potentially problematic characters
+            const responseObj = {
+              content: result.content ? String(result.content).replace(/^\uFEFF/, '') : "",
+              contentWithFootnotes: result.contentWithFootnotes ? String(result.contentWithFootnotes).replace(/^\uFEFF/, '') : null,
+              bibliography: Array.isArray(result.bibliography) ? result.bibliography : [],
+              keywordUsage: Array.isArray(result.keywordUsage) ? result.keywordUsage : [],
+              metadata: {
+                wordCount: result.metadata.wordCount || 0,
+                generationTime: (result.metadata.endTime.getTime() - result.metadata.startTime.getTime()) || 0,
+                iterations: result.metadata.iterations || 1,
+                tokens: {
+                  prompt: result.metadata.promptTokens || 0,
+                  completion: result.metadata.completionTokens || 0,
+                  total: result.metadata.totalTokens || 0
+                }
+              },
+              seo: Array.isArray(result.seo) ? result.seo : [],
+              hashtags: Array.isArray(result.hashtags) ? result.hashtags : [],
+              keywords: Array.isArray(result.keywords) ? result.keywords : []
+            };
+            
+            // Set proper content type and send response
+            res.setHeader('Content-Type', 'application/json');
+            return res.json(responseObj);
+          } catch (fallbackError) {
+            console.error("[ERROR] Fallback OpenAI API call also failed:", fallbackError);
+            throw apiCallError; // Re-throw the original error
+          }
+        }
       } catch (openaiError) {
-        console.error("OpenAI API error (simplified handler):", openaiError);
+        // Log detailed error information
+        console.error("[ERROR] OpenAI API error (simplified handler):", openaiError);
+        
+        if (openaiError instanceof Error) {
+          console.error("[ERROR] Error name:", openaiError.name);
+          console.error("[ERROR] Error message:", openaiError.message);
+          console.error("[ERROR] Error stack:", openaiError.stack);
+        }
         
         // Create a very basic fallback response
         const fallbackContent = `The content generation service is currently experiencing technical difficulties. 
@@ -286,7 +393,7 @@ Please try again in a few moments or contact support if the issue persists.
 
 Technical error: ${openaiError instanceof Error ? openaiError.message : 'Unknown error'}`;
         
-        return res.json({
+        const errorResponseObj = {
           content: fallbackContent,
           contentWithFootnotes: null,
           bibliography: [],
@@ -304,7 +411,11 @@ Technical error: ${openaiError instanceof Error ? openaiError.message : 'Unknown
           seo: [],
           hashtags: [],
           keywords: []
-        });
+        };
+        
+        // Set proper content type and send response
+        res.setHeader('Content-Type', 'application/json');
+        return res.json(errorResponseObj);
       }
     } catch (error) {
       console.error("Content generation error:", error);
