@@ -158,6 +158,7 @@ const getArchetypeDescription = (archetype: string): string => {
 export default function ContentGeneratorNew() {
   // Form state
   const [prompt, setPrompt] = useState("");
+  const [inputType, setInputType] = useState<"prompt" | "rewrite">("prompt"); // Toggle between prompt and rewrite modes
   const [preferredHeadline, setPreferredHeadline] = useState(""); // Optional preferred headline
   const [tone, setTone] = useState("professional");
   const [brandArchetype, setBrandArchetype] = useState("sage");
