@@ -39,7 +39,7 @@ const ContentGenerationRequestSchema = z.object({
     "creator", "ruler", "caregiver", "innocent",
     "everyman", "jester", "lover", "magician"
   ]).optional().default("sage"), // Make this optional with default
-  wordCount: z.number().int().min(50).max(5000),
+  wordCount: z.coerce.number().int().min(50).max(5000),
   antiAIDetection: z.boolean().default(false),
   prioritizeUndetectable: z.boolean().optional().default(true),
   isRewrite: z.boolean().optional().default(false),
@@ -57,9 +57,9 @@ const ContentGenerationRequestSchema = z.object({
   // Geographic/Regional focus
   regionFocus: z.string().optional().default(""),
   // Humanization parameters
-  typosPercentage: z.number().min(0).max(15).optional().default(3.0),
-  grammarMistakesPercentage: z.number().min(0).max(15).optional().default(3.0),
-  humanMisErrorsPercentage: z.number().min(0).max(15).optional().default(3.0),
+  typosPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
+  grammarMistakesPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
+  humanMisErrorsPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
   // Additional generation options
   generateSEO: z.boolean().optional().default(true),
   generateHashtags: z.boolean().optional().default(true),
@@ -77,8 +77,8 @@ const ContentGenerationRequestSchema = z.object({
   inclusiveLanguage: z.boolean().optional().default(false),
   addEmotionalImpact: z.boolean().optional().default(false),
   // New refinement options
-  maxIterations: z.number().int().min(1).max(10).optional().default(5),
-  wordCountTolerance: z.number().min(0.01).max(0.5).optional().default(0.1),
+  maxIterations: z.coerce.number().int().min(1).max(10).optional().default(5),
+  wordCountTolerance: z.coerce.number().min(0.01).max(0.5).optional().default(0.1),
   runAIDetectionTest: z.boolean().optional().default(false),
   // Bibliography options
   generateBibliography: z.boolean().optional().default(false),
@@ -142,6 +142,9 @@ export function registerContentRoutes(app: Express) {
    */
   app.post("/api/content/generate", async (req: Request, res: Response) => {
     try {
+      // Log the request body for debugging
+      console.log("Content generation request body:", JSON.stringify(req.body, null, 2));
+      
       // Validate request body
       const validationResult = ContentGenerationRequestSchema.safeParse(req.body);
       
@@ -215,6 +218,9 @@ export function registerContentRoutes(app: Express) {
    */
   app.post("/api/content/rewrite", async (req: Request, res: Response) => {
     try {
+      // Log the request body for debugging
+      console.log("Content rewrite request body:", JSON.stringify(req.body, null, 2));
+      
       // Validate request body
       const validationResult = ContentGenerationRequestSchema.safeParse(req.body);
       
