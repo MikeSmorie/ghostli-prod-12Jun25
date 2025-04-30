@@ -4,7 +4,8 @@ import {
   ContentGenerationParams, 
   generateContent, 
   SeoGenerationParams, 
-  generateSeoKeywords 
+  generateSeoKeywords,
+  rewriteContent
 } from "../services/openai";
 
 // Schema for keyword frequency requirements
@@ -120,10 +121,22 @@ export function registerContentRoutes(app: Express) {
         });
       }
       
-      // Attempt to generate content with OpenAI
+      // Determine whether to generate content or rewrite existing content
       try {
-        const result = await generateContent(params);
+        let result;
         
+        // Log the action type and parameters
+        if (params.isRewrite) {
+          console.log(`[INFO] Rewriting content with parameters: tone=${params.tone}, wordCount=${params.wordCount}, antiAIDetection=${params.antiAIDetection}`);
+          // Use the rewriteContent function for rewriting
+          result = await rewriteContent(params);
+        } else {
+          console.log(`[INFO] Generating content with parameters: tone=${params.tone}, wordCount=${params.wordCount}, antiAIDetection=${params.antiAIDetection}`);
+          // Use the generateContent function for new content
+          result = await generateContent(params);
+        }
+        
+        // Return the generated or rewritten content with all metadata
         return res.json({
           content: result.content,
           contentWithFootnotes: result.contentWithFootnotes,
@@ -148,9 +161,10 @@ export function registerContentRoutes(app: Express) {
         console.error("OpenAI API error:", openaiError);
         
         // Generate a fallback response for testing/development
-        const mockContent = `This is a fallback generated content for the prompt: "${params.prompt}"\n\n` +
+        const actionType = params.isRewrite ? "rewritten" : "generated";
+        const mockContent = `This is a fallback ${actionType} content for the prompt: "${params.prompt}"\n\n` +
           `This content is in a ${params.tone} tone and follows the ${params.brandArchetype} brand archetype.\n\n` +
-          `It contains about ${params.wordCount} words and has been generated as a fallback when the API has issues.\n\n` +
+          `It contains about ${params.wordCount} words and has been ${actionType} as a fallback when the API has issues.\n\n` +
           `The actual content would be much more detailed and tailored to your specific requirements.`;
           
         const mockSeo = params.generateSEO ? [
