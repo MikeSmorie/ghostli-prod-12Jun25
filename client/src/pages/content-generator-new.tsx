@@ -328,7 +328,8 @@ export default function ContentGeneratorNew() {
           try {
             // First try direct JSON parsing
             return JSON.parse(text);
-          } catch (jsonError) {
+          } catch (error) {
+            const jsonError = error;
             console.error("JSON parse error:", jsonError);
             console.log("Raw response text:", text);
             

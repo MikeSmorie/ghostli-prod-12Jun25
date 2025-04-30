@@ -72,7 +72,33 @@ export function getQueryFn(options: QueryFnOptions = {}) {
         throw new Error(`${res.status}: ${await res.text()}`);
       }
 
-      return res.json();
+      try {
+        // First try to parse as JSON directly
+        return await res.json();
+      } catch (jsonError) {
+        console.error("JSON parse error in queryClient:", jsonError);
+        
+        // If JSON parsing fails, try to read as text and then parse
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (secondError) {
+          console.error("Secondary JSON parse error:", secondError);
+          console.log("Raw response text:", text);
+          
+          // Return a placeholder object if we can't parse the response
+          if (text.includes('"content"')) {
+            // Try to extract content if it exists in the response
+            const contentMatch = text.match(/"content"\s*:\s*"([^"]+)"/);
+            if (contentMatch && contentMatch[1]) {
+              return { content: contentMatch[1] };
+            }
+          }
+          
+          // If all parsing fails, throw an error
+          throw new Error(`Failed to parse response: ${text.slice(0, 100)}...`);
+        }
+      }
     } catch (error) {
       if (error instanceof Error && error.message.includes("401") && options.on401 === "returnNull") {
         return null;

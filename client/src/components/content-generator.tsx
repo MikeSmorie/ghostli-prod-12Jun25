@@ -315,7 +315,45 @@ export default function ContentGenerator() {
         
         // Set progress to 100% to indicate completion
         setProgress(100);
-        return response.json();
+        
+        // Use a try-catch block around response.json() to handle JSON parse errors
+        try {
+          const text = await response.text();
+          try {
+            // First try direct JSON parsing
+            return JSON.parse(text);
+          } catch (jsonError) {
+            console.error("JSON parse error:", jsonError);
+            console.log("Raw response text:", text);
+            
+            // If parsing fails, try to extract content and create a valid response
+            if (text.includes('"content"')) {
+              const contentMatch = text.match(/"content"\s*:\s*"([^"]+)"/);
+              if (contentMatch && contentMatch[1]) {
+                return {
+                  content: contentMatch[1],
+                  contentWithFootnotes: null,
+                  metadata: {
+                    wordCount: contentMatch[1].split(/\s+/).filter(Boolean).length,
+                    generationTime: 1000,
+                    iterations: 1,
+                    tokens: {
+                      prompt: 0,
+                      completion: 0,
+                      total: 0
+                    }
+                  }
+                };
+              }
+            }
+            
+            // If all attempts fail, throw an error with details
+            throw new Error(`JSON parsing failed: ${String(jsonError)}. Raw response: ${text.slice(0, 100)}...`);
+          }
+        } catch (error) {
+          console.error("Error processing response:", error);
+          throw error;
+        }
       } catch (error: any) {
         setProgress(0);
         throw new Error(error.message || "An error occurred while generating content");

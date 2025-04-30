@@ -131,7 +131,7 @@ export function registerContentRoutes(app: Express) {
       return res.status(500).json({
         success: false,
         error: "OpenAI test failed",
-        message: error.message
+        message: error instanceof Error ? error.message : String(error)
       });
     }
   });
@@ -209,6 +209,74 @@ export function registerContentRoutes(app: Express) {
     }
   });
 
+  /**
+   * Rewrite content to make it undetectable by AI detection tools
+   * POST /api/content/rewrite
+   */
+  app.post("/api/content/rewrite", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = ContentGenerationRequestSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({
+          error: "Invalid request parameters",
+          details: validationResult.error.format()
+        });
+      }
+      
+      // Extract validated parameters and force isRewrite to true
+      const params: ContentGenerationParams = {
+        ...validationResult.data,
+        isRewrite: true
+      };
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
+      }
+      
+      try {
+        // Use the rewriteContent function
+        const result = await rewriteContent(params);
+        
+        // Return the rewritten content
+        return res.json({
+          content: result.content,
+          contentWithFootnotes: result.contentWithFootnotes,
+          bibliography: result.bibliography || [],
+          keywordUsage: result.keywordUsage || [],
+          metadata: {
+            wordCount: result.metadata.wordCount,
+            generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
+            iterations: result.metadata.iterations,
+            tokens: {
+              prompt: result.metadata.promptTokens,
+              completion: result.metadata.completionTokens,
+              total: result.metadata.totalTokens
+            }
+          },
+          seo: result.seo || [],
+          hashtags: result.hashtags || [],
+          keywords: result.keywords || []
+        });
+      } catch (error) {
+        console.error("OpenAI API error:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Content rewriting error:", error);
+      
+      return res.status(500).json({
+        error: "Content rewriting failed",
+        message: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
+  });
+  
   /**
    * Generate SEO keywords from content
    * POST /api/generate-seo
