@@ -6,8 +6,45 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const MODEL = "gpt-4o";
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+// We'll use "gpt-4" as a fallback if gpt-4o isn't available
+const PRIMARY_MODEL = "gpt-4o";
+const FALLBACK_MODEL = "gpt-4";
+let MODEL = PRIMARY_MODEL;
+
+// Function to test if a model is available
+async function testModelAvailability(model: string): Promise<boolean> {
+  try {
+    await openai.chat.completions.create({
+      model: model,
+      messages: [{ role: "user", content: "test" }],
+      max_tokens: 5
+    });
+    return true;
+  } catch (error: any) {
+    console.error(`Model ${model} not available:`, error?.message || 'Unknown error');
+    return false;
+  }
+}
+
+// Try to determine the best available model
+(async () => {
+  try {
+    if (await testModelAvailability(PRIMARY_MODEL)) {
+      MODEL = PRIMARY_MODEL;
+      console.log(`Using primary model: ${MODEL}`);
+    } else if (await testModelAvailability(FALLBACK_MODEL)) {
+      MODEL = FALLBACK_MODEL;
+      console.log(`Primary model unavailable, using fallback model: ${MODEL}`);
+    } else {
+      MODEL = "gpt-3.5-turbo";
+      console.log(`Fallback to basic model: ${MODEL}`);
+    }
+  } catch (error) {
+    console.error("Error determining available model:", error);
+    MODEL = "gpt-3.5-turbo"; // Ultimate fallback
+  }
+})();
 
 /**
  * Interface for SEO keyword generation
@@ -167,29 +204,78 @@ async function generateWithOpenAI(
   userPrompt: string, 
   options: { temperature?: number; max_tokens?: number } = {}
 ) {
-  try {
-    // Use provided options or default values
-    const temperature = options.temperature !== undefined ? options.temperature : 0.7;
-    const max_tokens = options.max_tokens !== undefined ? options.max_tokens : 2000;
+  // Use provided options or default values
+  const temperature = options.temperature !== undefined ? options.temperature : 0.7;
+  const max_tokens = options.max_tokens !== undefined ? options.max_tokens : 2000;
 
-    const response = await openai.chat.completions.create({
-      model: MODEL,
-      messages: [
-        { role: "system", content: systemMessage },
-        { role: "user", content: userPrompt }
-      ],
-      temperature,
-      max_tokens,
-    });
-    
-    return { 
-      content: response.choices[0].message.content || "",
-      usage: response.usage,
-    };
-  } catch (error) {
-    console.error("OpenAI API error:", error);
-    throw new Error("Error generating content with OpenAI API. Please try again later.");
+  // Define models to try in order of preference
+  const modelsToTry = [MODEL, "gpt-4", "gpt-3.5-turbo"];
+  
+  // Keep track of errors to report if all models fail
+  const errors: Error[] = [];
+  
+  // Try each model in succession
+  for (const model of modelsToTry) {
+    try {
+      // Log API call details
+      console.log(`[OpenAI] Making API call with model: ${model}, temperature: ${temperature}, max_tokens: ${max_tokens}`);
+      console.log(`[OpenAI] API key exists: ${Boolean(process.env.OPENAI_API_KEY)}`);
+      
+      const response = await openai.chat.completions.create({
+        model: model,
+        messages: [
+          { role: "system", content: systemMessage },
+          { role: "user", content: userPrompt }
+        ],
+        temperature,
+        max_tokens,
+      });
+      
+      console.log(`[OpenAI] API call successful with model ${model}, received ${response.choices.length} choices`);
+      
+      // If we're using a fallback model, update MODEL for future calls
+      if (model !== MODEL) {
+        console.log(`[OpenAI] Updating default model from ${MODEL} to ${model} for future requests`);
+        MODEL = model;
+      }
+      
+      return { 
+        content: response.choices[0].message.content || "",
+        usage: response.usage,
+      };
+    } catch (error) {
+      // More detailed error logging
+      console.error(`[OpenAI] Error with model ${model}:`, error.message);
+      
+      if (error instanceof Error) {
+        console.error(`[OpenAI] Error details - name: ${error.name}, message: ${error.message}`);
+        errors.push(error);
+      }
+      
+      // Try to get more specific error information
+      if (typeof error === 'object' && error !== null) {
+        // @ts-ignore
+        if (error.response) {
+          // @ts-ignore
+          console.error(`[OpenAI] API response status with model ${model}:`, error.response.status);
+          // @ts-ignore
+          console.error(`[OpenAI] API response data with model ${model}:`, error.response.data);
+        }
+      }
+      
+      // If this is the last model, we need to throw an error
+      if (model === modelsToTry[modelsToTry.length - 1]) {
+        const errorMessages = errors.map(e => e.message).join('; ');
+        throw new Error(`Failed to generate content with all OpenAI models. Errors: ${errorMessages}`);
+      }
+      
+      // Otherwise, continue to the next model
+      console.log(`[OpenAI] Trying next model in fallback sequence...`);
+    }
   }
+  
+  // This should never happen because the last model in the loop should either succeed or throw
+  throw new Error("Unexpected error in OpenAI API call");
 }
 
 /**

@@ -129,11 +129,33 @@ export function registerContentRoutes(app: Express) {
         if (params.isRewrite) {
           console.log(`[INFO] Rewriting content with parameters: tone=${params.tone}, wordCount=${params.wordCount}, antiAIDetection=${params.antiAIDetection}`);
           // Use the rewriteContent function for rewriting
-          result = await rewriteContent(params);
+          try {
+            result = await rewriteContent(params);
+            console.log("[INFO] Rewriting content succeeded");
+            // Validate the result
+            if (!result || !result.content) {
+              console.error("[ERROR] Rewriting content returned empty result");
+              throw new Error("Rewriting content returned empty result");
+            }
+          } catch (err) {
+            console.error("[ERROR] Rewriting content failed:", err);
+            throw err;
+          }
         } else {
           console.log(`[INFO] Generating content with parameters: tone=${params.tone}, wordCount=${params.wordCount}, antiAIDetection=${params.antiAIDetection}`);
           // Use the generateContent function for new content
-          result = await generateContent(params);
+          try {
+            result = await generateContent(params);
+            console.log("[INFO] Generating content succeeded");
+            // Validate the result
+            if (!result || !result.content) {
+              console.error("[ERROR] Generating content returned empty result");
+              throw new Error("Generating content returned empty result");
+            }
+          } catch (err) {
+            console.error("[ERROR] Generating content failed:", err);
+            throw err;
+          }
         }
         
         // Return the generated or rewritten content with all metadata
