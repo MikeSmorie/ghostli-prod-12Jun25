@@ -102,6 +102,34 @@ const testOpenAI = new OpenAI({
 
 export function registerContentRoutes(app: Express) {
   /**
+   * Test endpoint to debug JSON encoding issues
+   * GET /api/json-debug
+   */
+  app.get("/api/json-debug", (req: Request, res: Response) => {
+    const testObj = {
+      message: "This is a test message",
+      number: 123,
+      boolean: true,
+      array: [1, 2, 3],
+      nested: {
+        key: "value"
+      }
+    };
+    
+    // First, convert to string
+    const jsonString = JSON.stringify(testObj);
+    
+    // Log raw bytes for debugging
+    console.log("Raw bytes of JSON string:");
+    for (let i = 0; i < Math.min(20, jsonString.length); i++) {
+      console.log(`Byte ${i}: ${jsonString.charCodeAt(i)} (${jsonString[i]})`);
+    }
+    
+    // Set explicit content type and charset
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.send(jsonString);
+  });
+  /**
    * Test OpenAI API connection directly
    * GET /api/openai-test
    */
@@ -266,43 +294,55 @@ export function registerContentRoutes(app: Express) {
           };
         }
         
-        // Return the generated or rewritten content with all metadata
-        return res.json({
-          content: result.content,
-          contentWithFootnotes: result.contentWithFootnotes,
-          bibliography: result.bibliography || [],
-          keywordUsage: result.keywordUsage || [],
+        // Create a clean response object
+        const responseObj = {
+          content: typeof result.content === 'string' ? result.content : '',
+          contentWithFootnotes: typeof result.contentWithFootnotes === 'string' ? result.contentWithFootnotes : null,
+          bibliography: Array.isArray(result.bibliography) ? result.bibliography : [],
+          keywordUsage: Array.isArray(result.keywordUsage) ? result.keywordUsage : [],
           metadata: {
-            wordCount: result.metadata.wordCount,
-            generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
-            iterations: result.metadata.iterations,
+            wordCount: typeof result.metadata.wordCount === 'number' ? result.metadata.wordCount : 0,
+            generationTime: typeof result.metadata.endTime === 'object' && typeof result.metadata.startTime === 'object' ? 
+                           (result.metadata.endTime.getTime() - result.metadata.startTime.getTime()) : 0,
+            iterations: typeof result.metadata.iterations === 'number' ? result.metadata.iterations : 1,
             tokens: {
-              prompt: result.metadata.promptTokens,
-              completion: result.metadata.completionTokens,
-              total: result.metadata.totalTokens
+              prompt: typeof result.metadata.promptTokens === 'number' ? result.metadata.promptTokens : 0,
+              completion: typeof result.metadata.completionTokens === 'number' ? result.metadata.completionTokens : 0,
+              total: typeof result.metadata.totalTokens === 'number' ? result.metadata.totalTokens : 0
             }
           },
-          seo: result.seo || [],
-          hashtags: result.hashtags || [],
-          keywords: result.keywords || []
-        });
+          seo: Array.isArray(result.seo) ? result.seo : [],
+          hashtags: Array.isArray(result.hashtags) ? result.hashtags : [],
+          keywords: Array.isArray(result.keywords) ? result.keywords : []
+        };
+        
+        // Convert to JSON string and explicitly handle encoding
+        const jsonString = JSON.stringify(responseObj);
+        
+        // Set explicit content type and charset
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        
+        // Send raw string instead of using res.json() to have more control
+        return res.send(jsonString);
       } catch (openaiError) {
         console.error("OpenAI API error:", openaiError);
         
-        // Generate a fallback response for development
+        // Generate a fallback response for API errors
         const actionType = params.isRewrite ? "rewritten" : "generated";
-        const mockContent = `This is a fallback ${actionType} content for the prompt: "${params.prompt}"\n\n` +
-          `This content is in a ${params.tone} tone and follows the ${params.brandArchetype} brand archetype.\n\n` +
-          `It contains about ${params.wordCount} words and has been ${actionType} as a fallback when the API has issues.\n\n` +
-          `The actual content would be much more detailed and tailored to your specific requirements.`;
+        const errorContent = `I'm sorry, but there was an error ${actionType} content for your prompt: "${params.prompt}"
+
+Error details: ${openaiError instanceof Error ? openaiError.message : 'Unknown error'}
+
+Please try again in a few moments or contact support if the issue persists.`;
           
-        return res.json({
-          content: mockContent,
+        // Create a clean fallback response object
+        const fallbackObj = {
+          content: errorContent,
           contentWithFootnotes: null,
           bibliography: [],
           keywordUsage: [],
           metadata: {
-            wordCount: mockContent.split(/\s+/).filter(Boolean).length,
+            wordCount: errorContent.split(/\s+/).filter(Boolean).length,
             generationTime: 100,
             iterations: 0,
             tokens: {
@@ -314,22 +354,35 @@ export function registerContentRoutes(app: Express) {
           seo: [],
           hashtags: [],
           keywords: []
-        });
+        };
+        
+        // Convert to JSON string with explicit encoding
+        const fallbackJsonString = JSON.stringify(fallbackObj);
+        
+        // Set explicit content type and charset
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        
+        // Send raw string instead of using res.json()
+        return res.send(fallbackJsonString);
       }
     } catch (error) {
       console.error("Content generation error:", error);
       
-      if (error instanceof Error) {
-        return res.status(500).json({
-          error: "Content generation failed",
-          message: error.message
-        });
-      }
-      
-      return res.status(500).json({
+      // Create an error response object
+      const errorObj = {
         error: "Content generation failed",
-        message: "An unknown error occurred"
-      });
+        message: error instanceof Error ? error.message : "An unknown error occurred"
+      };
+      
+      // Convert to JSON string with explicit encoding
+      const errorJsonString = JSON.stringify(errorObj);
+      
+      // Set status code and headers
+      res.status(500);
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      
+      // Send raw string instead of using res.json()
+      return res.send(errorJsonString);
     }
   });
 
