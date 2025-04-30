@@ -38,7 +38,7 @@ const ContentGenerationRequestSchema = z.object({
     "sage", "hero", "outlaw", "explorer", 
     "creator", "ruler", "caregiver", "innocent",
     "everyman", "jester", "lover", "magician"
-  ]),
+  ]).optional().default("sage"), // Make this optional with default
   wordCount: z.number().int().min(50).max(5000),
   antiAIDetection: z.boolean().default(false),
   prioritizeUndetectable: z.boolean().optional().default(true),
@@ -46,7 +46,7 @@ const ContentGenerationRequestSchema = z.object({
   // Language options
   englishVariant: z.enum(["us", "uk"]).optional().default("us"),
   // Website scanning options
-  websiteUrl: z.string().url().optional().default(""),
+  websiteUrl: z.string().optional().default(""), // Allow empty string for websiteUrl
   copyWebsiteStyle: z.boolean().optional().default(false),
   useWebsiteContent: z.boolean().optional().default(false),
   // Keyword control options
