@@ -243,13 +243,17 @@ async function generateWithOpenAI(
         content: response.choices[0].message.content || "",
         usage: response.usage,
       };
-    } catch (error) {
+    } catch (error: any) {
       // More detailed error logging
-      console.error(`[OpenAI] Error with model ${model}:`, error.message);
+      console.error(`[OpenAI] Error with model ${model}:`, error?.message || 'Unknown error');
       
       if (error instanceof Error) {
         console.error(`[OpenAI] Error details - name: ${error.name}, message: ${error.message}`);
         errors.push(error);
+      } else if (error) {
+        // Create an Error object from the unknown error
+        const genericError = new Error(typeof error.message === 'string' ? error.message : 'Unknown OpenAI API error');
+        errors.push(genericError);
       }
       
       // Try to get more specific error information
