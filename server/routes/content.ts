@@ -40,6 +40,7 @@ const ContentGenerationRequestSchema = z.object({
   wordCount: z.number().int().min(50).max(5000),
   antiAIDetection: z.boolean().default(false),
   prioritizeUndetectable: z.boolean().optional().default(true),
+  isRewrite: z.boolean().optional().default(false),
   // Language options
   englishVariant: z.enum(["us", "uk"]).optional().default("us"),
   // Website scanning options

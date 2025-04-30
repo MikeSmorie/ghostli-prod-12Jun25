@@ -44,6 +44,7 @@ export interface ContentGenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  isRewrite?: boolean;                    // Indicates if this is a rewrite request
   // Language options
   englishVariant?: string;                // 'american' or 'british' English variant
   // Website scanning options
@@ -1193,6 +1194,118 @@ function getArchetypeDescription(archetype: string): string {
  * @param params Content parameters for SEO generation
  * @returns List of generated keywords and hashtags
  */
+/**
+ * Rewrites content to make it undetectable by AI detection tools
+ * @param params Parameters for content rewriting
+ * @returns Rewritten content and metadata
+ */
+export async function rewriteContent(params: ContentGenerationParams): Promise<ContentGenerationResult> {
+  const startTime = new Date();
+  
+  // Build the system prompt for rewriting
+  let systemPrompt = `
+You are an expert content rewriter with the unique skill of making AI-generated content appear completely human-written and undetectable by AI detection tools.
+
+REWRITE REQUIREMENTS:
+- Rewrite the provided content while preserving the core meaning, key information, and overall structure
+- Ensure the content appears completely human-written and undetectable by AI detection systems
+- Write in a ${params.tone} tone (${getToneDescription(params.tone)})
+- Embody the ${params.brandArchetype} brand archetype (${getArchetypeDescription(params.brandArchetype)})
+- Target word count: ${params.wordCount} words (stay within 10% of this target)
+
+HUMANIZATION TECHNIQUES:
+- Vary sentence structures extensively (mix simple, compound, and complex sentences)
+- Include natural language patterns typical of human writing
+- Incorporate approximately ${params.typosPercentage || 1}% natural typos and ${params.grammarMistakesPercentage || 1}% minor grammar errors
+- Add occasional imperfections in logic flow and transition words
+- Use colloquialisms and idioms where appropriate
+- Avoid repetitive patterns in sentence structures
+- Incorporate human-like reasoning patterns with occasional incomplete thoughts
+`;
+
+  // Add English variant instructions
+  if (params.englishVariant === "uk") {
+    systemPrompt += `
+- Use British English spelling and phrasing conventions (e.g., 'colour' instead of 'color', 'whilst' instead of 'while')
+- Incorporate British idioms and expressions when appropriate
+`;
+  } else {
+    systemPrompt += `
+- Use American English spelling and phrasing conventions
+- Incorporate American idioms and expressions when appropriate
+`;
+  }
+
+  // Add any keyword requirements
+  if (params.requiredKeywords && params.requiredKeywords.length > 0) {
+    systemPrompt += `
+KEYWORD REQUIREMENTS:
+The rewritten content must include these keywords with minimum occurrences:
+${params.requiredKeywords.map(k => `- "${k.keyword}" - at least ${k.occurrences} times`).join('\n')}
+`;
+  }
+
+  // Add anti-AI detection emphasis if needed
+  if (params.antiAIDetection) {
+    systemPrompt += `
+ANTI-AI DETECTION EMPHASIS:
+This is extremely important: make the content highly resistant to AI detection through natural human writing patterns.
+The content should pass as human-written when analyzed by AI detection tools.
+`;
+    
+    if (params.prioritizeUndetectable) {
+      systemPrompt += `Prioritize undetectability over everything else.\n`;
+    }
+  }
+
+  try {
+    // Call OpenAI to rewrite the content
+    const response = await openai.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
+        {
+          role: "user",
+          content: `Please rewrite this content to make it undetectable by AI detection tools while preserving the meaning and key information:\n\n${params.prompt}`
+        }
+      ],
+      temperature: 0.7
+    });
+
+    const rewrittenContent = response.choices[0].message.content || "";
+    const endTime = new Date();
+    
+    // Count words in the rewritten content
+    const wordCount = rewrittenContent.split(/\s+/).filter(Boolean).length;
+    
+    // Run AI detection test if requested
+    let aiDetectionResults;
+    if (params.runAIDetectionTest) {
+      aiDetectionResults = await simulateAIDetectionTest(rewrittenContent);
+    }
+    
+    return {
+      content: rewrittenContent,
+      metadata: {
+        startTime,
+        endTime,
+        wordCount,
+        iterations: 1,
+        promptTokens: response.usage?.prompt_tokens || 0,
+        completionTokens: response.usage?.completion_tokens || 0,
+        totalTokens: response.usage?.total_tokens || 0,
+        aiDetectionResults
+      }
+    };
+  } catch (error) {
+    console.error("Error in rewriting content:", error);
+    throw new Error("Failed to rewrite content. Please try again later.");
+  }
+}
+
 export async function generateSeoKeywords(params: SeoGenerationParams): Promise<SeoGenerationResult> {
   try {
     const systemMessage = `
