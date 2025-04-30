@@ -102,34 +102,6 @@ const testOpenAI = new OpenAI({
 
 export function registerContentRoutes(app: Express) {
   /**
-   * Test endpoint to debug JSON encoding issues
-   * GET /api/json-debug
-   */
-  app.get("/api/json-debug", (req: Request, res: Response) => {
-    const testObj = {
-      message: "This is a test message",
-      number: 123,
-      boolean: true,
-      array: [1, 2, 3],
-      nested: {
-        key: "value"
-      }
-    };
-    
-    // First, convert to string
-    const jsonString = JSON.stringify(testObj);
-    
-    // Log raw bytes for debugging
-    console.log("Raw bytes of JSON string:");
-    for (let i = 0; i < Math.min(20, jsonString.length); i++) {
-      console.log(`Byte ${i}: ${jsonString.charCodeAt(i)} (${jsonString[i]})`);
-    }
-    
-    // Set explicit content type and charset
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.send(jsonString);
-  });
-  /**
    * Test OpenAI API connection directly
    * GET /api/openai-test
    */
@@ -139,51 +111,25 @@ export function registerContentRoutes(app: Express) {
       console.log("API Key exists:", Boolean(process.env.OPENAI_API_KEY));
       console.log("API Key first 5 chars:", process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 5) + '...' : 'N/A');
       
-      const models = ["gpt-4o", "gpt-4", "gpt-3.5-turbo"];
-      const results = {};
-      
-      for (const model of models) {
-        try {
-          console.log(`Testing model: ${model}...`);
-          const startTime = Date.now();
-          
-          const response = await testOpenAI.chat.completions.create({
-            model: model,
-            messages: [
-              { role: "system", content: "You are a helpful assistant." },
-              { role: "user", content: "Say hello world" }
-            ],
-            max_tokens: 10
-          });
-          
-          const endTime = Date.now();
-          
-          results[model] = {
-            success: true,
-            response: response.choices[0].message,
-            time: endTime - startTime
-          };
-          
-          console.log(`Test for ${model} succeeded in ${endTime - startTime}ms`);
-        } catch (error) {
-          console.error(`Test for ${model} failed:`, error.message);
-          results[model] = {
-            success: false,
-            error: error.message
-          };
-        }
-      }
+      const response = await testOpenAI.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: "Say hello world" }
+        ],
+        max_tokens: 10
+      });
       
       return res.json({
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development',
-        apiKeyExists: Boolean(process.env.OPENAI_API_KEY),
-        apiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 5) + '...' : 'N/A',
-        results
+        success: true,
+        message: response.choices[0].message.content,
+        model: "gpt-3.5-turbo",
+        timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error("OpenAI test error:", error);
       return res.status(500).json({
+        success: false,
         error: "OpenAI test failed",
         message: error.message
       });
@@ -217,172 +163,49 @@ export function registerContentRoutes(app: Express) {
         });
       }
       
-      // Determine whether to generate content or rewrite existing content
       try {
+        // Determine whether to generate content or rewrite existing content
         let result;
         
-        // Log the action type and parameters
         if (params.isRewrite) {
-          console.log(`[INFO] Rewriting content with parameters: tone=${params.tone}, wordCount=${params.wordCount}, antiAIDetection=${params.antiAIDetection}`);
           // Use the rewriteContent function for rewriting
-          try {
-            result = await rewriteContent(params);
-            console.log("[INFO] Rewriting content succeeded");
-            // Validate the result
-            if (!result || !result.content) {
-              console.error("[ERROR] Rewriting content returned empty result");
-              throw new Error("Rewriting content returned empty result");
-            }
-          } catch (err) {
-            console.error("[ERROR] Rewriting content failed:", err);
-            throw err;
-          }
+          result = await rewriteContent(params);
         } else {
-          console.log(`[INFO] Using direct OpenAI call for content generation`);
-          
-          // Create a simplified prompt
-          let prompt = `Write content about: ${params.prompt}\n\n`;
-          prompt += `Tone: ${params.tone}\n`;
-          prompt += `Word count: approximately ${params.wordCount} words\n`;
-          
-          if (params.antiAIDetection) {
-            prompt += "Make this content completely undetectable by AI detection tools.\n";
-          }
-          
-          console.log("[INFO] Using prompt:", prompt);
-          
-          const response = await testOpenAI.chat.completions.create({
-            model: "gpt-3.5-turbo", // Use the most reliable model
-            messages: [
-              { 
-                role: "system", 
-                content: `You are an expert content writer who specializes in creating high-quality, engaging content.
-                         Your task is to generate content based on the user's specifications.` 
-              },
-              { role: "user", content: prompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 2000
-          });
-          
-          console.log("[INFO] OpenAI call succeeded");
-          
-          const generatedContent = response.choices[0].message.content || "";
-          const wordCount = generatedContent.split(/\s+/).filter(Boolean).length;
-          
-          const now = new Date();
-          const startTime = new Date(now.getTime() - 2000); // 2 seconds ago
-          
-          result = {
-            content: generatedContent,
-            contentWithFootnotes: null,
-            bibliography: [],
-            keywordUsage: [],
-            metadata: {
-              wordCount: wordCount,
-              generationTime: 2000,
-              iterations: 1,
-              startTime: startTime,
-              endTime: now,
-              promptTokens: response.usage?.prompt_tokens || 0,
-              completionTokens: response.usage?.completion_tokens || 0,
-              totalTokens: response.usage?.total_tokens || 0
-            },
-            seo: [],
-            hashtags: [],
-            keywords: []
-          };
+          // Use the generateContent function for new content
+          result = await generateContent(params);
         }
         
-        // Create a clean response object
-        const responseObj = {
-          content: typeof result.content === 'string' ? result.content : '',
-          contentWithFootnotes: typeof result.contentWithFootnotes === 'string' ? result.contentWithFootnotes : null,
-          bibliography: Array.isArray(result.bibliography) ? result.bibliography : [],
-          keywordUsage: Array.isArray(result.keywordUsage) ? result.keywordUsage : [],
+        // Return the generated content
+        return res.json({
+          content: result.content,
+          contentWithFootnotes: result.contentWithFootnotes,
+          bibliography: result.bibliography || [],
+          keywordUsage: result.keywordUsage || [],
           metadata: {
-            wordCount: typeof result.metadata.wordCount === 'number' ? result.metadata.wordCount : 0,
-            generationTime: typeof result.metadata.endTime === 'object' && typeof result.metadata.startTime === 'object' ? 
-                           (result.metadata.endTime.getTime() - result.metadata.startTime.getTime()) : 0,
-            iterations: typeof result.metadata.iterations === 'number' ? result.metadata.iterations : 1,
+            wordCount: result.metadata.wordCount,
+            generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
+            iterations: result.metadata.iterations,
             tokens: {
-              prompt: typeof result.metadata.promptTokens === 'number' ? result.metadata.promptTokens : 0,
-              completion: typeof result.metadata.completionTokens === 'number' ? result.metadata.completionTokens : 0,
-              total: typeof result.metadata.totalTokens === 'number' ? result.metadata.totalTokens : 0
+              prompt: result.metadata.promptTokens,
+              completion: result.metadata.completionTokens,
+              total: result.metadata.totalTokens
             }
           },
-          seo: Array.isArray(result.seo) ? result.seo : [],
-          hashtags: Array.isArray(result.hashtags) ? result.hashtags : [],
-          keywords: Array.isArray(result.keywords) ? result.keywords : []
-        };
-        
-        // Convert to JSON string and explicitly handle encoding
-        const jsonString = JSON.stringify(responseObj);
-        
-        // Set explicit content type and charset
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        
-        // Send raw string instead of using res.json() to have more control
-        return res.send(jsonString);
-      } catch (openaiError) {
-        console.error("OpenAI API error:", openaiError);
-        
-        // Generate a fallback response for API errors
-        const actionType = params.isRewrite ? "rewritten" : "generated";
-        const errorContent = `I'm sorry, but there was an error ${actionType} content for your prompt: "${params.prompt}"
-
-Error details: ${openaiError instanceof Error ? openaiError.message : 'Unknown error'}
-
-Please try again in a few moments or contact support if the issue persists.`;
-          
-        // Create a clean fallback response object
-        const fallbackObj = {
-          content: errorContent,
-          contentWithFootnotes: null,
-          bibliography: [],
-          keywordUsage: [],
-          metadata: {
-            wordCount: errorContent.split(/\s+/).filter(Boolean).length,
-            generationTime: 100,
-            iterations: 0,
-            tokens: {
-              prompt: 20,
-              completion: 50,
-              total: 70
-            }
-          },
-          seo: [],
-          hashtags: [],
-          keywords: []
-        };
-        
-        // Convert to JSON string with explicit encoding
-        const fallbackJsonString = JSON.stringify(fallbackObj);
-        
-        // Set explicit content type and charset
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        
-        // Send raw string instead of using res.json()
-        return res.send(fallbackJsonString);
+          seo: result.seo || [],
+          hashtags: result.hashtags || [],
+          keywords: result.keywords || []
+        });
+      } catch (error) {
+        console.error("OpenAI API error:", error);
+        throw error;
       }
     } catch (error) {
       console.error("Content generation error:", error);
       
-      // Create an error response object
-      const errorObj = {
+      return res.status(500).json({
         error: "Content generation failed",
         message: error instanceof Error ? error.message : "An unknown error occurred"
-      };
-      
-      // Convert to JSON string with explicit encoding
-      const errorJsonString = JSON.stringify(errorObj);
-      
-      // Set status code and headers
-      res.status(500);
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      
-      // Send raw string instead of using res.json()
-      return res.send(errorJsonString);
+      });
     }
   });
 
