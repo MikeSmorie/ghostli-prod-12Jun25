@@ -22,68 +22,147 @@ const RequiredSourceSchema = z.object({
   priority: z.number().int().min(1).max(5).default(3), // 1 = highest priority, 5 = lowest
 });
 
-// Schema for content generation request
+// Schema for content generation request - simplified and more robust
 const ContentGenerationRequestSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  // New Preferred Headline parameter
+  
+  // Allow any string for these fields with defaults
   preferredHeadline: z.string().optional().default(""),
-  tone: z.enum([
-    "professional", "casual", "academic", 
-    "enthusiastic", "authoritative", "persuasive", 
-    "informative", "humorous", "formal",
-    "polite", "firm", "legal", "conversational", 
-    "technical", "compassionate", "inspiring"
-  ]),
-  brandArchetype: z.enum([
-    "sage", "hero", "outlaw", "explorer", 
-    "creator", "ruler", "caregiver", "innocent",
-    "everyman", "jester", "lover", "magician"
-  ]).optional().default("sage"), // Make this optional with default
-  wordCount: z.coerce.number().int().min(50).max(5000),
-  antiAIDetection: z.boolean().default(false),
-  prioritizeUndetectable: z.boolean().optional().default(true),
-  isRewrite: z.boolean().optional().default(false),
-  // Language options
-  englishVariant: z.enum(["us", "uk"]).optional().default("us"),
-  // Website scanning options
-  websiteUrl: z.string().optional().default(""), // Allow empty string for websiteUrl
-  copyWebsiteStyle: z.boolean().optional().default(false),
-  useWebsiteContent: z.boolean().optional().default(false),
-  // Keyword control options
-  requiredKeywords: z.array(KeywordFrequencySchema).optional().default([]),
-  // Source control options
-  requiredSources: z.array(RequiredSourceSchema).optional().default([]),
-  restrictToRequiredSources: z.boolean().optional().default(false),
-  // Geographic/Regional focus
+  tone: z.string().default("professional"),
+  brandArchetype: z.string().default("sage"),
+  
+  // Coerce numeric fields and provide sensible defaults
+  wordCount: z.coerce.number().int().default(1000),
+  
+  // Handle all boolean fields with defaults
+  antiAIDetection: z.preprocess(
+    // Convert various formats to boolean
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  prioritizeUndetectable: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  isRewrite: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  
+  // Accept either enum or string for english variant
+  englishVariant: z.union([
+    z.enum(["us", "uk"]),
+    z.string().transform(val => val === "uk" ? "uk" : "us")
+  ]).default("us"),
+  
+  // Keep other string fields simple
+  websiteUrl: z.string().optional().default(""),
   regionFocus: z.string().optional().default(""),
-  // Humanization parameters
-  typosPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
-  grammarMistakesPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
-  humanMisErrorsPercentage: z.coerce.number().min(0).max(15).optional().default(3.0),
-  // Additional generation options
-  generateSEO: z.boolean().optional().default(true),
-  generateHashtags: z.boolean().optional().default(true),
-  generateKeywords: z.boolean().optional().default(true),
-  // E-A-T and content quality parameters
-  includeCitations: z.boolean().optional().default(false),
-  checkDuplication: z.boolean().optional().default(false),
-  addRhetoricalElements: z.boolean().optional().default(true),
-  strictToneAdherence: z.boolean().optional().default(false),
-  runSelfAnalysis: z.boolean().optional().default(false),
-  // Content specialization parameters
-  legalCompliance: z.boolean().optional().default(false),
-  technicalAccuracy: z.boolean().optional().default(false),
-  simplifyLanguage: z.boolean().optional().default(false),
-  inclusiveLanguage: z.boolean().optional().default(false),
-  addEmotionalImpact: z.boolean().optional().default(false),
-  // New refinement options
-  maxIterations: z.coerce.number().int().min(1).max(10).optional().default(5),
-  wordCountTolerance: z.coerce.number().min(0.01).max(0.5).optional().default(0.1),
-  runAIDetectionTest: z.boolean().optional().default(false),
-  // Bibliography options
-  generateBibliography: z.boolean().optional().default(false),
-  useFootnotes: z.boolean().optional().default(false)
-});
+  
+  // Boolean fields with preprocessing for robustness
+  copyWebsiteStyle: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  useWebsiteContent: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  
+  // Handle arrays with preprocessing
+  requiredKeywords: z.preprocess(
+    (val) => Array.isArray(val) ? val : [],
+    z.array(z.any()).default([])
+  ),
+  requiredSources: z.preprocess(
+    (val) => Array.isArray(val) ? val : [],
+    z.array(z.any()).default([])
+  ),
+  
+  // More boolean settings
+  restrictToRequiredSources: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  
+  // Numeric fields with coercion and defaults
+  typosPercentage: z.coerce.number().default(3.0),
+  grammarMistakesPercentage: z.coerce.number().default(3.0),
+  humanMisErrorsPercentage: z.coerce.number().default(3.0),
+  
+  // More boolean flags
+  generateSEO: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(true)
+  ),
+  generateHashtags: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(true)
+  ),
+  generateKeywords: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(true)
+  ),
+  includeCitations: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  checkDuplication: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  addRhetoricalElements: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(true)
+  ),
+  strictToneAdherence: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  runSelfAnalysis: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  legalCompliance: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  technicalAccuracy: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  simplifyLanguage: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  inclusiveLanguage: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  addEmotionalImpact: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  
+  // More numeric fields
+  maxIterations: z.coerce.number().default(5),
+  wordCountTolerance: z.coerce.number().default(0.1),
+  
+  // Final boolean fields
+  runAIDetectionTest: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  generateBibliography: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  useFootnotes: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  )
+})
+.passthrough(); // Allow any additional fields to pass through
 
 // Schema for SEO keyword generation request
 const SeoGenerationRequestSchema = z.object({

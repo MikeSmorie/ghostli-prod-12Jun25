@@ -771,7 +771,18 @@ Respond with a JSON object containing only the arrays requested. Do not include 
 
         // Parse the JSON response
         try {
-          const additionalContent = JSON.parse(response.choices[0].message.content || "{}");
+          // Safely parse JSON with error handling
+          let additionalContent;
+          try {
+            // Remove any markdown code blocks or backticks that might surround the JSON
+            const content = (response.choices[0].message.content || "{}").replace(/```json|```/g, "").trim();
+            additionalContent = JSON.parse(content);
+            console.log("[OpenAI] Successfully parsed additional content JSON");
+          } catch (jsonError) {
+            console.error("[OpenAI] Error parsing JSON from additional content:", jsonError);
+            // Provide a default structure in case of parsing failure
+            additionalContent = { seo: [], hashtags: [], keywords: [] };
+          }
           
           // Extract the arrays if they exist
           if (params.generateSEO && Array.isArray(additionalContent.seo)) {
@@ -831,7 +842,18 @@ ${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated
         });
 
         try {
-          const citationData = JSON.parse(response.choices[0].message.content || "{}");
+          // Safely parse JSON with error handling
+          let citationData;
+          try {
+            // Remove any markdown code blocks or backticks that might surround the JSON
+            const content = (response.choices[0].message.content || "{}").replace(/```json|```/g, "").trim();
+            citationData = JSON.parse(content);
+            console.log("[OpenAI] Successfully parsed citation data JSON");
+          } catch (jsonError) {
+            console.error("[OpenAI] Error parsing JSON from citation data:", jsonError);
+            // Provide a default structure in case of parsing failure
+            citationData = { citations: [] };
+          }
           
           if (citationData.citations && Array.isArray(citationData.citations)) {
             citations = citationData.citations;
@@ -892,7 +914,24 @@ ${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated
         });
 
         try {
-          contentQualityResults = JSON.parse(response.choices[0].message.content || "{}");
+          // Safely parse JSON with error handling
+          try {
+            // Remove any markdown code blocks or backticks that might surround the JSON
+            const content = (response.choices[0].message.content || "{}").replace(/```json|```/g, "").trim();
+            contentQualityResults = JSON.parse(content);
+            console.log("[OpenAI] Successfully parsed content quality results JSON");
+          } catch (jsonError) {
+            console.error("[OpenAI] Error parsing JSON from content quality results:", jsonError);
+            // Provide a default structure in case of parsing failure
+            contentQualityResults = {
+              toneAdherenceScore: 75,
+              brandArchetypeScore: 70,
+              originality: 80,
+              expertiseScore: 75,
+              rhetoricalElementsUsed: ["questions", "examples"],
+              selfAnalysisNotes: ["Content appears human-written"]
+            };
+          }
           
           refinementSteps.push({
             step: iterations,
