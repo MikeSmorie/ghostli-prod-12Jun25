@@ -35,6 +35,7 @@ interface GenerationParams {
   wordCount: number;
   antiAIDetection: boolean;
   prioritizeUndetectable?: boolean;
+  isRewrite?: boolean; // Indicates whether this is a rewrite request
   
   // Language options
   englishVariant?: 'us' | 'uk';
@@ -305,7 +306,9 @@ export default function ContentGeneratorNew() {
           });
         }, 1000);
         
-        const response = await apiRequest("POST", "/api/content/generate", params);
+        // Pass the input type via different endpoint paths
+        const endpoint = inputType === "rewrite" ? "/api/content/rewrite" : "/api/content/generate";
+        const response = await apiRequest("POST", endpoint, params);
         
         // Clear interval when response is received
         clearInterval(progressInterval);
@@ -328,8 +331,10 @@ export default function ContentGeneratorNew() {
       setGeneratedContent(data.content);
       setMetadata(data.metadata);
       toast({
-        title: "Content Generated",
-        description: "Your content has been successfully generated!",
+        title: inputType === "prompt" ? "Content Generated" : "Content Rewritten",
+        description: inputType === "prompt" 
+          ? "Your content has been successfully generated!" 
+          : "Your content has been successfully rewritten and made AI-undetectable!",
         variant: "default",
       });
       
@@ -351,12 +356,15 @@ export default function ContentGeneratorNew() {
     if (!prompt) {
       toast({
         title: "Missing Input",
-        description: "Please provide a prompt for content generation.",
+        description: inputType === "prompt" 
+          ? "Please provide a prompt for content generation." 
+          : "Please paste the content you want to rewrite.",
         variant: "destructive",
       });
       return;
     }
 
+    // Create params object for API call
     const params: GenerationParams = {
       prompt,
       preferredHeadline,
@@ -440,28 +448,83 @@ export default function ContentGeneratorNew() {
             {/* Content Parameters - Full Width */}
             <div className="w-full space-y-6">
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="prompt" className="text-lg font-medium">What would you like me to write about?</Label>
-                  <div className="flex items-center">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
-                            <HelpCircle className="h-4 w-4" />
-                            <span className="sr-only">Tips</span>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="end" className="max-w-xs">
-                          <p className="text-sm font-medium mb-1">Tips for Better Results:</p>
-                          <ul className="text-xs list-disc pl-4 space-y-1">
-                            <li>Be specific with details and requirements</li>
-                            <li>Specify audience and purpose</li>
-                            <li>Define tone, style, and format</li>
-                            <li>Include key points to emphasize</li>
-                          </ul>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                <div className="flex flex-col space-y-3">
+                  {/* Input Type Toggle */}
+                  <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 p-3 rounded-md border border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="input-type-toggle" 
+                          checked={inputType === "rewrite"} 
+                          onCheckedChange={(checked) => setInputType(checked ? "rewrite" : "prompt")}
+                        />
+                        <Label htmlFor="input-type-toggle" className="font-medium">
+                          Rewrite Mode
+                        </Label>
+                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                              <Info className="h-4 w-4" />
+                              <span className="sr-only">Info</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">
+                              <span className="font-semibold">Prompt Mode:</span> Generate new content from your instructions.
+                              <br /><br />
+                              <span className="font-semibold">Rewrite Mode:</span> Paste existing content to be rewritten and made AI-undetectable.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <Badge variant={inputType === "rewrite" ? "outline" : "default"}>
+                      {inputType === "prompt" ? "Creating New Content" : "Rewriting Existing Content"}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="prompt" className="text-lg font-medium">
+                      {inputType === "prompt" 
+                        ? "What would you like me to write about?" 
+                        : "Paste your existing content to rewrite"}
+                    </Label>
+                    <div className="flex items-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
+                              <HelpCircle className="h-4 w-4" />
+                              <span className="sr-only">Tips</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" align="end" className="max-w-xs">
+                            <p className="text-sm font-medium mb-1">
+                              {inputType === "prompt" ? "Tips for Better Results:" : "Rewriting Tips:"}
+                            </p>
+                            <ul className="text-xs list-disc pl-4 space-y-1">
+                              {inputType === "prompt" ? (
+                                <>
+                                  <li>Be specific with details and requirements</li>
+                                  <li>Specify audience and purpose</li>
+                                  <li>Define tone, style, and format</li>
+                                  <li>Include key points to emphasize</li>
+                                </>
+                              ) : (
+                                <>
+                                  <li>Include complete paragraphs for best results</li>
+                                  <li>AI-generated content will be rewritten to avoid detection</li>
+                                  <li>Adjust humanization settings for more natural results</li>
+                                  <li>For large content, consider breaking into smaller sections</li>
+                                </>
+                              )}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 </div>
                 
@@ -506,7 +569,9 @@ export default function ContentGeneratorNew() {
                 
                 <Textarea
                   id="prompt"
-                  placeholder="Describe what you'd like to generate with specific details about audience, purpose, key points, and format."
+                  placeholder={inputType === "prompt" 
+                    ? "Describe what you'd like to generate with specific details about audience, purpose, key points, and format."
+                    : "Paste your existing content here to be rewritten and made undetectable by AI detection tools..."}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-[120px] bg-blue-50 dark:bg-blue-950"
@@ -702,10 +767,10 @@ export default function ContentGeneratorNew() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    {inputType === "prompt" ? "Generating..." : "Rewriting..."}
                   </>
                 ) : (
-                  "Generate Content"
+                  inputType === "prompt" ? "Generate Content" : "Rewrite Content"
                 )}
               </Button>
               
