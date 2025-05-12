@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import axios from 'axios';
+import { removeRedundantPhrases } from './phraseRemoval';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -478,7 +479,31 @@ export async function generateContent(params: ContentGenerationParams): Promise<
 
     // Initial content
     let iterations = 1;
+    
+    // Apply phrase removal if conciseStyle is enabled
     let finalContent = content;
+    if (params.conciseStyle) {
+      // Apply the phrase removal system
+      const { processedContent, removedPhrases } = removeRedundantPhrases(content, {
+        conciseStyle: true,
+        qualityCheck: true
+      });
+      
+      // Update content and log removed phrases
+      finalContent = processedContent;
+      
+      // Add to refinement steps
+      if (removedPhrases.length > 0) {
+        refinementSteps.push({
+          step: iterations + 0.1, // Use decimal to maintain step ordering
+          action: "Applied concise writing style",
+          result: `Removed ${removedPhrases.length} redundant phrases (e.g., "not just", "not only")`
+        });
+      }
+    } else {
+      finalContent = content;
+    }
+    
     let currentWordCount = wordCount;
     let targetReached = false;
     
