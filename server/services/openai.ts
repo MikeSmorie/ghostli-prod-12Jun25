@@ -1431,7 +1431,23 @@ The content should pass as human-written when analyzed by AI detection tools.
       temperature: 0.7
     });
 
-    const rewrittenContent = response.choices[0].message.content || "";
+    let rewrittenContent = response.choices[0].message.content || "";
+    
+    // Apply phrase removal if conciseStyle is enabled
+    if (params.conciseStyle) {
+      // Apply the phrase removal system
+      const { processedContent, removedPhrases } = removeRedundantPhrases(rewrittenContent, {
+        conciseStyle: true,
+        qualityCheck: true
+      });
+      
+      // Update content
+      rewrittenContent = processedContent;
+      
+      // Log this process
+      console.log(`[PhraseRemoval] Removed ${removedPhrases.length} redundant phrases from rewritten content`);
+    }
+    
     const endTime = new Date();
     
     // Count words in the rewritten content
