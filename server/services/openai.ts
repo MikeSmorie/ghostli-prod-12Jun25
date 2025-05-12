@@ -122,6 +122,8 @@ export interface ContentGenerationParams {
   maxIterations?: number;                 // Maximum number of refinement iterations
   wordCountTolerance?: number;            // Percentage tolerance for word count
   runAIDetectionTest?: boolean;           // Whether to run AI detection test
+  // Writing style options
+  conciseStyle?: boolean;                // Whether to use concise writing style (removes "not just" phrases)
 }
 
 export interface ContentGenerationResult {
