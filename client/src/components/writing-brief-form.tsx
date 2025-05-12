@@ -61,6 +61,7 @@ export interface WritingBrief {
   wordCount: number;
   primaryKeywords: string[];
   secondaryKeywords: string[];
+  keywordFrequency: string;
   
   // Content Structure
   sections: string[];
@@ -90,6 +91,7 @@ const DEFAULT_BRIEF: WritingBrief = {
   wordCount: 1000,
   primaryKeywords: [],
   secondaryKeywords: [],
+  keywordFrequency: "medium",
   sections: [],
   formatRequirements: [],
   sources: [],
@@ -152,6 +154,15 @@ const FORMAT_REQUIREMENTS = [
   "Call to Action",
   "FAQ Section",
   "Summary Section",
+];
+
+const KEYWORD_FREQUENCIES = [
+  { value: "minimal", label: "Minimal (1-2 times)" },
+  { value: "low", label: "Low (3-5 times)" },
+  { value: "medium", label: "Medium (6-10 times)" },
+  { value: "high", label: "High (11-15 times)" },
+  { value: "very-high", label: "Very High (16+ times)" },
+  { value: "calculated", label: "Calculate based on word count" },
 ];
 
 export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormProps) {
@@ -643,6 +654,44 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Keyword Frequency Dropdown */}
+            <div>
+              <div className="flex items-center mb-2">
+                <Label htmlFor="keywordFrequency" className="text-base font-semibold">
+                  Keyword Frequency (Primary Keywords):
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Indicates how many times you'd like the primary keywords to appear within the text.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Select
+                value={brief.keywordFrequency}
+                onValueChange={(value) => updateBrief("keywordFrequency", value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select keyword frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {KEYWORD_FREQUENCIES.map((frequency) => (
+                    <SelectItem key={frequency.value} value={frequency.value}>
+                      {frequency.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
