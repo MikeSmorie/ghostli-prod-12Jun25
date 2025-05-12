@@ -76,6 +76,7 @@ export interface WritingBrief {
   
   // Revision Instructions
   revisionInstructions: string;
+  revisionRounds: number;
 }
 
 export interface WritingBriefFormProps {
@@ -97,6 +98,7 @@ const DEFAULT_BRIEF: WritingBrief = {
   sources: [],
   includeCitations: false,
   revisionInstructions: "",
+  revisionRounds: 1,
 };
 
 const CONTENT_TYPES = [
@@ -163,6 +165,12 @@ const KEYWORD_FREQUENCIES = [
   { value: "high", label: "High (11-15 times)" },
   { value: "very-high", label: "Very High (16+ times)" },
   { value: "calculated", label: "Calculate based on word count" },
+];
+
+const REVISION_ROUNDS = [
+  { value: 1, label: "1 Round" },
+  { value: 2, label: "2 Rounds" },
+  { value: 3, label: "3 Rounds" },
 ];
 
 export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormProps) {
@@ -909,10 +917,15 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
         {/* Step 6: Revision/Feedback Instructions */}
         <div className={currentStep === 6 ? "block" : "hidden"}>
           <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-primary">Revisions Section</h3>
+            <p className="text-sm text-muted-foreground">
+              Specify how you'd like feedback and revisions to be handled for this content.
+            </p>
+
             <div>
               <div className="flex items-center mb-2">
                 <Label htmlFor="revisionInstructions" className="text-base font-semibold">
-                  Revision/Feedback Instructions:
+                  Revision Instructions:
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -923,8 +936,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        Provide any specific instructions for how revisions or updates
-                        should be handled after the initial content is created.
+                        Please outline any specific changes you'd like to see in the first draft.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -938,8 +950,45 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                 className="min-h-[150px]"
               />
             </div>
+
+            <div>
+              <div className="flex items-center mb-2">
+                <Label htmlFor="revisionRounds" className="text-base font-semibold">
+                  Revision Rounds:
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        How many rounds of revisions would you prefer before final approval?
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Select
+                value={brief.revisionRounds.toString()}
+                onValueChange={(value) => updateBrief("revisionRounds", Number(value))}
+              >
+                <SelectTrigger className="w-full md:w-1/3">
+                  <SelectValue placeholder="Select number of rounds" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REVISION_ROUNDS.map((round) => (
+                    <SelectItem key={round.value} value={round.value.toString()}>
+                      {round.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             
-            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-200 dark:border-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-200 dark:border-blue-800 mt-6">
               <h3 className="text-base font-semibold mb-2 flex items-center">
                 <Bookmark className="mr-2 h-4 w-4" />
                 Brief Summary
@@ -1019,6 +1068,28 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                           ? brief.formatRequirements.join(", ")
                           : "No special formatting"}
                       </p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="revisions">
+                  <AccordionTrigger className="text-sm">
+                    Revisions
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-1 pl-4 text-sm">
+                      <p>
+                        <span className="font-medium">Revision Rounds:</span>{" "}
+                        {REVISION_ROUNDS.find(r => r.value === brief.revisionRounds)?.label || `${brief.revisionRounds} Round(s)`}
+                      </p>
+                      {brief.revisionInstructions && (
+                        <p>
+                          <span className="font-medium">Instructions:</span>{" "}
+                          {brief.revisionInstructions.length > 50 
+                            ? brief.revisionInstructions.substring(0, 50) + "..." 
+                            : brief.revisionInstructions}
+                        </p>
+                      )}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
