@@ -29,19 +29,14 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       requiredKeywords: [
         ...brief.primaryKeywords.map(keyword => {
           // Use the keyword frequency setting if available
-          let occurrences = 1;
+          let occurrences = 3; // Default to low (3-5 times)
           if (brief.keywordFrequency) {
             switch(brief.keywordFrequency) {
-              case 'minimal': occurrences = 1; break;
-              case 'low': occurrences = 3; break;
-              case 'medium': occurrences = 6; break;
-              case 'high': occurrences = 11; break;
-              case 'very-high': occurrences = 16; break;
-              case 'calculated': occurrences = Math.max(1, Math.floor(brief.wordCount / 300)); break;
-              default: occurrences = Math.max(1, Math.floor(brief.wordCount / 300));
+              case 'low': occurrences = 3; break; // 3-5 times
+              case 'medium': occurrences = 6; break; // 6-10 times
+              case 'high': occurrences = 11; break; // 11-15 times
+              default: occurrences = 3; // Default to low if unrecognized
             }
-          } else {
-            occurrences = Math.max(1, Math.floor(brief.wordCount / 300));
           }
           return { keyword, occurrences };
         }),

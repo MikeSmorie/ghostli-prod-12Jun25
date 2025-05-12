@@ -159,12 +159,9 @@ const FORMAT_REQUIREMENTS = [
 ];
 
 const KEYWORD_FREQUENCIES = [
-  { value: "minimal", label: "Minimal (1-2 times)" },
-  { value: "low", label: "Low (3-5 times)" },
-  { value: "medium", label: "Medium (6-10 times)" },
-  { value: "high", label: "High (11-15 times)" },
-  { value: "very-high", label: "Very High (16+ times)" },
-  { value: "calculated", label: "Calculate based on word count" },
+  { value: "low", label: "3-5 times" },
+  { value: "medium", label: "6-10 times" },
+  { value: "high", label: "11-15 times" },
 ];
 
 const REVISION_ROUNDS = [
@@ -558,7 +555,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        Main keywords that must appear in the content for SEO purposes.
+                        List the main keywords you'd like the content to focus on.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -618,7 +615,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        Additional keywords that should appear in the content but are less critical.
+                        Provide any secondary keywords that should also be included in the content.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -679,7 +676,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="max-w-xs">
-                        Indicates how many times you'd like the primary keywords to appear within the text.
+                        Indicate how often you'd like the primary keywords to appear in the content.
                       </p>
                     </TooltipContent>
                   </Tooltip>
