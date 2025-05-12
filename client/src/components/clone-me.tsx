@@ -736,10 +736,14 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
       return;
     }
     
+    // Log the voice mode being used
+    console.log(`Generating content with ${useClonedVoice ? 'CLONED' : 'STANDARD'} voice mode`);
+    
     generateContentMutation.mutate({
       prompt: generationPrompt,
       tone: generationTone,
       wordCount,
+      useClonedVoice, // Include the voice mode toggle value
       typosPercentage,
       grammarMistakesPercentage,
       humanMisErrorsPercentage
@@ -1134,6 +1138,39 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Clone Me Voice Toggle - New Feature */}
+                <div className="border p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <h3 className="text-base font-medium">Writing Voice Selection</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Choose between your personal writing style or a standard writing style
+                      </p>
+                    </div>
+                    <Switch
+                      checked={useClonedVoice}
+                      onCheckedChange={setUseClonedVoice}
+                      aria-label="Toggle cloned voice"
+                    />
+                  </div>
+                  
+                  <div className="p-3 bg-white/80 dark:bg-gray-800/50 rounded-md border">
+                    <p className="text-sm font-medium">
+                      {useClonedVoice ? (
+                        <>
+                          <Sparkles className="h-4 w-4 inline-block mr-1 text-blue-500" />
+                          Using <span className="text-blue-600 dark:text-blue-400 font-semibold">Cloned Voice</span> (matches your writing style)
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4 inline-block mr-1 text-gray-500" />
+                          Using <span className="text-gray-600 dark:text-gray-400 font-semibold">Standard Voice</span> (system-defined style)
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="generation-prompt">What would you like to write about?</Label>
                   <Textarea 
@@ -1323,8 +1360,10 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating Content...
                     </>
-                  ) : (
+                  ) : useClonedVoice ? (
                     "Generate Content in My Style"
+                  ) : (
+                    "Generate Content in Standard Style"
                   )}
                 </Button>
               </CardFooter>
