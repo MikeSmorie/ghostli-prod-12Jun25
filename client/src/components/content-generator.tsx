@@ -25,7 +25,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { WriteInMyStyle } from "./write-in-my-style";
 import { FeatureTabs } from "./ui/content-tabs";
-import { ProWritingBrief } from "./pro-writing-brief";
+import { WritingBriefManager } from "./writing-brief-manager";
 
 // Types
 interface GenerationParams {
@@ -712,19 +712,37 @@ export default function ContentGenerator() {
         setUsePersonalStyle={setUsePersonalStyle}
       />
       
-      {/* Pro Writing Brief Form */}
-      <ProWritingBrief 
-        onSubmit={(params) => {
+      {/* Writing Brief Manager - Shows Pro or Lite version based on user access */}
+      <WritingBriefManager 
+        onSubmit={(params: any) => {
           // Update all the relevant form fields based on the structured brief
           setPrompt(params.prompt);
           setTone(params.tone);
-          setBrandArchetype(params.brandArchetype);
-          setWordCount(params.wordCount);
           
+          // For Pro brief
+          if (params.brandArchetype) {
+            setBrandArchetype(params.brandArchetype);
+          }
+          
+          // Handle wordCount from either brief type
+          if (params.wordCount) {
+            setWordCount(params.wordCount);
+          }
+          
+          // Handle primaryKeyword from Lite brief
+          if (params.primaryKeyword && !params.requiredKeywords) {
+            setRequiredKeywords([{ 
+              keyword: params.primaryKeyword, 
+              occurrences: Math.max(1, Math.floor(params.wordCount / 400))
+            }]);
+          }
+          
+          // Handle requiredKeywords from Pro brief
           if (params.requiredKeywords) {
             setRequiredKeywords(params.requiredKeywords);
           }
           
+          // Handle Pro brief specific fields
           if (params.requiredSources) {
             setRequiredSources(params.requiredSources);
           }
@@ -733,7 +751,7 @@ export default function ContentGenerator() {
             setIncludeCitations(params.includeCitations);
           }
           
-          // Additional params that might be set
+          // Additional params that might be set in Pro brief
           if (params.strictToneAdherence !== undefined) {
             setStrictToneAdherence(params.strictToneAdherence);
           }
