@@ -1255,6 +1255,15 @@ ${params.strictToneAdherence ? `
 - Ensure vocabulary choices align with the selected tone
 - Adjust phrasing and sentence structure to reinforce the tone
 ` : ''}
+${params.conciseStyle ? `
+- Use direct, concise language without redundant phrases
+- Avoid constructions like "not just X, but Y" - instead write "X and Y" 
+- Avoid phrases like "It's not just about X, it's about Y" - use "X and Y both matter" instead
+- Eliminate unnecessary qualifiers and filler phrases
+- Be clear and precise with minimal wordiness
+- Make statements directly without softening or over-explaining
+- Choose strong, specific verbs over weak, general ones
+` : ''}
 ${params.checkDuplication ? `
 - Ensure content is original and not duplicative of common web content
 - Approach topics from fresh angles and perspectives

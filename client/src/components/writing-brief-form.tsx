@@ -61,6 +61,7 @@ export interface WritingBrief {
   tone: string;
   writingStyle: string;
   gradeLevel: string;
+  conciseStyle?: boolean;
   
   // Length & Keywords
   wordCount: number;
@@ -95,6 +96,7 @@ const DEFAULT_BRIEF: WritingBrief = {
   tone: "professional",
   writingStyle: "informative",
   gradeLevel: "grade-7-10",
+  conciseStyle: false,
   wordCount: 1000,
   primaryKeywords: [],
   secondaryKeywords: [],
@@ -550,6 +552,42 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="mt-6 border-t pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="conciseStyle" 
+                    checked={brief.conciseStyle} 
+                    onCheckedChange={(checked) => updateBrief("conciseStyle", checked)}
+                  />
+                  <Label htmlFor="conciseStyle" className="text-base font-semibold">
+                    Enable Concise Writing Style
+                  </Label>
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="max-w-xs">
+                        <p className="mb-2">Removes redundant phrases like "not just" for clearer, more direct writing.</p>
+                        <div className="border-t pt-2">
+                          <p className="text-sm text-muted-foreground mb-1">Instead of: "This isn't just AI; it's about creating..."</p>
+                          <p className="text-sm font-medium">It becomes: "This is AI, designed to create..."</p>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Makes content more professional and direct by removing filler phrases and using clear, concise language.
+              </p>
             </div>
           </div>
         </div>

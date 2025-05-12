@@ -65,6 +65,9 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       addRhetoricalElements: brief.writingStyle.toLowerCase() === 'persuasive',
       simplifyLanguage: brief.writingStyle.toLowerCase() === 'educational',
       
+      // Writing style options
+      conciseStyle: brief.conciseStyle,
+      
       // Grade level complexity
       complexityLevel: mapGradeLevelToComplexity(brief.gradeLevel),
       
