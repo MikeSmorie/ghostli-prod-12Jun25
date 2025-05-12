@@ -98,17 +98,16 @@ const DEFAULT_BRIEF: WritingBrief = {
 };
 
 const CONTENT_TYPES = [
-  "Blog Post",
-  "Article",
-  "White Paper",
+  "Ad Copy",
   "Email",
   "Newsletter",
   "Product Description",
   "Landing Page",
+  "Blog Post",
+  "E-book",
   "Case Study",
   "Press Release",
   "Social Media Post",
-  "Ad Copy",
   "Academic Paper",
 ];
 
