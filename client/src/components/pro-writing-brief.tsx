@@ -15,6 +15,9 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
   const { toast } = useToast();
   
   const handleBriefSubmit = (brief: WritingBrief) => {
+    // Handle undefined revisionRounds (for backward compatibility)
+    const revisionRounds = brief.revisionRounds || 1;
+    
     // Transform the brief into the format expected by the content generator
     const transformedParams = {
       prompt: generatePromptFromBrief(brief),
@@ -24,10 +27,24 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       
       // Add keywords as required keywords with frequencies
       requiredKeywords: [
-        ...brief.primaryKeywords.map(keyword => ({ 
-          keyword, 
-          occurrences: Math.max(1, Math.floor(brief.wordCount / 300)) // Rough estimate based on word count
-        })),
+        ...brief.primaryKeywords.map(keyword => {
+          // Use the keyword frequency setting if available
+          let occurrences = 1;
+          if (brief.keywordFrequency) {
+            switch(brief.keywordFrequency) {
+              case 'minimal': occurrences = 1; break;
+              case 'low': occurrences = 3; break;
+              case 'medium': occurrences = 6; break;
+              case 'high': occurrences = 11; break;
+              case 'very-high': occurrences = 16; break;
+              case 'calculated': occurrences = Math.max(1, Math.floor(brief.wordCount / 300)); break;
+              default: occurrences = Math.max(1, Math.floor(brief.wordCount / 300));
+            }
+          } else {
+            occurrences = Math.max(1, Math.floor(brief.wordCount / 300));
+          }
+          return { keyword, occurrences };
+        }),
         ...brief.secondaryKeywords.map(keyword => ({ 
           keyword, 
           occurrences: 1 // Secondary keywords just need to appear
@@ -43,6 +60,10 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       
       // Citation handling
       includeCitations: brief.includeCitations,
+      
+      // Revision information
+      revisionRounds: revisionRounds,
+      revisionInstructions: brief.revisionInstructions,
       
       // Other related settings that we can infer from the brief
       strictToneAdherence: true, // Professional content should strictly adhere to tone
@@ -83,8 +104,18 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
     }
     
     // Add revision instructions if provided
-    if (brief.revisionInstructions) {
-      prompt += `Additional instructions: ${brief.revisionInstructions}\n\n`;
+    if (brief.revisionInstructions || brief.revisionRounds) {
+      prompt += "Revision information:\n";
+      
+      if (brief.revisionRounds) {
+        prompt += `- Expected revision rounds: ${brief.revisionRounds}\n`;
+      }
+      
+      if (brief.revisionInstructions) {
+        prompt += `- Revision instructions: ${brief.revisionInstructions}\n`;
+      }
+      
+      prompt += "\n";
     }
     
     return prompt;
