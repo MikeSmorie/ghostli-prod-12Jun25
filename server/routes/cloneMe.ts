@@ -206,7 +206,8 @@ async function generateStyledContent(
   styleId: number,
   prompt: string,
   tone: string,
-  wordCount: number
+  wordCount: number,
+  useClonedVoice: boolean = true
 ): Promise<string> {
   try {
     // Get the user's writing style
@@ -250,28 +251,47 @@ async function generateStyledContent(
       return words.join(' ');
     }).join('\n\n[Next Sample]\n\n');
 
-    // Create a detailed system prompt for style emulation
-    const systemPrompt = `You are a specialized writing assistant that perfectly emulates a user's unique writing style.
+    // Create a detailed system prompt based on whether to use cloned voice or not
+    let systemPrompt;
     
-    # USER'S WRITING STYLE PROFILE
-    ${JSON.stringify(userStyle, null, 2)}
-    
-    # STYLE METRICS
-    - Average sentence length: ${style.avgSentenceLength || 'unknown'} words
-    - Average paragraph length: ${style.avgParagraphLength || 'unknown'} sentences
-    - Vocabulary diversity: ${style.vocabularyDiversity || 'unknown'}
-    
-    # WRITING SAMPLES
-    ${sampleTexts}
-    
-    # GENERATION INSTRUCTIONS
-    - Write in the style of the user as demonstrated in the sample texts and style profile
-    - Adapt the style to the requested tone: "${tone}"
-    - Aim for approximately ${wordCount} words
-    - Only return the generated content with no additional commentary
-    - The user's style is the priority - create content that would be indistinguishable from their own writing
-    - Include typical patterns, sentence structures, and vocabulary from their samples
-    `;
+    if (useClonedVoice) {
+      // Detailed system prompt for cloned voice (style emulation)
+      systemPrompt = `You are a specialized writing assistant that perfectly emulates a user's unique writing style.
+      
+      # USER'S WRITING STYLE PROFILE
+      ${JSON.stringify(userStyle, null, 2)}
+      
+      # STYLE METRICS
+      - Average sentence length: ${style.avgSentenceLength || 'unknown'} words
+      - Average paragraph length: ${style.avgParagraphLength || 'unknown'} sentences
+      - Vocabulary diversity: ${style.vocabularyDiversity || 'unknown'}
+      
+      # WRITING SAMPLES
+      ${sampleTexts}
+      
+      # GENERATION INSTRUCTIONS
+      - Write in the style of the user as demonstrated in the sample texts and style profile
+      - Adapt the style to the requested tone: "${tone}"
+      - Aim for approximately ${wordCount} words
+      - Only return the generated content with no additional commentary
+      - The user's style is the priority - create content that would be indistinguishable from their own writing
+      - Include typical patterns, sentence structures, and vocabulary from their samples
+      - IMPORTANT: You are using CLONED VOICE mode which means you must match the user's writing style exactly
+      `;
+    } else {
+      // System prompt for non-cloned voice (standard writing)
+      systemPrompt = `You are a professional writing assistant that creates high-quality content.
+      
+      # GENERATION INSTRUCTIONS
+      - Write in a standard, professional style that follows general writing best practices
+      - Adapt the writing to the requested tone: "${tone}"
+      - Aim for approximately ${wordCount} words
+      - Only return the generated content with no additional commentary
+      - Create well-structured, clear, and engaging content
+      - IMPORTANT: You are using NON-CLONED VOICE mode which means you should NOT try to match the user's personal writing style
+      - Instead, create content using standard writing conventions and the requested tone
+      `;
+    }
 
     // Generate content with OpenAI
     const response = await openai.chat.completions.create({
@@ -283,7 +303,9 @@ async function generateStyledContent(
         },
         {
           role: "user",
-          content: `Write about the following topic in my writing style: ${prompt}`,
+          content: useClonedVoice
+            ? `Write about the following topic in my writing style: ${prompt}`
+            : `Write about the following topic using standard writing conventions: ${prompt}`,
         },
       ],
       max_tokens: calculateMaxTokens(wordCount),
@@ -814,12 +836,15 @@ export function registerCloneMeRoutes(app: Express): void {
         });
       }
       
-      const { prompt, tone, wordCount } = validationResult.data;
+      const { prompt, tone, wordCount, useClonedVoice } = validationResult.data;
       const userId = req.user?.id;
       
       if (!userId) {
         return res.status(401).json({ error: "Unauthorized" });
       }
+      
+      // Log the voice mode being used
+      console.log(`Generating content with ${useClonedVoice ? 'CLONED voice' : 'NON-CLONED voice'} for user ${userId}`);
       
       // Get the user's writing style
       const [style] = await db
@@ -838,8 +863,8 @@ export function registerCloneMeRoutes(app: Express): void {
         });
       }
       
-      // Generate content
-      const content = await generateStyledContent(style.id, prompt, tone, wordCount);
+      // Generate content with specified voice mode
+      const content = await generateStyledContent(style.id, prompt, tone, wordCount, useClonedVoice);
       
       // Calculate actual word count
       const actualWordCount = content.split(/\s+/).length;
