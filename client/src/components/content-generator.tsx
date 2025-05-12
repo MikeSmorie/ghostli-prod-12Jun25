@@ -25,6 +25,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { WriteInMyStyle } from "./write-in-my-style";
 import { FeatureTabs } from "./ui/content-tabs";
+import { ProWritingBrief } from "./pro-writing-brief";
 
 // Types
 interface GenerationParams {
