@@ -65,6 +65,9 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       addRhetoricalElements: brief.writingStyle.toLowerCase() === 'persuasive',
       simplifyLanguage: brief.writingStyle.toLowerCase() === 'educational',
       
+      // Grade level complexity
+      complexityLevel: mapGradeLevelToComplexity(brief.gradeLevel),
+      
       // We could map writing style to brand archetype, but for simplicity:
       brandArchetype: mapStyleToArchetype(brief.writingStyle),
     };
@@ -78,7 +81,10 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
     const contentType = brief.contentType ? `${brief.contentType}` : "content";
     const audience = brief.targetAudience ? `for ${brief.targetAudience}` : "";
     
-    let prompt = `Create a ${contentType} ${audience} with the following structure:\n\n`;
+    // Get the grade level label
+    const gradeLevelInfo = brief.gradeLevel ? getGradeLevelInfo(brief.gradeLevel) : "intermediate complexity";
+    
+    let prompt = `Create a ${contentType} ${audience} with ${gradeLevelInfo} and the following structure:\n\n`;
     
     // Add sections
     if (brief.sections.length > 0) {
@@ -134,6 +140,18 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
     };
     
     return styleToArchetypeMap[style.toLowerCase()] || "sage";
+  };
+  
+  // Helper function to map grade level to complexity value
+  const mapGradeLevelToComplexity = (gradeLevel: string): number => {
+    const gradeLevelToComplexityMap: Record<string, number> = {
+      "grade-4-6": 0.25,     // Simple
+      "grade-7-10": 0.5,     // Intermediate
+      "grade-11-12": 0.75,   // Advanced
+      "college": 1.0         // College/Professional
+    };
+    
+    return gradeLevelToComplexityMap[gradeLevel] || 0.5;
   };
 
   return (

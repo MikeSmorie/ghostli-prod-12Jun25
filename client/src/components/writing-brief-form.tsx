@@ -19,6 +19,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  RadioGroup,
+  RadioGroupItem
+} from "@/components/ui/radio-group";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -56,6 +60,7 @@ export interface WritingBrief {
   // Tone & Style
   tone: string;
   writingStyle: string;
+  gradeLevel: string;
   
   // Length & Keywords
   wordCount: number;
@@ -89,6 +94,7 @@ const DEFAULT_BRIEF: WritingBrief = {
   targetAudience: "",
   tone: "professional",
   writingStyle: "informative",
+  gradeLevel: "grade-7-10",
   wordCount: 1000,
   primaryKeywords: [],
   secondaryKeywords: [],
@@ -168,6 +174,13 @@ const REVISION_ROUNDS = [
   { value: 1, label: "1 Round" },
   { value: 2, label: "2 Rounds" },
   { value: 3, label: "3 Rounds" },
+];
+
+const GRADE_LEVELS = [
+  { value: "grade-4-6", label: "Grade 4-6", description: "Simple, clear, accessible writing" },
+  { value: "grade-7-10", label: "Grade 7-10", description: "Intermediate complexity for general audiences" },
+  { value: "grade-11-12", label: "Grade 11-12", description: "Advanced writing for professional or academic use" },
+  { value: "college", label: "College/Professional", description: "High-level content with complex vocabulary and structure" },
 ];
 
 export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormProps) {
@@ -481,6 +494,64 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <div className="flex items-center mb-2">
+                <Label htmlFor="gradeLevel" className="text-base font-semibold">
+                  Content Complexity Level:
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Select the appropriate reading level for your target audience.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {GRADE_LEVELS.map((level) => (
+                    <div key={level.value} className="flex items-start space-x-3">
+                      <RadioGroup
+                        value={brief.gradeLevel}
+                        onValueChange={(value) => updateBrief("gradeLevel", value)}
+                        className="flex flex-col space-y-1"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value={level.value} id={level.value} />
+                          <Label htmlFor={level.value} className="font-medium">
+                            {level.label}
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                      <p className="text-sm text-muted-foreground">{level.description}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-4 bg-muted/50 p-4 rounded-md">
+                  <h4 className="text-sm font-medium mb-2">Content Preview at {GRADE_LEVELS.find(level => level.value === brief.gradeLevel)?.label}</h4>
+                  <p className="text-sm italic text-muted-foreground">
+                    {brief.gradeLevel === "grade-4-6" && 
+                      "The cat sat on the mat. It was warm there. The sun made a bright spot. The cat liked to feel warm. It closed its eyes and went to sleep."}
+                    {brief.gradeLevel === "grade-7-10" && 
+                      "The feline found comfort on the household rug. The afternoon sunlight created a warm patch that was ideal for relaxation. Content with its spot, the cat's eyelids grew heavy until it drifted off to sleep."}
+                    {brief.gradeLevel === "grade-11-12" && 
+                      "The domestic feline situated itself upon the floor covering, where the afternoon sun's rays had established a comfortable microclimate. Pleased with this fortuitous thermal condition, the cat gradually surrendered to somnolence."}
+                    {brief.gradeLevel === "college" && 
+                      "The domesticated felis catus positioned itself strategically on the textile floor covering, where solar radiation had created an optimal thermal environment. Experiencing contentment with this serendipitous meteorological phenomenon, the felid succumbed to a state of temporary unconsciousness characteristic of its species' diurnal habits."}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
