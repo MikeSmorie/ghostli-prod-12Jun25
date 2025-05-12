@@ -94,6 +94,8 @@ interface ContentGenerationParams {
   prompt: string;
   tone: string;
   wordCount: number;
+  // Toggle between cloned voice and system rules
+  useClonedVoice?: boolean;
   // Humanization parameters (percentages)
   typosPercentage?: number;
   grammarMistakesPercentage?: number;
@@ -173,6 +175,7 @@ export default function CloneMe() {
   const [generationPrompt, setGenerationPrompt] = useState("");
   const [generationTone, setGenerationTone] = useState("professional");
   const [wordCount, setWordCount] = useState(1000);
+  const [useClonedVoice, setUseClonedVoice] = useState(true); // Default to cloned voice mode
   
   // Humanization parameters
   const [typosPercentage, setTyposPercentage] = useState(1.0); // Default 1% typos
