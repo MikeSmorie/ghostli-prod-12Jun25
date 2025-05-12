@@ -1372,7 +1372,11 @@ function EssayViewerContent({ essayId }: EssayViewerContentProps) {
             {generateContentMutation.isPending && (
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Generating content in your writing style...</span>
+                  <span>
+                    {useClonedVoice 
+                      ? "Generating content in your personal writing style..." 
+                      : "Generating content in standard writing style..."}
+                  </span>
                   <span>{generationProgress}%</span>
                 </div>
                 <Progress value={generationProgress} className="h-2" />
