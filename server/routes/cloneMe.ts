@@ -26,6 +26,7 @@ const ContentGenerationSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
   tone: z.string().min(1, "Tone is required"),
   wordCount: z.number().int().min(50).max(5000).default(1000),
+  useClonedVoice: z.boolean().default(true), // true = use cloned voice, false = use system rules only
 });
 
 const FeedbackSubmissionSchema = z.object({

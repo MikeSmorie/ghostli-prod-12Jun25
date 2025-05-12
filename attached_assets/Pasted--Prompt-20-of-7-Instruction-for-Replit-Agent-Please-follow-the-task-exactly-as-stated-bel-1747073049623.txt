@@ -1,0 +1,36 @@
+**Prompt 20 of 7**
+
+**Instruction for Replit Agent**:  
+Please follow the task exactly as stated below. Do **not** interpret, preempt, or go ahead with any actions beyond this prompt.
+
+**Task**:  
+Perform a **comprehensive audit** of the current **GhostliAI** build to assess its **existing functionality** and identify any gaps or issues in the system. This audit should include the following checks:
+
+1. **Core Functionality**:
+   - Verify that the **content generation engine** is working as expected, including **humanization** and **vocabulary control** features.
+   - Ensure **content is generated** with proper **fluency**, **structure**, and **keyword management**.
+
+2. **UI/UX**:
+   - Review the **front-end interface** to confirm it is **user-friendly** and aligned with the described requirements (e.g., **link insertion**, **writing brief input**).
+
+3. **Feature Set Check**:
+   - Ensure that **multi-language support** is **not yet implemented**, as per the current build status.
+   - Verify that there is no **plagiarism detection** system in place and confirm if we need to add this.
+   - Check for any work done on the **browser extension** and determine if it is feasible to add this feature.
+
+4. **Database & Backend**:
+   - Review the **database schema** to ensure it can handle **user essays**, **writing styles**, and **customizations** effectively.
+   - Confirm if any issues exist with **data storage**, **retrieval**, or **scalability**.
+
+5. **Performance Testing**:
+   - Run basic **load tests** to check the system's ability to handle **concurrent users** and **API calls** without performance degradation or crashes.
+   - Identify any **scalability** concerns for when migrating to commercial cloud servers.
+
+6. **Missing Features**:
+   - Identify any features mentioned in the **product roadmap** that are currently **missing** or **incomplete** (e.g., **multi-language**, **plagiarism checker**).
+   - Document any issues or areas where the build is not functioning as expected.
+
+Once the audit is completed, please provide a **detailed report** on:
+- The **current state of the system**.
+- Any **missing features** or **gaps**.
+- **Recommended next steps** for development and **feature integration**.
