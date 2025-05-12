@@ -35,6 +35,7 @@ import {
   MessageSquare,
   Bookmark,
   RefreshCw,
+  X
 } from "lucide-react";
 import {
   Tooltip,
@@ -44,7 +45,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { RadixCheckbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Types
 export interface WritingBrief {
@@ -739,7 +740,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {FORMAT_REQUIREMENTS.map((format) => (
                   <div key={format} className="flex items-center space-x-2">
-                    <RadixCheckbox
+                    <Checkbox
                       id={`format-${format}`}
                       checked={brief.formatRequirements.includes(format)}
                       onCheckedChange={() => toggleFormatRequirement(format)}

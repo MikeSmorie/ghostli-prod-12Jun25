@@ -712,6 +712,46 @@ export default function ContentGenerator() {
         setUsePersonalStyle={setUsePersonalStyle}
       />
       
+      {/* Pro Writing Brief Form */}
+      <ProWritingBrief 
+        onSubmit={(params) => {
+          // Update all the relevant form fields based on the structured brief
+          setPrompt(params.prompt);
+          setTone(params.tone);
+          setBrandArchetype(params.brandArchetype);
+          setWordCount(params.wordCount);
+          
+          if (params.requiredKeywords) {
+            setRequiredKeywords(params.requiredKeywords);
+          }
+          
+          if (params.requiredSources) {
+            setRequiredSources(params.requiredSources);
+          }
+          
+          if (params.includeCitations !== undefined) {
+            setIncludeCitations(params.includeCitations);
+          }
+          
+          // Additional params that might be set
+          if (params.strictToneAdherence !== undefined) {
+            setStrictToneAdherence(params.strictToneAdherence);
+          }
+          
+          if (params.addRhetoricalElements !== undefined) {
+            setAddRhetoricalElements(params.addRhetoricalElements);
+          }
+          
+          if (params.simplifyLanguage !== undefined) {
+            setSimplifyLanguage(params.simplifyLanguage);
+          }
+          
+          // Focus on the prompt field after submission
+          document.getElementById('prompt')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        isSubmitting={isLoading}
+      />
+      
       <Card className="w-full">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
