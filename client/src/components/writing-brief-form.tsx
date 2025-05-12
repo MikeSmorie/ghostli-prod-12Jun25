@@ -518,25 +518,23 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
               </div>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
+                <RadioGroup
+                  value={brief.gradeLevel}
+                  onValueChange={(value) => updateBrief("gradeLevel", value)}
+                  className="grid grid-cols-1 gap-4"
+                >
                   {GRADE_LEVELS.map((level) => (
                     <div key={level.value} className="flex items-start space-x-3">
-                      <RadioGroup
-                        value={brief.gradeLevel}
-                        onValueChange={(value) => updateBrief("gradeLevel", value)}
-                        className="flex flex-col space-y-1"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value={level.value} id={level.value} />
-                          <Label htmlFor={level.value} className="font-medium">
-                            {level.label}
-                          </Label>
-                        </div>
-                      </RadioGroup>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={level.value} id={level.value} />
+                        <Label htmlFor={level.value} className="font-medium">
+                          {level.label}
+                        </Label>
+                      </div>
                       <p className="text-sm text-muted-foreground">{level.description}</p>
                     </div>
                   ))}
-                </div>
+                </RadioGroup>
                 
                 <div className="mt-4 bg-muted/50 p-4 rounded-md">
                   <h4 className="text-sm font-medium mb-2">Content Preview at {GRADE_LEVELS.find(level => level.value === brief.gradeLevel)?.label}</h4>

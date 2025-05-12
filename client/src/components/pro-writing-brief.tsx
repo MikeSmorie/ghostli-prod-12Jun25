@@ -153,6 +153,18 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
     
     return gradeLevelToComplexityMap[gradeLevel] || 0.5;
   };
+  
+  // Helper function to get a description of the grade level for the prompt
+  const getGradeLevelInfo = (gradeLevel: string): string => {
+    const gradeLevelDescriptionMap: Record<string, string> = {
+      "grade-4-6": "simple, clear, accessible writing (grade 4-6 level)",
+      "grade-7-10": "intermediate complexity for general audiences (grade 7-10 level)",
+      "grade-11-12": "advanced writing for professional or academic use (grade 11-12 level)",
+      "college": "high-level content with complex vocabulary and structure (college/professional level)"
+    };
+    
+    return gradeLevelDescriptionMap[gradeLevel] || "intermediate complexity for general audiences";
+  };
 
   return (
     <FeatureGuard 
