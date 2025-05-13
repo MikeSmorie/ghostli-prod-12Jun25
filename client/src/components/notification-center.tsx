@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, Check, Info, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useNotifications, Notification } from '@/hooks/use-notifications';
+import { SubscriptionMessageDialog } from '@/components/subscription-message-dialog';
 import { 
   Popover, 
   PopoverContent, 
@@ -25,6 +26,8 @@ import { Separator } from '@/components/ui/separator';
  */
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const { 
     notifications, 
     unreadNotifications, 
@@ -32,10 +35,18 @@ export function NotificationCenter() {
     markAsRead 
   } = useNotifications();
 
-  // Handle marking a notification as read
-  const handleMarkAsRead = (notification: Notification) => {
+  // Handle clicking on a notification
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark it as read if it's not read yet
     if (!notification.read) {
       markAsRead(notification.id);
+    }
+    
+    // Check if this is a subscription-related notification
+    if (isSubscriptionNotification(notification.announcement.title)) {
+      setSelectedNotification(notification);
+      setDialogOpen(true);
+      setOpen(false); // Close the popover
     }
   };
 
@@ -81,14 +92,22 @@ export function NotificationCenter() {
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="relative"
-          aria-label="Notifications"
-        >
+    <>
+      <SubscriptionMessageDialog
+        notification={selectedNotification}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onMarkAsRead={markAsRead}
+      />
+      
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="relative"
+            aria-label="Notifications"
+          >
           <Bell className="h-5 w-5" />
           {unreadNotifications.length > 0 && (
             <Badge 
@@ -135,8 +154,8 @@ export function NotificationCenter() {
               notifications.map((notification) => (
                 <div 
                   key={notification.id} 
-                  className="px-4 py-3 hover:bg-muted/50 transition-colors"
-                  onClick={() => handleMarkAsRead(notification)}
+                  className="px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex gap-3">
                     <div className="flex-shrink-0 pt-0.5">
@@ -189,5 +208,6 @@ export function NotificationCenter() {
         )}
       </PopoverContent>
     </Popover>
+    </>
   );
 }
