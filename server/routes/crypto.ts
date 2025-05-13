@@ -3,7 +3,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { authenticateJWT } from '../auth';
-import { cryptoTypeEnum, CryptoType } from '@db/schema';
+import { cryptoTypeEnum, CryptoType, cryptoWallets, users, cryptoTransactions, payments } from '@db/schema';
 import { 
   setupCryptoWalletsForUser,
   createCryptoPaymentRequest,
@@ -20,6 +20,15 @@ import {
 } from '../services/crypto/walletService';
 import { updateExchangeRates } from '../services/crypto/walletService';
 import { z } from 'zod';
+import { db } from '@db';
+import { eq, and, desc } from 'drizzle-orm';
+import { isTransactionConfirmed } from '../services/crypto/blockchainService';
+import { 
+  sendCryptoPaymentConfirmation, 
+  sendCryptoPaymentFailure 
+} from '../services/emailService';
+import { SubscriptionNotificationService } from '../services/subscriptionNotifications';
+import crypto from 'crypto';
 
 const router = Router();
 
