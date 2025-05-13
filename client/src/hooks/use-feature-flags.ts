@@ -1,125 +1,107 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "../lib/queryClient";
-import { useState, useEffect } from "react";
-
-// Feature constants - these should match keys on the server
-export const FEATURES = {
-  // Content Generation
-  CONTENT_GENERATION_BASIC: "CONTENT_GENERATION_BASIC",
-  CONTENT_GENERATION_PREMIUM: "CONTENT_GENERATION_PREMIUM",
-  
-  // Interface
-  WRITING_BRIEF_LITE: "WRITING_BRIEF_LITE",
-  WRITING_BRIEF_PRO: "WRITING_BRIEF_PRO",
-  
-  // Personalization
-  CLONE_ME: "CLONE_ME",
-  HUMANIZATION_SETTINGS: "HUMANIZATION_SETTINGS",
-  VOCABULARY_CONTROL: "VOCABULARY_CONTROL",
-  
-  // Quality & Optimization
-  PLAGIARISM_DETECTION: "PLAGIARISM_DETECTION",
-  SEO_OPTIMIZATION: "SEO_OPTIMIZATION",
-  
-  // Export
-  EXPORT_BASIC: "EXPORT_BASIC",
-  MULTIPLE_EXPORT_FORMATS: "MULTIPLE_EXPORT_FORMATS",
-};
-
-// Map for tier levels
-export const TIER_LEVELS = {
-  FREE: "free",
-  BASIC: "basic", 
-  PREMIUM: "premium",
-  ENTERPRISE: "enterprise"
-};
-
-// Define the shape of feature flag data from the API
-interface FeatureFlagResponse {
-  features: Record<string, boolean>;
-  tier: string;
-}
+import { useUser } from "./use-user";
+import { getQueryFn } from "@/lib/queryClient";
 
 /**
- * Hook for accessing the user's feature flags and subscription tier
+ * A hook that provides access to feature flags based on the user's subscription
  */
 export function useFeatureFlags() {
-  const [features, setFeatures] = useState<Record<string, boolean>>({});
-  const [tier, setTier] = useState<string>(TIER_LEVELS.FREE);
-
-  // Fetch feature flags from the API
-  const { data, isLoading, error, isError } = useQuery<FeatureFlagResponse>({
+  const { user, isLoading: isUserLoading } = useUser();
+  
+  const {
+    data: featureFlags,
+    isLoading: isFlagsLoading,
+    error,
+  } = useQuery({
     queryKey: ["/api/subscription/features"],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest("GET", "/api/subscription/features");
-        if (!response.ok) {
-          throw new Error("Failed to fetch feature flags");
-        }
-        return await response.json();
-      } catch (error) {
-        console.error("Error fetching feature flags:", error);
-        // Return default values on error
-        return {
-          features: getDefaultFeatures(),
-          tier: TIER_LEVELS.FREE
-        };
-      }
-    },
-    // Only refetch on mount or when explicitly invalidated
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: getQueryFn(),
+    // Don't fetch feature flags if user isn't logged in
+    enabled: !!user,
   });
 
-  // Update local state when data changes
-  useEffect(() => {
-    if (data) {
-      setFeatures(data.features);
-      setTier(data.tier);
-    }
-  }, [data]);
+  const isLoading = isUserLoading || isFlagsLoading;
 
-  // Check if the user has access to a specific feature
+  /**
+   * Check if a feature is enabled for the current user
+   */
   const hasFeature = (featureName: string): boolean => {
-    return features[featureName] === true;
+    if (isLoading || !featureFlags) return false;
+    return featureFlags.features?.[featureName] === true;
   };
 
-  // Check if the user is a Pro subscriber
-  const isProUser = (): boolean => {
-    return tier !== TIER_LEVELS.FREE;
+  /**
+   * Check if the user has a pro subscription
+   */
+  const isPro = (): boolean => {
+    if (isLoading || !featureFlags) return false;
+    return featureFlags.isPro === true;
   };
 
-  // Get the user's subscription tier
-  const getUserTier = (): string => {
-    return tier;
+  /**
+   * Get user's current subscription tier
+   */
+  const getTier = (): string => {
+    if (isLoading || !featureFlags) return "none";
+    return featureFlags.tier || "none";
   };
 
-  // Default features (free tier) - fallback if API call fails
-  const getDefaultFeatures = (): Record<string, boolean> => {
-    return {
-      [FEATURES.CONTENT_GENERATION_BASIC]: true,
-      [FEATURES.WRITING_BRIEF_LITE]: true,
-      [FEATURES.EXPORT_BASIC]: true,
-      
-      // Premium features are disabled by default
-      [FEATURES.CONTENT_GENERATION_PREMIUM]: false,
-      [FEATURES.WRITING_BRIEF_PRO]: false,
-      [FEATURES.CLONE_ME]: false,
-      [FEATURES.HUMANIZATION_SETTINGS]: false,
-      [FEATURES.VOCABULARY_CONTROL]: false,
-      [FEATURES.PLAGIARISM_DETECTION]: false,
-      [FEATURES.SEO_OPTIMIZATION]: false,
-      [FEATURES.MULTIPLE_EXPORT_FORMATS]: false,
-    };
+  /**
+   * Check if the subscription is active
+   */
+  const isActive = (): boolean => {
+    if (isLoading || !featureFlags) return false;
+    return featureFlags.isActive === true;
   };
 
   return {
-    features,
-    tier,
     isLoading,
     error,
-    isError,
     hasFeature,
-    isProUser,
-    getUserTier,
+    isPro,
+    getTier,
+    isActive,
+    // Expose all raw feature flags for debugging
+    featureFlags,
   };
 }
+
+// Define feature flag constants for use throughout the application
+export const FEATURES = {
+  // Content Generation
+  CONTENT_GENERATION: "content_generation",
+  HIGH_WORD_COUNT: "high_word_count",
+  
+  // Content Style & Format
+  STYLE_ADJUSTMENTS: "style_adjustments",
+  GRADE_LEVEL_ADJUSTMENT: "grade_level_adjustment",
+  CLONE_ME: "clone_me",
+  
+  // AI Detection Prevention
+  HUMANIZATION: "humanization",
+  ADVANCED_HUMANIZATION: "advanced_humanization",
+  
+  // Export Options
+  BASIC_EXPORT: "basic_export", 
+  MULTIPLE_EXPORT_FORMATS: "multiple_export_formats",
+  
+  // Content Analysis
+  PLAGIARISM_DETECTION: "plagiarism_detection", 
+  EAT_COMPLIANCE: "eat_compliance",
+  
+  // Content Customization
+  KEYWORD_CONTROL: "keyword_control",
+  PHRASE_REMOVAL: "phrase_removal",
+  SOURCE_SELECTION: "source_selection",
+  REGIONAL_DATA: "regional_data",
+  
+  // Content Management
+  SAVE_CONTENT: "save_content", 
+  CONTENT_HISTORY: "content_history",
+  
+  // Integration
+  WEBSITE_SCANNING: "website_scanning",
+  API_ACCESS: "api_access"
+} as const;
+
+// Make TypeScript type from const above
+export type FeatureFlag = keyof typeof FEATURES;

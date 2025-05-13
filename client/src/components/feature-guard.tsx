@@ -1,90 +1,94 @@
-import { ReactNode } from "react";
-import { useFeatureFlags } from "../hooks/use-feature-flags";
+import React from "react";
+import { useFeatureFlags, type FeatureFlag } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Link } from "wouter";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface FeatureGuardProps {
-  /** The name of the feature to check access for */
-  featureName: string;
-  /** Content to render if the user has access to the feature */
-  children: ReactNode;
-  /** Alternative content to render if the user doesn't have access (optional) */
-  fallback?: ReactNode;
-  /** Whether to show an upgrade dialog (default: true) */
-  showUpgradeDialog?: boolean;
+  /** Feature flag that should be required */
+  feature: string | FeatureFlag;
+  /** Content to display when feature access is granted */
+  children: React.ReactNode;
+  /** Optional fallback content when feature is not available */
+  fallback?: React.ReactNode;
+  /** If set to true, will render nothing when feature is disabled (instead of fallback) */
+  hideIfDisabled?: boolean;
+  /** If set to true, will render a loading indicator instead of nothing when checking feature access */
+  showLoading?: boolean;
+  /** If true, shows a clear upgrade message for features only available in Pro tier */
+  showUpgradeInfo?: boolean;
 }
 
 /**
- * A component that conditionally renders its children based on whether
- * the current user has access to a specific feature.
+ * Component that conditionally renders its children based on feature access.
+ * Can optionally display a fallback UI when the feature is not available.
  */
 export function FeatureGuard({
-  featureName,
+  feature,
   children,
   fallback,
-  showUpgradeDialog = true,
+  hideIfDisabled = false,
+  showLoading = false,
+  showUpgradeInfo = false,
 }: FeatureGuardProps) {
-  const { hasFeature, isLoading } = useFeatureFlags();
+  const { hasFeature, isLoading, isPro, getTier } = useFeatureFlags();
   
-  // Wait for features to load
-  if (isLoading) {
+  // Show loading state if still checking feature access
+  if (isLoading && showLoading) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center py-4">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" />
       </div>
     );
   }
 
   // If user has access to the feature, render the children
-  if (hasFeature(featureName)) {
+  if (hasFeature(feature)) {
     return <>{children}</>;
   }
 
-  // If no fallback is provided and we don't want to show upgrade dialog, render nothing
-  if (!fallback && !showUpgradeDialog) {
+  // If hideIfDisabled is true, render nothing
+  if (hideIfDisabled) {
     return null;
   }
 
-  // If a fallback is provided, render it
+  // If fallback is provided, render that
   if (fallback) {
     return <>{fallback}</>;
   }
 
-  // Otherwise show the upgrade dialog
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="default">Access this feature</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Pro Feature Required</AlertDialogTitle>
-          <AlertDialogDescription>
-            This feature requires a Pro subscription. Upgrade now to unlock
-            advanced content generation features, including premium humanization,
-            Clone Me, and more.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Maybe Later</AlertDialogCancel>
-          <AlertDialogAction asChild>
+  // Otherwise show a default message about feature restriction
+  if (showUpgradeInfo) {
+    const tier = getTier();
+    const isFreeTier = tier === "free" || tier === "none";
+    
+    return (
+      <div className="rounded-md border p-4 bg-muted/30">
+        <div className="flex flex-col gap-3">
+          <h3 className="text-md font-semibold">
+            Pro Feature Required
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {isFreeTier 
+              ? "This feature is only available with a Pro subscription."
+              : "Your current subscription plan doesn't include this feature."}
+          </p>
+          <div className="flex mt-2">
             <Link href="/subscription">
-              <Button>View Plans</Button>
+              <Button variant="default" size="sm">
+                {isFreeTier ? "Upgrade to Pro" : "View Plans"}
+              </Button>
             </Link>
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default minimal fallback
+  return (
+    <div className="text-sm text-muted-foreground py-2">
+      This feature is not available in your current plan.
+    </div>
   );
 }

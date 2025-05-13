@@ -1,72 +1,56 @@
-import { useState } from "react";
-import { useFeatureFlags, FEATURES } from "../hooks/use-feature-flags";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FeatureGuard } from "./feature-guard";
-import { WritingBriefForm } from "./writing-brief-form"; // Import the regular/lite brief form
-import { ProWritingBrief } from "./pro-writing-brief"; // Import the pro brief form
+import React, { useState } from 'react';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WritingBriefForm } from './writing-brief-form';
+import { ProWritingBrief } from './pro-writing-brief';
+import { FeatureGuard } from './feature-guard';
+import { FEATURES } from '@/hooks/use-feature-flags';
 
-export function WritingBriefToggle() {
-  const { hasFeature, isProUser } = useFeatureFlags();
-  const [activeTab, setActiveTab] = useState<string>(
-    isProUser() ? "pro" : "lite"
-  );
+interface WritingBriefToggleProps {
+  onSubmit: (data: any) => void;
+  isSubmitting: boolean;
+}
 
-  // Handler for tab change
+/**
+ * Component for toggling between Lite and Pro writing brief interfaces
+ */
+export function WritingBriefToggle({ onSubmit, isSubmitting }: WritingBriefToggleProps) {
+  const [activeTab, setActiveTab] = useState("lite");
+  
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Content Generation Brief</CardTitle>
-        <CardDescription>
-          Define your content requirements and let our AI generate high-quality content
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* If user has access to pro, show the tabs to toggle between lite and pro */}
-        {hasFeature(FEATURES.WRITING_BRIEF_PRO) ? (
-          <Tabs
-            defaultValue={activeTab}
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="lite">Quick Brief</TabsTrigger>
-              <TabsTrigger value="pro">Advanced Brief</TabsTrigger>
-            </TabsList>
-            <TabsContent value="lite">
-              <WritingBriefForm />
-            </TabsContent>
-            <TabsContent value="pro">
-              <ProWritingBrief />
-            </TabsContent>
-          </Tabs>
+    <div className="w-full">
+      <Tabs
+        defaultValue="lite"
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <div className="flex justify-center mb-6">
+          <TabsList>
+            <TabsTrigger value="lite">Lite Brief</TabsTrigger>
+            <TabsTrigger value="pro">Pro Brief</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        {activeTab === "lite" ? (
+          <WritingBriefForm onSubmit={onSubmit} isSubmitting={isSubmitting} />
         ) : (
-          // If user only has lite access, show lite form with option to upgrade
-          <>
-            <WritingBriefForm />
-            
-            <div className="mt-8 p-4 border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 rounded-md">
-              <h3 className="font-semibold text-lg mb-2">Want more control?</h3>
-              <p className="mb-4">
-                Upgrade to Pro for advanced content customization options, including humanization settings,
-                Clone Me voice replication, and premium content generation up to 5,000 words.
-              </p>
-              <FeatureGuard
-                featureName={FEATURES.WRITING_BRIEF_PRO}
-                showUpgradeDialog={true}
-              >
-                <Button>Access Pro Features</Button>
-              </FeatureGuard>
-            </div>
-          </>
+          <FeatureGuard 
+            feature={FEATURES.ADVANCED_HUMANIZATION}
+            showUpgradeInfo
+            fallback={
+              <div className="mb-6">
+                <WritingBriefForm onSubmit={onSubmit} isSubmitting={isSubmitting} />
+              </div>
+            }
+          >
+            <ProWritingBrief onSubmit={onSubmit} isSubmitting={isSubmitting} />
+          </FeatureGuard>
         )}
-      </CardContent>
-    </Card>
+      </Tabs>
+    </div>
   );
 }

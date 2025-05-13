@@ -1,127 +1,157 @@
-import { useFeatureFlags, FEATURES } from "../hooks/use-feature-flags";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Crown, Sparkles, Lock, Unlock, ExternalLink } from "lucide-react";
+import React from 'react';
+import { useFeatureFlags, FEATURES } from '@/hooks/use-feature-flags';
+import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
+/**
+ * Component for visualizing and managing feature flags
+ * This is primarily a development/demo tool
+ */
 export function FeatureFlagManager() {
-  const { features, getUserTier, isProUser, isLoading } = useFeatureFlags();
+  const { hasFeature, isLoading, error, getTier, isPro, featureFlags } = useFeatureFlags();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
 
-  const tier = getUserTier();
-  const isPro = isProUser();
+  if (error) {
+    return (
+      <div className="p-4 border border-destructive/30 bg-destructive/10 rounded-md">
+        <h3 className="font-semibold mb-2">Error loading feature flags</h3>
+        <p className="text-sm">{error.message}</p>
+      </div>
+    );
+  }
 
-  // Group features by category
-  const featuresByCategory: Record<string, { name: string; enabled: boolean }[]> = {
-    "Content Generation": [
-      { name: FEATURES.CONTENT_GENERATION_BASIC, enabled: features[FEATURES.CONTENT_GENERATION_BASIC] || false },
-      { name: FEATURES.CONTENT_GENERATION_PREMIUM, enabled: features[FEATURES.CONTENT_GENERATION_PREMIUM] || false },
+  // Group features by category based on their prefix
+  const featureCategories: Record<string, string[]> = {
+    'Content Generation': [
+      FEATURES.CONTENT_GENERATION,
+      FEATURES.HIGH_WORD_COUNT,
     ],
-    "Interface": [
-      { name: FEATURES.WRITING_BRIEF_LITE, enabled: features[FEATURES.WRITING_BRIEF_LITE] || false },
-      { name: FEATURES.WRITING_BRIEF_PRO, enabled: features[FEATURES.WRITING_BRIEF_PRO] || false },
+    'Content Style': [
+      FEATURES.STYLE_ADJUSTMENTS,
+      FEATURES.GRADE_LEVEL_ADJUSTMENT, 
+      FEATURES.CLONE_ME,
     ],
-    "Personalization": [
-      { name: FEATURES.CLONE_ME, enabled: features[FEATURES.CLONE_ME] || false },
-      { name: FEATURES.HUMANIZATION_SETTINGS, enabled: features[FEATURES.HUMANIZATION_SETTINGS] || false },
-      { name: FEATURES.VOCABULARY_CONTROL, enabled: features[FEATURES.VOCABULARY_CONTROL] || false },
+    'AI Detection': [
+      FEATURES.HUMANIZATION,
+      FEATURES.ADVANCED_HUMANIZATION,
     ],
-    "Quality & Optimization": [
-      { name: FEATURES.PLAGIARISM_DETECTION, enabled: features[FEATURES.PLAGIARISM_DETECTION] || false },
-      { name: FEATURES.SEO_OPTIMIZATION, enabled: features[FEATURES.SEO_OPTIMIZATION] || false },
+    'Export': [
+      FEATURES.BASIC_EXPORT,
+      FEATURES.MULTIPLE_EXPORT_FORMATS,
     ],
-    "Export": [
-      { name: FEATURES.EXPORT_BASIC, enabled: features[FEATURES.EXPORT_BASIC] || false },
-      { name: FEATURES.MULTIPLE_EXPORT_FORMATS, enabled: features[FEATURES.MULTIPLE_EXPORT_FORMATS] || false },
+    'Content Analysis': [
+      FEATURES.PLAGIARISM_DETECTION,
+      FEATURES.EAT_COMPLIANCE,
     ],
-  };
-
-  // Function to format feature name for display
-  const formatFeatureName = (name: string) => {
-    return name
-      .replace(/_/g, " ")
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+    'Content Customization': [
+      FEATURES.KEYWORD_CONTROL,
+      FEATURES.PHRASE_REMOVAL,
+      FEATURES.SOURCE_SELECTION,
+      FEATURES.REGIONAL_DATA,
+    ],
+    'Content Management': [
+      FEATURES.SAVE_CONTENT,
+      FEATURES.CONTENT_HISTORY,
+    ],
+    'Integration': [
+      FEATURES.WEBSITE_SCANNING,
+      FEATURES.API_ACCESS,
+    ],
   };
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Feature Access</CardTitle>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Current Tier:</span>
-          {isPro ? (
-            <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700">
-              <Crown className="h-3 w-3 mr-1" />
-              Pro
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Lite
-            </Badge>
-          )}
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle>Feature Access</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Current subscription: <Badge variant={isPro() ? "default" : "outline"}>{getTier()}</Badge>
+            </p>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
-          {Object.entries(featuresByCategory).map(([category, categoryFeatures]) => (
+        <div className="space-y-6">
+          {Object.entries(featureCategories).map(([category, features]) => (
             <div key={category}>
-              <h3 className="font-medium text-lg mb-3">{category}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {categoryFeatures.map((feature) => (
-                  <div
-                    key={feature.name}
+              <h3 className="font-medium mb-3">{category}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {features.map((feature) => (
+                  <div 
+                    key={feature} 
                     className={`p-3 rounded-md border ${
-                      feature.enabled
-                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                        : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800"
+                      hasFeature(feature) 
+                        ? 'bg-primary/5 border-primary/30' 
+                        : 'bg-muted/30 border-border/50'
                     }`}
                   >
-                    <div className="flex items-center">
-                      {feature.enabled ? (
-                        <Unlock className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                      ) : (
-                        <Lock className="h-4 w-4 mr-2 text-gray-400" />
-                      )}
-                      <span className="text-sm font-medium">
-                        {formatFeatureName(feature.name)}
-                      </span>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-sm font-medium">{formatFeatureName(feature)}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {getFeatureDescription(feature)}
+                        </p>
+                      </div>
+                      <Badge variant={hasFeature(feature) ? "default" : "outline"}>
+                        {hasFeature(feature) ? "Enabled" : "Disabled"}
+                      </Badge>
                     </div>
                   </div>
                 ))}
               </div>
+              {category !== Object.keys(featureCategories).pop() && (
+                <Separator className="mt-4" />
+              )}
             </div>
           ))}
-
-          {!isPro && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="text-center">
-                <h3 className="text-lg font-medium mb-2">Unlock All Features</h3>
-                <p className="text-muted-foreground mb-4">
-                  Upgrade to Pro to access premium features and enhance your content generation experience.
-                </p>
-                <Link href="/subscription">
-                  <Button className="gap-2">
-                    <Crown className="h-4 w-4" />
-                    View Pro Plans
-                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
   );
+}
+
+// Helper function to format feature name from constants
+function formatFeatureName(feature: string): string {
+  // Convert snake_case to Title Case
+  return feature
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// Helper function to get feature description
+function getFeatureDescription(feature: string): string {
+  const descriptions: Record<string, string> = {
+    [FEATURES.CONTENT_GENERATION]: "Generate content with AI",
+    [FEATURES.HIGH_WORD_COUNT]: "Generate up to 5000 words",
+    [FEATURES.STYLE_ADJUSTMENTS]: "Adjust tone and style",
+    [FEATURES.GRADE_LEVEL_ADJUSTMENT]: "Set reading complexity",
+    [FEATURES.CLONE_ME]: "Replicate your writing style",
+    [FEATURES.HUMANIZATION]: "Basic anti-AI detection",
+    [FEATURES.ADVANCED_HUMANIZATION]: "Advanced humanization with fine-tuning",
+    [FEATURES.BASIC_EXPORT]: "Export as plain text",
+    [FEATURES.MULTIPLE_EXPORT_FORMATS]: "Export in multiple formats",
+    [FEATURES.PLAGIARISM_DETECTION]: "Check for plagiarism",
+    [FEATURES.EAT_COMPLIANCE]: "Expertise, Authority, Trust compliance",
+    [FEATURES.KEYWORD_CONTROL]: "Control keyword density",
+    [FEATURES.PHRASE_REMOVAL]: "Remove redundant phrases",
+    [FEATURES.SOURCE_SELECTION]: "Force specific sources",
+    [FEATURES.REGIONAL_DATA]: "Regional data preferences",
+    [FEATURES.SAVE_CONTENT]: "Save content for later",
+    [FEATURES.CONTENT_HISTORY]: "Access generation history",
+    [FEATURES.WEBSITE_SCANNING]: "Extract website content",
+    [FEATURES.API_ACCESS]: "Access via API",
+  };
+  
+  return descriptions[feature] || "Feature description not available";
 }
