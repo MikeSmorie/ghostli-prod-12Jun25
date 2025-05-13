@@ -12,6 +12,7 @@ import { registerCloneMeRoutes } from "./routes/cloneMe";
 import messagesRoutes from "./routes/announcements";
 import adminLogsRoutes from "./routes/admin-logs";
 import paymentRoutes from "./routes/payment";
+import subscriptionNotificationsRoutes from "./routes/subscriptionNotifications";
 import { registerSupergodRoutes } from "./routes/supergod";
 import { logError } from "./utils/logger";
 import { requireRole, requireSupergod } from "./middleware/rbac";
@@ -77,6 +78,7 @@ export function registerRoutes(app: Express) {
   app.use("/api/messages", messagesRoutes);
   app.use("/api/admin", requireAdmin, adminLogsRoutes);
   app.use("/api/payment", paymentRoutes);
+  app.use("/api/subscription-notification", subscriptionNotificationsRoutes);
   
   // PayPal integration routes
   app.use("/paypal", paypalRoutes);
