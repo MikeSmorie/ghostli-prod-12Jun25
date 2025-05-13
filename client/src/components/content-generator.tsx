@@ -137,6 +137,23 @@ interface GenerationResult {
   seo?: string[];
   hashtags?: string[];
   keywords?: string[];
+  
+  // Plagiarism detection results for Pro users
+  plagiarismResults?: {
+    isPlagiarized: boolean;
+    score: number;
+    checkedTimestamp: string;
+    matchedSources: {
+      source: string | null;
+      url: string | null;
+      matchedText: string;
+      matchPercentage: number;
+      startPosition: number;
+      endPosition: number;
+      suggestedCitation?: string;
+      suggestedRephrase?: string;
+    }[];
+  };
 }
 
 // Helper functions for brand archetype descriptions
@@ -274,11 +291,16 @@ export default function ContentGenerator() {
   const [inclusiveLanguage, setInclusiveLanguage] = useState(false);
   const [addEmotionalImpact, setAddEmotionalImpact] = useState(false);
   
+  // Plagiarism detection options
+  const [checkPlagiarism, setCheckPlagiarism] = useState(false);
+  const [userTier] = useState("premium"); // Set to "premium" to test the feature, would come from user auth
+  
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
   const [seoKeywords, setSeoKeywords] = useState<string[] | null>(null);
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+  const [plagiarismResults, setPlagiarismResults] = useState<GenerationResult['plagiarismResults'] | null>(null);
   
   // Progress indication state
   const [progress, setProgress] = useState(0);
