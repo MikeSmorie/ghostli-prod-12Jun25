@@ -46,4 +46,27 @@ router.get("/gateways/:clientId", async (req, res) => {
   }
 });
 
+// Get payment history for a user
+router.get("/history/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const paymentHistory = await db.query.payments.findMany({
+      where: eq(payments.userId, parseInt(userId)),
+      orderBy: payments.createdAt, // Order by date (most recent first)
+      with: {
+        subscription: {
+          with: {
+            plan: true
+          }
+        }
+      }
+    });
+    
+    res.json(paymentHistory);
+  } catch (error) {
+    console.error("Error fetching payment history:", error);
+    res.status(500).json({ error: "Failed to fetch payment history" });
+  }
+});
+
 export default router;

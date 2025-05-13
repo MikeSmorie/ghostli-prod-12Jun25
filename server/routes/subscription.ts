@@ -98,6 +98,43 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
+// Cancel subscription (sets cancelledAt date and doesn't renew)
+router.post("/cancel/:subscriptionId", async (req, res) => {
+  try {
+    const { subscriptionId } = req.params;
+    const subscriptionIdInt = parseInt(subscriptionId);
+    
+    // Get the subscription first to make sure it exists
+    const subscription = await db.query.userSubscriptions.findFirst({
+      where: eq(userSubscriptions.id, subscriptionIdInt)
+    });
+    
+    if (!subscription) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+    
+    // Update the subscription with cancelledAt date
+    const [updatedSubscription] = await db.update(userSubscriptions)
+      .set({ 
+        cancelledAt: new Date(),
+        // Don't change status - it should remain active until endDate
+      })
+      .where(eq(userSubscriptions.id, subscriptionIdInt))
+      .returning();
+    
+    res.json({ 
+      message: "Subscription cancelled successfully", 
+      subscription: updatedSubscription 
+    });
+  } catch (error) {
+    console.error("Error cancelling subscription:", error);
+    res.status(500).json({ 
+      message: "Error cancelling subscription",
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Admin: Create or update subscription plan
 router.post("/admin/plans", async (req, res) => {
   try {
