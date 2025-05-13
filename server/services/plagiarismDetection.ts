@@ -31,7 +31,7 @@ export interface MatchedSource {
  * @param content The content to check for plagiarism
  * @returns Promise resolving to plagiarism check result
  */
-export async function checkPlagiarism(content: string): Promise<PlagiarismCheckResult> {
+export async function checkPlagiarism(textContent: string): Promise<PlagiarismCheckResult> {
   try {
     // Use OpenAI to analyze the content for potential plagiarism
     const response = await openai.chat.completions.create({
@@ -65,7 +65,7 @@ export async function checkPlagiarism(content: string): Promise<PlagiarismCheckR
         },
         {
           role: "user",
-          content: `Please analyze this content for potential plagiarism:\n\n${content}`
+          content: `Please analyze this content for potential plagiarism:\n\n${textContent}`
         }
       ],
       response_format: { type: "json_object" },
@@ -73,15 +73,15 @@ export async function checkPlagiarism(content: string): Promise<PlagiarismCheckR
     });
 
     // Parse the response
-    const content = response.choices[0].message.content;
-    const analysis = content ? JSON.parse(content) : { isPlagiarized: false, originalityScore: 100, matchedSources: [] };
+    const responseContent = response.choices[0].message.content;
+    const analysis = responseContent ? JSON.parse(responseContent) : { isPlagiarized: false, originalityScore: 100, matchedSources: [] };
     
     // Construct the result
     const result: PlagiarismCheckResult = {
       isPlagiarized: analysis.isPlagiarized || false,
       score: 100 - (analysis.originalityScore || 0), // Invert so higher means more plagiarized
       matchedSources: analysis.matchedSources || [],
-      originalContent: content,
+      originalContent: textContent,
       checkedTimestamp: new Date()
     };
 
