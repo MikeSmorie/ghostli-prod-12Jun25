@@ -125,6 +125,9 @@ export interface ContentGenerationParams {
   runAIDetectionTest?: boolean;           // Whether to run AI detection test
   // Writing style options
   conciseStyle?: boolean;                // Whether to use concise writing style (removes "not just" phrases)
+  // Plagiarism detection options
+  checkPlagiarism?: boolean;             // Whether to run plagiarism detection (Pro feature)
+  userTier?: string;                     // User's subscription tier for feature access
 }
 
 export interface ContentGenerationResult {
