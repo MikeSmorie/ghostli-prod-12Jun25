@@ -9,6 +9,7 @@ import {
   insertPaymentSchema
 } from "@db/schema";
 import { eq } from "drizzle-orm";
+import { updateUserFeatureAccess } from "../services/subscriptionFeatures";
 
 const router = express.Router();
 
@@ -60,9 +61,17 @@ router.post("/subscribe", async (req, res) => {
         amount: plan.price,
         currency: "USD",
         status: "pending",
-        paymentMethod: "placeholder"
+        paymentMethod: "paypal"
       })
       .returning();
+      
+    // Initialize user feature access based on subscription plan
+    try {
+      await updateUserFeatureAccess(userId, subscription.id);
+    } catch (error) {
+      console.warn("Failed to update user feature access:", error);
+      // Continue despite feature update error - it's not critical for subscription creation
+    }
 
     res.json({ 
       message: "Subscription initiated", 

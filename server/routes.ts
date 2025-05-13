@@ -16,6 +16,7 @@ import { registerSupergodRoutes } from "./routes/supergod";
 import { logError } from "./utils/logger";
 import { requireRole, requireSupergod } from "./middleware/rbac";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
+import paypalRoutes from "./routes/paypal";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -78,18 +79,7 @@ export function registerRoutes(app: Express) {
   app.use("/api/payment", paymentRoutes);
   
   // PayPal integration routes
-  app.get("/paypal/setup", async (req, res) => {
-    await loadPaypalDefault(req, res);
-  });
-
-  app.post("/paypal/order", async (req, res) => {
-    // Request body should contain: { intent, amount, currency }
-    await createPaypalOrder(req, res);
-  });
-
-  app.post("/paypal/order/:orderID/capture", async (req, res) => {
-    await capturePaypalOrder(req, res);
-  });
+  app.use("/paypal", paypalRoutes);
   
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks

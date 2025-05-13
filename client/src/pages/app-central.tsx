@@ -98,7 +98,7 @@ export default function AppCentral() {
               <Button 
                 className="flex items-center gap-2"
                 variant="outline"
-                onClick={() => setLocation("/subscription")}
+                onClick={() => setLocation("/subscription/pro")}
               >
                 <BadgeCheck className="h-5 w-5" />
                 Manage Subscription
