@@ -479,6 +479,28 @@ export type SelectPlanFeature = typeof planFeatures.$inferSelect;
 export type InsertFeatureFlag = typeof featureFlags.$inferInsert;
 export type SelectFeatureFlag = typeof featureFlags.$inferSelect;
 
+// Create schemas for crypto wallet tables
+export const insertCryptoWalletSchema = createInsertSchema(cryptoWallets, {
+  // The private key and seed phrase need special handling for security
+  privateKey: z.string().min(1),
+  seedPhrase: z.string().optional()
+});
+export const selectCryptoWalletSchema = createSelectSchema(cryptoWallets);
+
+export const insertCryptoTransactionSchema = createInsertSchema(cryptoTransactions);
+export const selectCryptoTransactionSchema = createSelectSchema(cryptoTransactions);
+
+export const insertCryptoExchangeRateSchema = createInsertSchema(cryptoExchangeRates);
+export const selectCryptoExchangeRateSchema = createSelectSchema(cryptoExchangeRates);
+
+// Types for crypto wallet tables
+export type InsertCryptoWallet = typeof cryptoWallets.$inferInsert;
+export type SelectCryptoWallet = typeof cryptoWallets.$inferSelect;
+export type InsertCryptoTransaction = typeof cryptoTransactions.$inferInsert;
+export type SelectCryptoTransaction = typeof cryptoTransactions.$inferSelect;
+export type InsertCryptoExchangeRate = typeof cryptoExchangeRates.$inferInsert;
+export type SelectCryptoExchangeRate = typeof cryptoExchangeRates.$inferSelect;
+
 // Clone Me feature related tables and enums
 
 // Essay tone enum for categorizing user submitted essays
