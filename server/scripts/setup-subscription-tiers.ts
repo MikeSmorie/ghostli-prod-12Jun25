@@ -7,23 +7,24 @@ import {
   tierLevelEnum 
 } from "@db/schema";
 import { eq } from "drizzle-orm";
+import { TIER_LITE, TIER_PRO, FEATURES } from "../services/subscriptionTiers";
 
 // Define our subscription tiers features
-const FEATURES = [
+const FEATURE_DEFINITIONS = [
   // Basic features (available to Lite/Free users)
-  { name: "content_generation_basic", category: "generation", description: "Basic content generation up to 1000 words" },
-  { name: "writing_brief_lite", category: "interface", description: "Access to lite version of writing brief with basic fields" },
-  { name: "export_basic", category: "export", description: "Export as plain text" },
+  { name: FEATURES.CONTENT_GENERATION_BASIC, category: "generation", description: "Basic content generation up to 1000 words" },
+  { name: FEATURES.WRITING_BRIEF_LITE, category: "interface", description: "Access to lite version of writing brief with basic fields" },
+  { name: FEATURES.EXPORT_BASIC, category: "export", description: "Export as plain text" },
   
   // Pro features
-  { name: "content_generation_premium", category: "generation", description: "Premium content generation up to 5000 words" },
-  { name: "writing_brief_pro", category: "interface", description: "Access to detailed writing brief with all options" },
-  { name: "clone_me", category: "personalization", description: "Writing style analysis and cloning" },
-  { name: "humanization_settings", category: "personalization", description: "Advanced humanization settings" },
-  { name: "vocabulary_control", category: "personalization", description: "Vocabulary customization and control" },
-  { name: "plagiarism_detection", category: "quality", description: "Plagiarism detection and prevention" },
-  { name: "seo_optimization", category: "optimization", description: "SEO optimization features" },
-  { name: "multilple_export_formats", category: "export", description: "Export in multiple formats (PDF, Word, HTML)" },
+  { name: FEATURES.CONTENT_GENERATION_PREMIUM, category: "generation", description: "Premium content generation up to 5000 words" },
+  { name: FEATURES.WRITING_BRIEF_PRO, category: "interface", description: "Access to detailed writing brief with all options" },
+  { name: FEATURES.CLONE_ME, category: "personalization", description: "Writing style analysis and cloning" },
+  { name: FEATURES.HUMANIZATION_SETTINGS, category: "personalization", description: "Advanced humanization settings" },
+  { name: FEATURES.VOCABULARY_CONTROL, category: "personalization", description: "Vocabulary customization and control" },
+  { name: FEATURES.PLAGIARISM_DETECTION, category: "quality", description: "Plagiarism detection and prevention" },
+  { name: FEATURES.SEO_OPTIMIZATION, category: "optimization", description: "SEO optimization features" },
+  { name: FEATURES.MULTIPLE_EXPORT_FORMATS, category: "export", description: "Export in multiple formats (PDF, Word, HTML)" },
 ];
 
 // Define the subscription plans
@@ -34,10 +35,14 @@ const SUBSCRIPTION_PLANS = [
     position: 1,
     price: "0",
     interval: "monthly",
-    features: JSON.stringify(["content_generation_basic", "writing_brief_lite", "export_basic"]),
+    features: JSON.stringify([
+      FEATURES.CONTENT_GENERATION_BASIC,
+      FEATURES.WRITING_BRIEF_LITE,
+      FEATURES.EXPORT_BASIC
+    ]),
     isActive: true,
     trialPeriodDays: 0,
-    metadata: JSON.stringify({ tierLevel: "free" })
+    metadata: JSON.stringify({ tierLevel: TIER_LITE })
   },
   {
     name: "Pro",
@@ -46,38 +51,38 @@ const SUBSCRIPTION_PLANS = [
     price: "29.99", // price in dollars
     interval: "monthly",
     features: JSON.stringify([
-      "content_generation_basic", 
-      "content_generation_premium",
-      "writing_brief_lite",
-      "writing_brief_pro", 
-      "clone_me", 
-      "humanization_settings", 
-      "vocabulary_control", 
-      "plagiarism_detection",
-      "seo_optimization",
-      "multilple_export_formats",
-      "export_basic"
+      FEATURES.CONTENT_GENERATION_BASIC,
+      FEATURES.CONTENT_GENERATION_PREMIUM,
+      FEATURES.WRITING_BRIEF_LITE,
+      FEATURES.WRITING_BRIEF_PRO,
+      FEATURES.CLONE_ME,
+      FEATURES.HUMANIZATION_SETTINGS,
+      FEATURES.VOCABULARY_CONTROL,
+      FEATURES.PLAGIARISM_DETECTION,
+      FEATURES.SEO_OPTIMIZATION,
+      FEATURES.MULTIPLE_EXPORT_FORMATS,
+      FEATURES.EXPORT_BASIC
     ]),
     isActive: true,
     trialPeriodDays: 7,
-    metadata: JSON.stringify({ tierLevel: "premium" })
+    metadata: JSON.stringify({ tierLevel: TIER_PRO })
   }
 ];
 
 // Define feature flags with appropriate tier levels
 const FEATURE_FLAGS = [
-  { name: "content_generation_basic", enabled: true, description: "Basic content generation up to 1000 words" },
-  { name: "writing_brief_lite", enabled: true, description: "Access to lite version of writing brief" },
-  { name: "export_basic", enabled: true, description: "Export as plain text" },
+  { name: FEATURES.CONTENT_GENERATION_BASIC, enabled: true, description: "Basic content generation up to 1000 words" },
+  { name: FEATURES.WRITING_BRIEF_LITE, enabled: true, description: "Access to lite version of writing brief" },
+  { name: FEATURES.EXPORT_BASIC, enabled: true, description: "Export as plain text" },
   
-  { name: "content_generation_premium", enabled: false, description: "Premium content generation up to 5000 words" },
-  { name: "writing_brief_pro", enabled: false, description: "Access to detailed writing brief with all options" },
-  { name: "clone_me", enabled: false, description: "Writing style analysis and cloning" },
-  { name: "humanization_settings", enabled: false, description: "Advanced humanization settings" },
-  { name: "vocabulary_control", enabled: false, description: "Vocabulary customization and control" },
-  { name: "plagiarism_detection", enabled: false, description: "Plagiarism detection and prevention" },
-  { name: "seo_optimization", enabled: false, description: "SEO optimization features" },
-  { name: "multilple_export_formats", enabled: false, description: "Export in multiple formats (PDF, Word, HTML)" },
+  { name: FEATURES.CONTENT_GENERATION_PREMIUM, enabled: false, description: "Premium content generation up to 5000 words" },
+  { name: FEATURES.WRITING_BRIEF_PRO, enabled: false, description: "Access to detailed writing brief with all options" },
+  { name: FEATURES.CLONE_ME, enabled: false, description: "Writing style analysis and cloning" },
+  { name: FEATURES.HUMANIZATION_SETTINGS, enabled: false, description: "Advanced humanization settings" },
+  { name: FEATURES.VOCABULARY_CONTROL, enabled: false, description: "Vocabulary customization and control" },
+  { name: FEATURES.PLAGIARISM_DETECTION, enabled: false, description: "Plagiarism detection and prevention" },
+  { name: FEATURES.SEO_OPTIMIZATION, enabled: false, description: "SEO optimization features" },
+  { name: FEATURES.MULTIPLE_EXPORT_FORMATS, enabled: false, description: "Export in multiple formats (PDF, Word, HTML)" },
 ];
 
 async function setupSubscriptionTiers() {
@@ -92,7 +97,7 @@ async function setupSubscriptionTiers() {
   console.log("Deleted existing data");
   
   // Insert features
-  const insertedFeatures = await db.insert(features).values(FEATURES).returning();
+  const insertedFeatures = await db.insert(features).values(FEATURE_DEFINITIONS).returning();
   console.log(`Inserted ${insertedFeatures.length} features`);
   
   // Insert subscription plans
