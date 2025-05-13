@@ -160,9 +160,8 @@ export type TierLevel = z.infer<typeof tierLevelEnum>;
 // Feature flags table to control access to features
 export const featureFlags = pgTable("feature_flags", {
   id: serial("id").primaryKey(),
-  featureName: text("feature_name").notNull().unique(),
-  isEnabled: boolean("is_enabled").default(true),
-  tierLevel: text("tier_level").notNull().default("premium"),
+  name: text("name").notNull().unique(),
+  enabled: boolean("enabled").default(true),
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at")
@@ -358,9 +357,7 @@ export const selectFeatureSchema = createSelectSchema(features);
 export const insertPlanFeatureSchema = createInsertSchema(planFeatures);
 export const selectPlanFeatureSchema = createSelectSchema(planFeatures);
 
-export const insertFeatureFlagSchema = createInsertSchema(featureFlags, {
-  tierLevel: tierLevelEnum.default("premium")
-});
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags);
 export const selectFeatureFlagSchema = createSelectSchema(featureFlags);
 
 // Types

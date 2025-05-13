@@ -66,18 +66,18 @@ const SUBSCRIPTION_PLANS = [
 
 // Define feature flags with appropriate tier levels
 const FEATURE_FLAGS = [
-  { featureName: "content_generation_basic", tierLevel: "free", description: "Basic content generation up to 1000 words" },
-  { featureName: "writing_brief_lite", tierLevel: "free", description: "Access to lite version of writing brief" },
-  { featureName: "export_basic", tierLevel: "free", description: "Export as plain text" },
+  { name: "content_generation_basic", enabled: true, description: "Basic content generation up to 1000 words" },
+  { name: "writing_brief_lite", enabled: true, description: "Access to lite version of writing brief" },
+  { name: "export_basic", enabled: true, description: "Export as plain text" },
   
-  { featureName: "content_generation_premium", tierLevel: "premium", description: "Premium content generation up to 5000 words" },
-  { featureName: "writing_brief_pro", tierLevel: "premium", description: "Access to detailed writing brief with all options" },
-  { featureName: "clone_me", tierLevel: "premium", description: "Writing style analysis and cloning" },
-  { featureName: "humanization_settings", tierLevel: "premium", description: "Advanced humanization settings" },
-  { featureName: "vocabulary_control", tierLevel: "premium", description: "Vocabulary customization and control" },
-  { featureName: "plagiarism_detection", tierLevel: "premium", description: "Plagiarism detection and prevention" },
-  { featureName: "seo_optimization", tierLevel: "premium", description: "SEO optimization features" },
-  { featureName: "multilple_export_formats", tierLevel: "premium", description: "Export in multiple formats (PDF, Word, HTML)" },
+  { name: "content_generation_premium", enabled: false, description: "Premium content generation up to 5000 words" },
+  { name: "writing_brief_pro", enabled: false, description: "Access to detailed writing brief with all options" },
+  { name: "clone_me", enabled: false, description: "Writing style analysis and cloning" },
+  { name: "humanization_settings", enabled: false, description: "Advanced humanization settings" },
+  { name: "vocabulary_control", enabled: false, description: "Vocabulary customization and control" },
+  { name: "plagiarism_detection", enabled: false, description: "Plagiarism detection and prevention" },
+  { name: "seo_optimization", enabled: false, description: "SEO optimization features" },
+  { name: "multilple_export_formats", enabled: false, description: "Export in multiple formats (PDF, Word, HTML)" },
 ];
 
 async function setupSubscriptionTiers() {
