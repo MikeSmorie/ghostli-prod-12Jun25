@@ -1,13 +1,9 @@
 import { Request, Response, Router } from "express";
 import { db } from "@db";
-import { userSubscriptions, featureFlags } from "@db/schema";
+import { userSubscriptions, featureFlags, subscriptionPlans } from "@db/schema";
 import { eq, and } from "drizzle-orm";
-import { 
-  hasFeatureAccess, 
-  getUserSubscriptionTier, 
-  FEATURES, 
-  TIER_PRO 
-} from "../services/subscriptionTiers";
+import { getUserFeatures, hasFeatureAccess, getUserSubscriptionTier, updateUserSubscription } from "../services/subscriptionFeatures";
+import { FEATURES, SUBSCRIPTION_TIERS } from "../services/subscriptionTiers";
 
 const router = Router();
 
@@ -38,7 +34,7 @@ router.get("/features", async (req: Request, res: Response) => {
     return res.json({
       tier,
       features: featureAccess,
-      isPro: tier === TIER_PRO,
+      isPro: tier === SUBSCRIPTION_TIERS.PRO.tierLevel,
       isActive: true // This will be determined by the subscription status
     });
     

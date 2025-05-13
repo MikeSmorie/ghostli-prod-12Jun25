@@ -1,187 +1,186 @@
-import { db } from "@db";
-import { 
-  users, 
-  userSubscriptions, 
-  subscriptionPlans, 
-  featureFlags, 
-  features,
-  planFeatures 
-} from "@db/schema";
-import { eq, and, desc } from "drizzle-orm";
+/**
+ * Service defining subscription tiers and feature flags
+ * This file contains the definitions of all features and which tiers have access to them
+ */
 
-// Constants for tier definitions
-export const TIER_LITE = "free";
-export const TIER_PRO = "premium";
-
-// Feature keys
+/**
+ * All feature flags in the system
+ */
 export const FEATURES = {
-  // Basic features (available to Lite/Free users)
-  CONTENT_GENERATION_BASIC: "content_generation_basic",
-  WRITING_BRIEF_LITE: "writing_brief_lite",
-  EXPORT_BASIC: "export_basic",
+  // Content Generation
+  CONTENT_GENERATION: "content_generation",
+  HIGH_WORD_COUNT: "high_word_count",
   
-  // Pro features
-  CONTENT_GENERATION_PREMIUM: "content_generation_premium",
-  WRITING_BRIEF_PRO: "writing_brief_pro",
+  // Content Style & Format
+  STYLE_ADJUSTMENTS: "style_adjustments",
+  GRADE_LEVEL_ADJUSTMENT: "grade_level_adjustment",
   CLONE_ME: "clone_me",
-  HUMANIZATION_SETTINGS: "humanization_settings",
-  VOCABULARY_CONTROL: "vocabulary_control",
-  PLAGIARISM_DETECTION: "plagiarism_detection",
-  SEO_OPTIMIZATION: "seo_optimization",
-  MULTIPLE_EXPORT_FORMATS: "multiple_export_formats"
-};
-
-// Mapping of features to their tier levels
-const FEATURE_TIER_MAP: Record<string, string> = {
-  [FEATURES.CONTENT_GENERATION_BASIC]: TIER_LITE,
-  [FEATURES.WRITING_BRIEF_LITE]: TIER_LITE,
-  [FEATURES.EXPORT_BASIC]: TIER_LITE,
   
-  [FEATURES.CONTENT_GENERATION_PREMIUM]: TIER_PRO,
-  [FEATURES.WRITING_BRIEF_PRO]: TIER_PRO,
-  [FEATURES.CLONE_ME]: TIER_PRO, 
-  [FEATURES.HUMANIZATION_SETTINGS]: TIER_PRO,
-  [FEATURES.VOCABULARY_CONTROL]: TIER_PRO,
-  [FEATURES.PLAGIARISM_DETECTION]: TIER_PRO,
-  [FEATURES.SEO_OPTIMIZATION]: TIER_PRO,
-  [FEATURES.MULTIPLE_EXPORT_FORMATS]: TIER_PRO,
+  // AI Detection Prevention
+  HUMANIZATION: "humanization",
+  ADVANCED_HUMANIZATION: "advanced_humanization",
+  
+  // Export Options
+  BASIC_EXPORT: "basic_export", 
+  MULTIPLE_EXPORT_FORMATS: "multiple_export_formats",
+  
+  // Content Analysis
+  PLAGIARISM_DETECTION: "plagiarism_detection", 
+  EAT_COMPLIANCE: "eat_compliance",
+  
+  // Content Customization
+  KEYWORD_CONTROL: "keyword_control",
+  PHRASE_REMOVAL: "phrase_removal",
+  SOURCE_SELECTION: "source_selection",
+  REGIONAL_DATA: "regional_data",
+  
+  // Content Management
+  SAVE_CONTENT: "save_content", 
+  CONTENT_HISTORY: "content_history",
+  
+  // Integration
+  WEBSITE_SCANNING: "website_scanning",
+  API_ACCESS: "api_access"
 };
 
 /**
- * Checks if a user has access to a specific feature based on their subscription
+ * Descriptions for all features
  */
-export async function hasFeatureAccess(userId: number, featureName: string): Promise<boolean> {
-  try {
-    // First check if the feature exists
-    const feature = await db.query.featureFlags.findFirst({
-      where: eq(featureFlags.name, featureName)
-    });
+export const FEATURE_DESCRIPTIONS: Record<string, string> = {
+  [FEATURES.CONTENT_GENERATION]: "Generate high-quality content with AI",
+  [FEATURES.HIGH_WORD_COUNT]: "Generate content up to 5000 words",
+  [FEATURES.STYLE_ADJUSTMENTS]: "Adjust tone, voice, and style of generated content",
+  [FEATURES.GRADE_LEVEL_ADJUSTMENT]: "Adjust reading complexity of generated content",
+  [FEATURES.CLONE_ME]: "Analyze and replicate your writing style",
+  [FEATURES.HUMANIZATION]: "Basic AI detection prevention",
+  [FEATURES.ADVANCED_HUMANIZATION]: "Advanced AI detection prevention with fine-tuning",
+  [FEATURES.BASIC_EXPORT]: "Export content as plain text",
+  [FEATURES.MULTIPLE_EXPORT_FORMATS]: "Export as PDF, Word, HTML, and more",
+  [FEATURES.PLAGIARISM_DETECTION]: "Check content against online sources for originality",
+  [FEATURES.EAT_COMPLIANCE]: "Ensure content meets Expertise, Authoritativeness, Trustworthiness standards",
+  [FEATURES.KEYWORD_CONTROL]: "Control keyword frequency and implementation",
+  [FEATURES.PHRASE_REMOVAL]: "Remove redundant phrases automatically",
+  [FEATURES.SOURCE_SELECTION]: "Force content to use specific sources",
+  [FEATURES.REGIONAL_DATA]: "Set regional statistical data preferences",
+  [FEATURES.SAVE_CONTENT]: "Save content for future reference",
+  [FEATURES.CONTENT_HISTORY]: "Access history of all generated content",
+  [FEATURES.WEBSITE_SCANNING]: "Extract content from websites for analysis",
+  [FEATURES.API_ACCESS]: "API access for content generation"
+};
+
+/**
+ * Define subscription tiers with pricing and features
+ */
+export const SUBSCRIPTION_TIERS = {
+  FREE: {
+    name: "Lite",
+    description: "Free basic content generation",
+    tierLevel: "free",
+    monthlyPrice: 0,
+    yearlyPrice: 0
+  },
+  PRO: {
+    name: "Pro",
+    description: "Professional content generation with advanced features",
+    tierLevel: "premium",
+    monthlyPrice: 19.99,
+    yearlyPrice: 199.99
+  }
+};
+
+/**
+ * Get all features with access level for a specific tier
+ */
+export function getFeaturesForTier(tierLevel: string): Record<string, boolean> {
+  switch (tierLevel) {
+    case "free": 
+      return {
+        // Content Generation - Limited
+        [FEATURES.CONTENT_GENERATION]: true,
+        [FEATURES.HIGH_WORD_COUNT]: false, // Limited to 1000 words
+        
+        // Content Style & Format - Basic Only
+        [FEATURES.STYLE_ADJUSTMENTS]: true,
+        [FEATURES.GRADE_LEVEL_ADJUSTMENT]: false,
+        [FEATURES.CLONE_ME]: false,
+        
+        // AI Detection Prevention - Basic Only
+        [FEATURES.HUMANIZATION]: true, 
+        [FEATURES.ADVANCED_HUMANIZATION]: false,
+        
+        // Export Options - Basic Only
+        [FEATURES.BASIC_EXPORT]: true,
+        [FEATURES.MULTIPLE_EXPORT_FORMATS]: false,
+        
+        // Content Analysis - None
+        [FEATURES.PLAGIARISM_DETECTION]: false,
+        [FEATURES.EAT_COMPLIANCE]: false,
+        
+        // Content Customization - Limited
+        [FEATURES.KEYWORD_CONTROL]: true,
+        [FEATURES.PHRASE_REMOVAL]: false,
+        [FEATURES.SOURCE_SELECTION]: false,
+        [FEATURES.REGIONAL_DATA]: false,
+        
+        // Content Management - Basic Only
+        [FEATURES.SAVE_CONTENT]: true,
+        [FEATURES.CONTENT_HISTORY]: false,
+        
+        // Integration - None
+        [FEATURES.WEBSITE_SCANNING]: false,
+        [FEATURES.API_ACCESS]: false
+      };
     
-    if (!feature) {
-      console.warn(`Feature flag "${featureName}" not found in database`);
-      return false;
-    }
+    case "premium":
+      return {
+        // Content Generation - Full
+        [FEATURES.CONTENT_GENERATION]: true,
+        [FEATURES.HIGH_WORD_COUNT]: true, // Up to 5000 words
+        
+        // Content Style & Format - Full
+        [FEATURES.STYLE_ADJUSTMENTS]: true,
+        [FEATURES.GRADE_LEVEL_ADJUSTMENT]: true,
+        [FEATURES.CLONE_ME]: true,
+        
+        // AI Detection Prevention - Full
+        [FEATURES.HUMANIZATION]: true,
+        [FEATURES.ADVANCED_HUMANIZATION]: true,
+        
+        // Export Options - Full
+        [FEATURES.BASIC_EXPORT]: true,
+        [FEATURES.MULTIPLE_EXPORT_FORMATS]: true,
+        
+        // Content Analysis - Full
+        [FEATURES.PLAGIARISM_DETECTION]: true,
+        [FEATURES.EAT_COMPLIANCE]: true,
+        
+        // Content Customization - Full
+        [FEATURES.KEYWORD_CONTROL]: true,
+        [FEATURES.PHRASE_REMOVAL]: true,
+        [FEATURES.SOURCE_SELECTION]: true,
+        [FEATURES.REGIONAL_DATA]: true,
+        
+        // Content Management - Full
+        [FEATURES.SAVE_CONTENT]: true,
+        [FEATURES.CONTENT_HISTORY]: true,
+        
+        // Integration - Full
+        [FEATURES.WEBSITE_SCANNING]: true,
+        [FEATURES.API_ACCESS]: true
+      };
     
-    // If feature is disabled globally, nobody has access
-    if (!feature.enabled) {
-      return false;
-    }
-    
-    // Determine the tier level required for this feature
-    const tierRequired = FEATURE_TIER_MAP[featureName] || TIER_PRO;
-    
-    // Free tier features are accessible to everyone
-    if (tierRequired === TIER_LITE) {
-      return true;
-    }
-    
-    // Check if user has an active subscription
-    const activeSubscription = await db.query.userSubscriptions.findFirst({
-      where: and(
-        eq(userSubscriptions.userId, userId),
-        eq(userSubscriptions.status, "active")
-      ),
-      with: {
-        plan: true
-      },
-      orderBy: [desc(userSubscriptions.createdAt)]
-    });
-    
-    if (!activeSubscription) {
-      return false;
-    }
-    
-    // Check the subscription plan's metadata to determine tier level
-    const planMetadata = activeSubscription.plan.metadata 
-      ? JSON.parse(activeSubscription.plan.metadata as string) 
-      : { tierLevel: TIER_LITE };
-    
-    const subscriptionTier = planMetadata.tierLevel || TIER_LITE;
-    
-    // Premium tier has access to all features
-    if (subscriptionTier === TIER_PRO) {
-      return true;
-    }
-    
-    // For other tiers, check tier requirements
-    return subscriptionTier === tierRequired;
-  } catch (error) {
-    console.error("Error checking feature access:", error);
-    return false;
+    default:
+      // If the tier doesn't exist, return free tier features
+      return getFeaturesForTier("free");
   }
 }
 
 /**
- * Updates a user's feature flags based on their subscription
- * Used when a subscription is created or updated
+ * Get all feature definitions to use in setting up the database
  */
-export async function updateUserFeatureAccess(userId: number, subscriptionId: number): Promise<void> {
-  try {
-    // Get the user's subscription
-    const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.id, subscriptionId),
-      with: {
-        plan: true
-      }
-    });
-    
-    if (!subscription) {
-      throw new Error(`Subscription ${subscriptionId} not found`);
-    }
-    
-    // Get the subscription plan's tier level from metadata
-    const planMetadata = subscription.plan.metadata 
-      ? JSON.parse(subscription.plan.metadata as string) 
-      : { tierLevel: TIER_LITE };
-    
-    const tierLevel = planMetadata.tierLevel || TIER_LITE;
-    
-    console.log(`User ${userId} subscription updated to tier ${tierLevel}`);
-
-    // We don't actually update any persistent feature flags here, instead we 
-    // rely on the hasFeatureAccess function to dynamically calculate access 
-    // based on the user's subscription tier when features are requested.
-    // This is a better approach as it avoids having to update feature flags 
-    // when subscription plans change.
-    
-    // If we need to store user-specific feature flag overrides in the future,
-    // this is where we would implement that logic.
-    
-  } catch (error) {
-    console.error("Error updating user feature access:", error);
-    throw error;
-  }
-}
-
-/**
- * Gets a user's subscription tier
- */
-export async function getUserSubscriptionTier(userId: number): Promise<string> {
-  try {
-    // Check if user has an active subscription
-    const activeSubscription = await db.query.userSubscriptions.findFirst({
-      where: and(
-        eq(userSubscriptions.userId, userId),
-        eq(userSubscriptions.status, "active")
-      ),
-      with: {
-        plan: true
-      },
-      orderBy: [desc(userSubscriptions.createdAt)]
-    });
-    
-    if (!activeSubscription) {
-      return TIER_LITE; // Default to free tier
-    }
-    
-    // Check the subscription plan metadata to determine tier level
-    const planMetadata = activeSubscription.plan.metadata 
-      ? JSON.parse(activeSubscription.plan.metadata as string) 
-      : { tierLevel: TIER_LITE };
-    
-    return planMetadata.tierLevel || TIER_LITE;
-  } catch (error) {
-    console.error("Error getting user subscription tier:", error);
-    return TIER_LITE; // Default to free tier on error
-  }
+export function getAllFeatureDefinitions() {
+  return Object.entries(FEATURES).map(([key, name]) => ({
+    name,
+    description: FEATURE_DESCRIPTIONS[name]
+  }));
 }

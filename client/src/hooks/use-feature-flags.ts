@@ -1,108 +1,125 @@
-import { useEffect, useState } from "react";
-import { useUser } from "./use-user";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
+import { useState, useEffect } from "react";
 
-// Define the available feature flags
+// Feature constants - these should match keys on the server
 export const FEATURES = {
-  // Basic features (available to Lite/Free users)
-  CONTENT_GENERATION_BASIC: "content_generation_basic",
-  WRITING_BRIEF_LITE: "writing_brief_lite",
-  EXPORT_BASIC: "export_basic",
+  // Content Generation
+  CONTENT_GENERATION_BASIC: "CONTENT_GENERATION_BASIC",
+  CONTENT_GENERATION_PREMIUM: "CONTENT_GENERATION_PREMIUM",
   
-  // Pro features
-  CONTENT_GENERATION_PREMIUM: "content_generation_premium",
-  WRITING_BRIEF_PRO: "writing_brief_pro",
-  CLONE_ME: "clone_me",
-  HUMANIZATION_SETTINGS: "humanization_settings",
-  VOCABULARY_CONTROL: "vocabulary_control",
-  PLAGIARISM_DETECTION: "plagiarism_detection",
-  SEO_OPTIMIZATION: "seo_optimization",
-  MULTIPLE_EXPORT_FORMATS: "multiple_export_formats"
+  // Interface
+  WRITING_BRIEF_LITE: "WRITING_BRIEF_LITE",
+  WRITING_BRIEF_PRO: "WRITING_BRIEF_PRO",
+  
+  // Personalization
+  CLONE_ME: "CLONE_ME",
+  HUMANIZATION_SETTINGS: "HUMANIZATION_SETTINGS",
+  VOCABULARY_CONTROL: "VOCABULARY_CONTROL",
+  
+  // Quality & Optimization
+  PLAGIARISM_DETECTION: "PLAGIARISM_DETECTION",
+  SEO_OPTIMIZATION: "SEO_OPTIMIZATION",
+  
+  // Export
+  EXPORT_BASIC: "EXPORT_BASIC",
+  MULTIPLE_EXPORT_FORMATS: "MULTIPLE_EXPORT_FORMATS",
 };
 
-// Define tier constants
-export const TIER_LITE = "free";
-export const TIER_PRO = "premium";
+// Map for tier levels
+export const TIER_LEVELS = {
+  FREE: "free",
+  BASIC: "basic", 
+  PREMIUM: "premium",
+  ENTERPRISE: "enterprise"
+};
 
-interface FeatureFlag {
-  name: string;
-  enabled: boolean;
-}
-
-export interface SubscriptionInfo {
-  tier: string;
+// Define the shape of feature flag data from the API
+interface FeatureFlagResponse {
   features: Record<string, boolean>;
-  isPro: boolean;
-  isActive: boolean;
+  tier: string;
 }
 
+/**
+ * Hook for accessing the user's feature flags and subscription tier
+ */
 export function useFeatureFlags() {
-  const { user } = useUser();
-  const [userFeatures, setUserFeatures] = useState<Record<string, boolean>>({});
-  
-  const { data: subscriptionInfo, isLoading } = useQuery({
+  const [features, setFeatures] = useState<Record<string, boolean>>({});
+  const [tier, setTier] = useState<string>(TIER_LEVELS.FREE);
+
+  // Fetch feature flags from the API
+  const { data, isLoading, error, isError } = useQuery<FeatureFlagResponse>({
     queryKey: ["/api/subscription/features"],
     queryFn: async () => {
-      if (!user) return {
-        tier: TIER_LITE,
-        features: {},
-        isPro: false,
-        isActive: false
-      };
-      
-      const res = await apiRequest("GET", "/api/subscription/features");
-      return await res.json();
+      try {
+        const response = await apiRequest("GET", "/api/subscription/features");
+        if (!response.ok) {
+          throw new Error("Failed to fetch feature flags");
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching feature flags:", error);
+        // Return default values on error
+        return {
+          features: getDefaultFeatures(),
+          tier: TIER_LEVELS.FREE
+        };
+      }
     },
-    enabled: !!user,
+    // Only refetch on mount or when explicitly invalidated
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  }
-  );
-  
+  });
+
+  // Update local state when data changes
   useEffect(() => {
-    if (subscriptionInfo) {
-      setUserFeatures(subscriptionInfo.features);
+    if (data) {
+      setFeatures(data.features);
+      setTier(data.tier);
     }
-  }, [subscriptionInfo]);
-  
+  }, [data]);
+
+  // Check if the user has access to a specific feature
   const hasFeature = (featureName: string): boolean => {
-    // If still loading, default to not having access
-    if (isLoading) {
-      return false;
-    }
-    
-    // If no subscription info yet, check if it's a free feature
-    if (!subscriptionInfo) {
-      return [
-        FEATURES.CONTENT_GENERATION_BASIC,
-        FEATURES.WRITING_BRIEF_LITE,
-        FEATURES.EXPORT_BASIC
-      ].includes(featureName);
-    }
-    
-    // Return the feature access from the subscription info
-    return subscriptionInfo.features[featureName] || false;
+    return features[featureName] === true;
   };
-  
-  const getUserTier = (): string => {
-    return subscriptionInfo?.tier || TIER_LITE;
-  };
-  
+
+  // Check if the user is a Pro subscriber
   const isProUser = (): boolean => {
-    return subscriptionInfo?.isPro || false;
+    return tier !== TIER_LEVELS.FREE;
   };
-  
-  const hasActiveSubscription = (): boolean => {
-    return subscriptionInfo?.isActive || false;
+
+  // Get the user's subscription tier
+  const getUserTier = (): string => {
+    return tier;
   };
-  
+
+  // Default features (free tier) - fallback if API call fails
+  const getDefaultFeatures = (): Record<string, boolean> => {
+    return {
+      [FEATURES.CONTENT_GENERATION_BASIC]: true,
+      [FEATURES.WRITING_BRIEF_LITE]: true,
+      [FEATURES.EXPORT_BASIC]: true,
+      
+      // Premium features are disabled by default
+      [FEATURES.CONTENT_GENERATION_PREMIUM]: false,
+      [FEATURES.WRITING_BRIEF_PRO]: false,
+      [FEATURES.CLONE_ME]: false,
+      [FEATURES.HUMANIZATION_SETTINGS]: false,
+      [FEATURES.VOCABULARY_CONTROL]: false,
+      [FEATURES.PLAGIARISM_DETECTION]: false,
+      [FEATURES.SEO_OPTIMIZATION]: false,
+      [FEATURES.MULTIPLE_EXPORT_FORMATS]: false,
+    };
+  };
+
   return {
-    hasFeature,
-    getUserTier,
-    isProUser,
-    hasActiveSubscription,
+    features,
+    tier,
     isLoading,
-    features: userFeatures,
+    error,
+    isError,
+    hasFeature,
+    isProUser,
+    getUserTier,
   };
 }

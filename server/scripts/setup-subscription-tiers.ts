@@ -1,149 +1,218 @@
 import { db } from "@db";
-import { 
-  subscriptionPlans, 
-  features, 
-  planFeatures, 
-  featureFlags, 
-  tierLevelEnum 
-} from "@db/schema";
+import { featureFlags, subscriptionPlans, planFeatures } from "@db/schema";
+import { getFeaturesForTier, getAllFeatureDefinitions, SUBSCRIPTION_TIERS } from "../services/subscriptionTiers";
 import { eq } from "drizzle-orm";
-import { TIER_LITE, TIER_PRO, FEATURES } from "../services/subscriptionTiers";
 
-// Define our subscription tiers features
-const FEATURE_DEFINITIONS = [
-  // Basic features (available to Lite/Free users)
-  { name: FEATURES.CONTENT_GENERATION_BASIC, category: "generation", description: "Basic content generation up to 1000 words" },
-  { name: FEATURES.WRITING_BRIEF_LITE, category: "interface", description: "Access to lite version of writing brief with basic fields" },
-  { name: FEATURES.EXPORT_BASIC, category: "export", description: "Export as plain text" },
-  
-  // Pro features
-  { name: FEATURES.CONTENT_GENERATION_PREMIUM, category: "generation", description: "Premium content generation up to 5000 words" },
-  { name: FEATURES.WRITING_BRIEF_PRO, category: "interface", description: "Access to detailed writing brief with all options" },
-  { name: FEATURES.CLONE_ME, category: "personalization", description: "Writing style analysis and cloning" },
-  { name: FEATURES.HUMANIZATION_SETTINGS, category: "personalization", description: "Advanced humanization settings" },
-  { name: FEATURES.VOCABULARY_CONTROL, category: "personalization", description: "Vocabulary customization and control" },
-  { name: FEATURES.PLAGIARISM_DETECTION, category: "quality", description: "Plagiarism detection and prevention" },
-  { name: FEATURES.SEO_OPTIMIZATION, category: "optimization", description: "SEO optimization features" },
-  { name: FEATURES.MULTIPLE_EXPORT_FORMATS, category: "export", description: "Export in multiple formats (PDF, Word, HTML)" },
-];
+/**
+ * This script initializes or updates the subscription tiers and feature flags in the database.
+ * It creates:
+ * 1. All feature flag definitions
+ * 2. All subscription plan tiers
+ * 3. The relationship between plans and features (which tier gets which features)
+ */
 
-// Define the subscription plans
-const SUBSCRIPTION_PLANS = [
-  {
-    name: "Lite",
-    description: "Free access to basic content generation features",
-    position: 1,
-    price: "0",
-    interval: "monthly",
-    features: JSON.stringify([
-      FEATURES.CONTENT_GENERATION_BASIC,
-      FEATURES.WRITING_BRIEF_LITE,
-      FEATURES.EXPORT_BASIC
-    ]),
-    isActive: true,
-    trialPeriodDays: 0,
-    metadata: JSON.stringify({ tierLevel: TIER_LITE })
-  },
-  {
-    name: "Pro",
-    description: "Full access to all advanced features including Clone Me, humanization settings, and more",
-    position: 2,
-    price: "29.99", // price in dollars
-    interval: "monthly",
-    features: JSON.stringify([
-      FEATURES.CONTENT_GENERATION_BASIC,
-      FEATURES.CONTENT_GENERATION_PREMIUM,
-      FEATURES.WRITING_BRIEF_LITE,
-      FEATURES.WRITING_BRIEF_PRO,
-      FEATURES.CLONE_ME,
-      FEATURES.HUMANIZATION_SETTINGS,
-      FEATURES.VOCABULARY_CONTROL,
-      FEATURES.PLAGIARISM_DETECTION,
-      FEATURES.SEO_OPTIMIZATION,
-      FEATURES.MULTIPLE_EXPORT_FORMATS,
-      FEATURES.EXPORT_BASIC
-    ]),
-    isActive: true,
-    trialPeriodDays: 7,
-    metadata: JSON.stringify({ tierLevel: TIER_PRO })
+export async function setupSubscriptionTiers() {
+  try {
+    console.log("Setting up subscription tiers and feature flags...");
+
+    // Step 1: Create or update feature flags
+    await setupFeatureFlags();
+
+    // Step 2: Create or update subscription plans
+    await setupSubscriptionPlans();
+
+    // Step 3: Create or update plan-feature relationships
+    await setupPlanFeatures();
+
+    console.log("Subscription tiers and feature flags setup complete.");
+  } catch (error) {
+    console.error("Error setting up subscription tiers:", error);
   }
-];
+}
 
-// Define feature flags with appropriate tier levels
-const FEATURE_FLAGS = [
-  { name: FEATURES.CONTENT_GENERATION_BASIC, enabled: true, description: "Basic content generation up to 1000 words" },
-  { name: FEATURES.WRITING_BRIEF_LITE, enabled: true, description: "Access to lite version of writing brief" },
-  { name: FEATURES.EXPORT_BASIC, enabled: true, description: "Export as plain text" },
-  
-  { name: FEATURES.CONTENT_GENERATION_PREMIUM, enabled: false, description: "Premium content generation up to 5000 words" },
-  { name: FEATURES.WRITING_BRIEF_PRO, enabled: false, description: "Access to detailed writing brief with all options" },
-  { name: FEATURES.CLONE_ME, enabled: false, description: "Writing style analysis and cloning" },
-  { name: FEATURES.HUMANIZATION_SETTINGS, enabled: false, description: "Advanced humanization settings" },
-  { name: FEATURES.VOCABULARY_CONTROL, enabled: false, description: "Vocabulary customization and control" },
-  { name: FEATURES.PLAGIARISM_DETECTION, enabled: false, description: "Plagiarism detection and prevention" },
-  { name: FEATURES.SEO_OPTIMIZATION, enabled: false, description: "SEO optimization features" },
-  { name: FEATURES.MULTIPLE_EXPORT_FORMATS, enabled: false, description: "Export in multiple formats (PDF, Word, HTML)" },
-];
+async function setupFeatureFlags() {
+  console.log("Setting up feature flags...");
 
-async function setupSubscriptionTiers() {
-  console.log("Setting up subscription tiers...");
+  // Get all feature definitions
+  const featureDefinitions = getAllFeatureDefinitions();
+
+  // For each feature, insert it if it doesn't exist or update it if it does
+  for (const feature of featureDefinitions) {
+    // Check if feature exists
+    const existingFeatures = await db
+      .select()
+      .from(featureFlags)
+      .where(eq(featureFlags.name, feature.name));
+
+    if (existingFeatures.length === 0) {
+      // Create new feature flag
+      await db.insert(featureFlags).values({
+        name: feature.name,
+        description: feature.description,
+        enabled: true, // All features are enabled in the system by default
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      console.log(`Created feature flag: ${feature.name}`);
+    } else {
+      // Update existing feature flag
+      await db
+        .update(featureFlags)
+        .set({
+          description: feature.description,
+          updatedAt: new Date(),
+        })
+        .where(eq(featureFlags.name, feature.name));
+      console.log(`Updated feature flag: ${feature.name}`);
+    }
+  }
+}
+
+async function setupSubscriptionPlans() {
+  console.log("Setting up subscription plans...");
+
+  // Set up free tier
+  await createOrUpdatePlan({
+    name: SUBSCRIPTION_TIERS.FREE.name,
+    description: SUBSCRIPTION_TIERS.FREE.description,
+    tierLevel: SUBSCRIPTION_TIERS.FREE.tierLevel,
+    monthlyPrice: SUBSCRIPTION_TIERS.FREE.monthlyPrice,
+    yearlyPrice: SUBSCRIPTION_TIERS.FREE.yearlyPrice
+  });
+
+  // Set up pro tier
+  await createOrUpdatePlan({
+    name: SUBSCRIPTION_TIERS.PRO.name,
+    description: SUBSCRIPTION_TIERS.PRO.description,
+    tierLevel: SUBSCRIPTION_TIERS.PRO.tierLevel,
+    monthlyPrice: SUBSCRIPTION_TIERS.PRO.monthlyPrice,
+    yearlyPrice: SUBSCRIPTION_TIERS.PRO.yearlyPrice
+  });
+}
+
+async function createOrUpdatePlan(plan: {
+  name: string;
+  description: string;
+  tierLevel: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+}) {
+  // Check if plan exists
+  const existingPlans = await db
+    .select()
+    .from(subscriptionPlans)
+    .where(eq(subscriptionPlans.name, plan.name));
+
+  if (existingPlans.length === 0) {
+    // Create new plan
+    await db.insert(subscriptionPlans).values({
+      name: plan.name,
+      description: plan.description,
+      tierLevel: plan.tierLevel,
+      monthlyPrice: plan.monthlyPrice,
+      yearlyPrice: plan.yearlyPrice,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    console.log(`Created subscription plan: ${plan.name}`);
+  } else {
+    // Update existing plan
+    await db
+      .update(subscriptionPlans)
+      .set({
+        description: plan.description,
+        monthlyPrice: plan.monthlyPrice,
+        yearlyPrice: plan.yearlyPrice,
+        updatedAt: new Date(),
+      })
+      .where(eq(subscriptionPlans.name, plan.name));
+    console.log(`Updated subscription plan: ${plan.name}`);
+  }
+}
+
+async function setupPlanFeatures() {
+  console.log("Setting up plan-feature relationships...");
+
+  // Get all plan IDs
+  const plans = await db.select().from(subscriptionPlans);
   
-  // First, clear existing data
-  await db.delete(planFeatures);
-  await db.delete(features);
-  await db.delete(subscriptionPlans);
-  await db.delete(featureFlags);
-  
-  console.log("Deleted existing data");
-  
-  // Insert features
-  const insertedFeatures = await db.insert(features).values(FEATURE_DEFINITIONS).returning();
-  console.log(`Inserted ${insertedFeatures.length} features`);
-  
-  // Insert subscription plans
-  const insertedPlans = await db.insert(subscriptionPlans).values(SUBSCRIPTION_PLANS).returning();
-  console.log(`Inserted ${insertedPlans.length} subscription plans`);
-  
-  // Create a map of feature names to IDs
-  const featureMap = insertedFeatures.reduce((acc, feature) => {
+  // Get all feature IDs
+  const features = await db.select().from(featureFlags);
+
+  // Map plan names to IDs
+  const planMap = plans.reduce((acc, plan) => {
+    acc[plan.name] = plan.id;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Map feature names to IDs
+  const featureMap = features.reduce((acc, feature) => {
     acc[feature.name] = feature.id;
     return acc;
   }, {} as Record<string, number>);
-  
-  // Insert plan features
-  const planFeatureValues = [];
-  
-  for (const plan of insertedPlans) {
-    const planFeatureNames = JSON.parse(plan.features as string);
-    for (const featureName of planFeatureNames) {
-      const featureId = featureMap[featureName];
-      if (featureId) {
-        planFeatureValues.push({
-          planId: plan.id,
-          featureId,
-          enabled: true
-        });
-      }
-    }
-  }
-  
-  const insertedPlanFeatures = await db.insert(planFeatures).values(planFeatureValues).returning();
-  console.log(`Inserted ${insertedPlanFeatures.length} plan features`);
-  
-  // Insert feature flags
-  const insertedFeatureFlags = await db.insert(featureFlags).values(FEATURE_FLAGS).returning();
-  console.log(`Inserted ${insertedFeatureFlags.length} feature flags`);
-  
-  console.log("Subscription tiers setup complete!");
+
+  // Set up features for free tier
+  const freeTierFeatures = getFeaturesForTier(SUBSCRIPTION_TIERS.FREE.tierLevel);
+  await setupFeaturesForPlan(
+    planMap[SUBSCRIPTION_TIERS.FREE.name],
+    featureMap,
+    freeTierFeatures
+  );
+
+  // Set up features for pro tier
+  const proTierFeatures = getFeaturesForTier(SUBSCRIPTION_TIERS.PRO.tierLevel);
+  await setupFeaturesForPlan(
+    planMap[SUBSCRIPTION_TIERS.PRO.name],
+    featureMap,
+    proTierFeatures
+  );
 }
 
-// Run the setup function
-setupSubscriptionTiers()
-  .then(() => {
-    console.log("Setup completed successfully");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Error during setup:", error);
-    process.exit(1);
-  });
+async function setupFeaturesForPlan(
+  planId: number,
+  featureMap: Record<string, number>,
+  features: Record<string, boolean>
+) {
+  // For each feature, create or update the plan-feature relationship
+  for (const [featureName, isEnabled] of Object.entries(features)) {
+    const featureId = featureMap[featureName];
+    
+    if (!featureId) {
+      console.warn(`Feature not found: ${featureName}`);
+      continue;
+    }
+
+    // Check if relationship exists
+    const existingRelationships = await db
+      .select()
+      .from(planFeatures)
+      .where(
+        eq(planFeatures.planId, planId),
+        eq(planFeatures.featureId, featureId)
+      );
+
+    if (existingRelationships.length === 0) {
+      // Create new relationship
+      await db.insert(planFeatures).values({
+        planId,
+        featureId,
+        isEnabled,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    } else {
+      // Update existing relationship
+      await db
+        .update(planFeatures)
+        .set({
+          isEnabled,
+          updatedAt: new Date(),
+        })
+        .where(
+          eq(planFeatures.planId, planId),
+          eq(planFeatures.featureId, featureId)
+        );
+    }
+  }
+}
