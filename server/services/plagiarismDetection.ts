@@ -73,7 +73,8 @@ export async function checkPlagiarism(content: string): Promise<PlagiarismCheckR
     });
 
     // Parse the response
-    const analysis = JSON.parse(response.choices[0].message.content);
+    const content = response.choices[0].message.content;
+    const analysis = content ? JSON.parse(content) : { isPlagiarized: false, originalityScore: 100, matchedSources: [] };
     
     // Construct the result
     const result: PlagiarismCheckResult = {
@@ -134,7 +135,7 @@ export async function rephraseContent(content: string, matchedSource: MatchedSou
       temperature: 0.7, // Higher temperature for more creativity
     });
     
-    const rephrased = response.choices[0].message.content || matchedPortion;
+    const rephrased = response.choices[0].message.content?.toString() || matchedPortion;
     
     // Return the content with the rephrased section
     return beforeMatch + rephrased + afterMatch;
@@ -162,7 +163,8 @@ export async function addCitations(content: string, matchedSources: MatchedSourc
       if (!source.source) continue;
       
       // Extract the citation if we have it
-      const citation = source.suggestedCitation || `(${source.source}${source.url ? `, ${source.url}` : ''})`;
+      const sourceText = source.source || "Unknown Source";
+      const citation = source.suggestedCitation || `(${sourceText}${source.url ? `, ${source.url}` : ''})`;
       
       // Insert citation at the end of the matched portion
       contentWithCitations = 

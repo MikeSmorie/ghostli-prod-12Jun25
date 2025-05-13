@@ -150,6 +150,22 @@ export interface ContentGenerationResult {
   }[];
   // Formatted content with footnotes (optional)
   contentWithFootnotes?: string;      // Same content but with footnote references
+  // Plagiarism detection results (Pro feature)
+  plagiarismResults?: {
+    isPlagiarized: boolean;           // Whether plagiarism was detected
+    score: number;                    // 0-100 score (0 = original, 100 = plagiarized)
+    checkedTimestamp: string;         // When the check was performed
+    matchedSources: {
+      source: string | null;          // Source name if identified
+      url: string | null;             // URL if identified
+      matchedText: string;            // The text that was matched
+      matchPercentage: number;        // Confidence percentage of the match
+      startPosition: number;          // Start position in the content
+      endPosition: number;            // End position in the content
+      suggestedCitation?: string;     // Suggested citation format
+      suggestedRephrase?: string;     // Suggested rephrasing
+    }[];
+  };
   metadata: {
     startTime: Date;
     endTime: Date;

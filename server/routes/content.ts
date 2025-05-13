@@ -7,6 +7,8 @@ import {
   generateSeoKeywords,
   rewriteContent
 } from "../services/openai";
+import { checkPlagiarism, rephraseContent, addCitations } from "../services/plagiarismDetection";
+import { isFeatureEnabled } from "../services/featureFlags";
 import OpenAI from "openai";
 
 // Schema for keyword frequency requirements
