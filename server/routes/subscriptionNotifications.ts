@@ -91,6 +91,60 @@ router.post(
   }
 );
 
+// Trigger an upgrade reminder when a user tries to access a Pro feature
+router.post(
+  "/trigger-upgrade-reminder",
+  authenticateJWT,
+  ensureServiceInitialized,
+  async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const { featureTriggered } = req.body;
+      
+      // Get the current user details
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      // Check if user already has an active Pro subscription
+      const service = await getLifecycleService();
+      const hasPro = await service.userHasActiveProSubscription(userId);
+      
+      // Only send reminder if user doesn't have Pro
+      if (!hasPro) {
+        // Format the feature name to be more user-friendly
+        const formattedFeature = featureTriggered
+          ? featureTriggered.toLowerCase()
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ')
+          : 'premium features';
+        
+        // Send the upgrade reminder
+        const result = await service.notificationService.sendUpgradeReminder(
+          userId,
+          user.username,
+          formattedFeature
+        );
+        
+        return res.json({ success: result });
+      }
+      
+      // User already has Pro, no need for reminder
+      return res.json({ success: false, message: "User already has Pro subscription" });
+    } catch (error) {
+      console.error("Error sending upgrade reminder:", error);
+      res.status(500).json({ error: "Failed to send upgrade reminder" });
+    }
+  }
+);
+
 // Trigger a subscription welcome message
 router.post(
   "/subscription/:id/welcome",

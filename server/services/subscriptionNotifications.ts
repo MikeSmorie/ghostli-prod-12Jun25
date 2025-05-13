@@ -122,7 +122,7 @@ export class SubscriptionNotificationService {
 
     // Filter by creation date and check if any message title contains the message type
     return recentAnnouncements.some(announcement => 
-      announcement.createdAt > yesterday && 
+      announcement.createdAt && announcement.createdAt > yesterday && 
       announcement.title.includes(messageType) &&
       announcement.recipients.length > 0
     );

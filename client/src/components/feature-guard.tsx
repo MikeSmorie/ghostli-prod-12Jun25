@@ -47,6 +47,37 @@ export function FeatureGuard({
     return <>{children}</>;
   }
 
+  // If user doesn't have access and showUpgradeInfo is true,
+  // send an upgrade reminder notification (only if not already shown recently)
+  if (showUpgradeInfo && !isPro()) {
+    // Use a client-side throttling mechanism to avoid spamming the API
+    const lastReminderSent = localStorage.getItem('lastUpgradeReminder');
+    const currentTime = new Date().getTime();
+    const REMINDER_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+    
+    // Only send reminder if we haven't sent one in the last 24 hours
+    if (!lastReminderSent || (currentTime - parseInt(lastReminderSent)) > REMINDER_INTERVAL) {
+      // Get feature name from the string or object
+      const featureName = typeof feature === 'string' ? feature : feature;
+      
+      // Send upgrade reminder API call
+      fetch('/api/subscription/trigger-upgrade-reminder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          featureTriggered: featureName 
+        })
+      }).then(() => {
+        // Store the time we sent the reminder
+        localStorage.setItem('lastUpgradeReminder', currentTime.toString());
+      }).catch(err => {
+        console.error('Failed to send upgrade reminder:', err);
+      });
+    }
+  }
+
   // If hideIfDisabled is true, render nothing
   if (hideIfDisabled) {
     return null;

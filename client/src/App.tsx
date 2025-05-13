@@ -31,6 +31,7 @@ import { FontSizeControls } from "@/components/font-size-controls";
 import { NavigationControls } from "@/components/navigation-controls";
 import { AdminToggle } from "@/components/admin-toggle";
 import { AIAssistant } from "@/components/ai-assistant";
+import { NotificationCenter } from "@/components/notification-center";
 import { AdminProvider } from "@/contexts/admin-context";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -142,6 +143,7 @@ function Router() {
               <AIAssistant />
               <span className="text-sm font-medium hidden md:inline">AI Assistant</span>
             </div>
+            <NotificationCenter />
             <span className="text-sm font-medium">
               {user.username}
             </span>
