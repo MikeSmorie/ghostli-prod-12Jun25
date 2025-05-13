@@ -458,6 +458,141 @@ export function registerContentRoutes(app: Express) {
   });
   
   /**
+   * Check content for plagiarism
+   * POST /api/check-plagiarism
+   */
+  app.post("/api/check-plagiarism", async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({
+          error: "Missing content",
+          message: "Content is required for plagiarism checking"
+        });
+      }
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
+      }
+      
+      try {
+        // Use the plagiarism detection service
+        const result = await checkPlagiarism(content);
+        
+        // Return the plagiarism check result
+        return res.json(result);
+      } catch (error) {
+        console.error("Plagiarism check error:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Plagiarism detection error:", error);
+      
+      return res.status(500).json({
+        error: "Plagiarism detection failed",
+        message: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
+  });
+  
+  /**
+   * Rephrase potentially plagiarized content
+   * POST /api/content/rephrase
+   */
+  app.post("/api/content/rephrase", async (req: Request, res: Response) => {
+    try {
+      const { content, matchedSource } = req.body;
+      
+      if (!content || !matchedSource) {
+        return res.status(400).json({
+          error: "Missing parameters",
+          message: "Content and matchedSource are required"
+        });
+      }
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
+      }
+      
+      try {
+        // Use the rephrasing service
+        const rephrasedContent = await rephraseContent(content, matchedSource);
+        
+        // Return the rephrased content
+        return res.json({
+          content: rephrasedContent,
+          originalContent: content
+        });
+      } catch (error) {
+        console.error("Content rephrasing error:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Content rephrasing error:", error);
+      
+      return res.status(500).json({
+        error: "Content rephrasing failed",
+        message: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
+  });
+  
+  /**
+   * Add citation to potentially plagiarized content
+   * POST /api/content/add-citation
+   */
+  app.post("/api/content/add-citation", async (req: Request, res: Response) => {
+    try {
+      const { content, matchedSource } = req.body;
+      
+      if (!content || !matchedSource) {
+        return res.status(400).json({
+          error: "Missing parameters",
+          message: "Content and matchedSource are required"
+        });
+      }
+      
+      // Check for API key
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({
+          error: "OpenAI API key is not configured",
+          message: "Please set the OPENAI_API_KEY environment variable"
+        });
+      }
+      
+      try {
+        // Use the citation service
+        const contentWithCitation = await addCitations(content, [matchedSource]);
+        
+        // Return the content with added citation
+        return res.json({
+          content: contentWithCitation,
+          originalContent: content
+        });
+      } catch (error) {
+        console.error("Citation adding error:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Citation adding error:", error);
+      
+      return res.status(500).json({
+        error: "Citation adding failed",
+        message: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
+  });
+
+  /**
    * Generate SEO keywords from content
    * POST /api/generate-seo
    */

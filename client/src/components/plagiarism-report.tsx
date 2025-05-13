@@ -13,7 +13,21 @@ import { AlertCircle, Check, Info, ExternalLink, RefreshCw, Shield, BookOpen, Ed
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatDistanceToNow } from "date-fns";
+// Simplify and avoid date-fns dependency for now
+const formatTimeAgo = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  } catch (e) {
+    return "recently";
+  }
+};
 
 interface MatchedSource {
   source: string | null;
@@ -46,7 +60,7 @@ export function PlagiarismReport({
   onRerunCheck
 }: PlagiarismReportProps) {
   // Format the timestamp to show how long ago it was checked
-  const timeAgo = formatDistanceToNow(new Date(checkedTimestamp), { addSuffix: true });
+  const timeAgo = formatTimeAgo(checkedTimestamp);
   
   return (
     <Card className={isPlagiarized ? "border-amber-500" : "border-green-500"}>
