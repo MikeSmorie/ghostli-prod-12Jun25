@@ -1,190 +1,146 @@
-import express from "express";
+import { Request, Response, Router } from "express";
 import { db } from "@db";
+import { userSubscriptions, featureFlags } from "@db/schema";
+import { eq, and } from "drizzle-orm";
 import { 
-  subscriptionPlans, 
-  userSubscriptions, 
-  payments,
-  insertSubscriptionPlanSchema,
-  insertUserSubscriptionSchema,
-  insertPaymentSchema
-} from "@db/schema";
-import { eq } from "drizzle-orm";
-import { updateUserFeatureAccess } from "../services/subscriptionFeatures";
+  hasFeatureAccess, 
+  getUserSubscriptionTier, 
+  FEATURES, 
+  TIER_PRO 
+} from "../services/subscriptionTiers";
 
-const router = express.Router();
+const router = Router();
 
-// Get all subscription plans
-router.get("/plans", async (_req, res) => {
+/**
+ * Get the current user's subscription status and feature access
+ */
+router.get("/api/subscription/features", async (req: Request, res: Response) => {
   try {
-    const plans = await db.query.subscriptionPlans.findMany({
-      where: eq(subscriptionPlans.isActive, true)
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const userId = req.user.id;
+    
+    // Get the user's subscription tier
+    const tier = await getUserSubscriptionTier(userId);
+    
+    // Check all available features
+    const allFeatures = await db.select().from(featureFlags);
+    const featureAccess: Record<string, boolean> = {};
+    
+    // Get feature access for all features
+    for (const feature of allFeatures) {
+      featureAccess[feature.name] = await hasFeatureAccess(userId, feature.name);
+    }
+    
+    // Return the subscription info
+    return res.json({
+      tier,
+      features: featureAccess,
+      isPro: tier === TIER_PRO,
+      isActive: true // This will be determined by the subscription status
     });
-    res.json(plans);
+    
   } catch (error) {
-    res.status(500).json({ message: "Error fetching subscription plans" });
-  }
-});
-
-// Subscribe to a plan
-router.post("/subscribe", async (req, res) => {
-  try {
-    const { userId, planId } = req.body;
-
-    // Get the plan details for pricing
-    const plan = await db.query.subscriptionPlans.findFirst({
-      where: eq(subscriptionPlans.id, planId)
-    });
-
-    if (!plan) {
-      return res.status(404).json({ message: "Subscription plan not found" });
-    }
-
-    // Create subscription record
-    const [subscription] = await db.insert(userSubscriptions)
-      .values({
-        userId,
-        planId,
-        status: "pending",
-        startDate: new Date(),
-      })
-      .returning();
-
-    if (!subscription) {
-      throw new Error("Failed to create subscription");
-    }
-
-    // Create pending payment record
-    const [payment] = await db.insert(payments)
-      .values({
-        userId,
-        subscriptionId: subscription.id,
-        amount: plan.price,
-        currency: "USD",
-        status: "pending",
-        paymentMethod: "paypal"
-      })
-      .returning();
-      
-    // Initialize user feature access based on subscription plan
-    try {
-      await updateUserFeatureAccess(userId, subscription.id);
-    } catch (error) {
-      console.warn("Failed to update user feature access:", error);
-      // Continue despite feature update error - it's not critical for subscription creation
-    }
-
-    res.json({ 
-      message: "Subscription initiated", 
-      subscription,
-      payment
-    });
-  } catch (error) {
-    res.status(400).json({ 
-      message: "Error creating subscription",
-      error: error instanceof Error ? error.message : String(error)
+    console.error("Error fetching subscription features:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch subscription features", 
+      error: (error as Error).message
     });
   }
 });
 
-// Get user's active subscription
-router.get("/user/:userId", async (req, res) => {
+/**
+ * Get details of a specific subscription
+ */
+router.get("/api/subscription/:id", async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const userId = req.user.id;
+    const subscriptionId = parseInt(req.params.id);
+    
+    // Get subscription details
     const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.userId, parseInt(userId)),
+      where: and(
+        eq(userSubscriptions.id, subscriptionId),
+        eq(userSubscriptions.userId, userId)
+      ),
       with: {
         plan: true
       }
-    });
-
-    if (!subscription) {
-      return res.status(404).json({ message: "No active subscription found" });
-    }
-
-    res.json(subscription);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching subscription" });
-  }
-});
-
-// Cancel subscription (sets cancelledAt date and doesn't renew)
-router.post("/cancel/:subscriptionId", async (req, res) => {
-  try {
-    const { subscriptionId } = req.params;
-    const subscriptionIdInt = parseInt(subscriptionId);
-    
-    // Get the subscription first to make sure it exists
-    const subscription = await db.query.userSubscriptions.findFirst({
-      where: eq(userSubscriptions.id, subscriptionIdInt)
     });
     
     if (!subscription) {
       return res.status(404).json({ message: "Subscription not found" });
     }
     
-    // Update the subscription with cancelledAt date
-    const [updatedSubscription] = await db.update(userSubscriptions)
-      .set({ 
-        cancelledAt: new Date(),
-        // Don't change status - it should remain active until endDate
+    return res.json(subscription);
+    
+  } catch (error) {
+    console.error("Error fetching subscription:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch subscription", 
+      error: (error as Error).message
+    });
+  }
+});
+
+/**
+ * Update a subscription (e.g. cancel it)
+ */
+router.put("/api/subscription/:id", async (req: Request, res: Response) => {
+  try {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const userId = req.user.id;
+    const subscriptionId = parseInt(req.params.id);
+    const { status } = req.body;
+    
+    // Validate the status
+    if (status !== "active" && status !== "cancelled") {
+      return res.status(400).json({ message: "Invalid subscription status" });
+    }
+    
+    // Check if subscription exists and belongs to the user
+    const subscription = await db.query.userSubscriptions.findFirst({
+      where: and(
+        eq(userSubscriptions.id, subscriptionId),
+        eq(userSubscriptions.userId, userId)
+      )
+    });
+    
+    if (!subscription) {
+      return res.status(404).json({ message: "Subscription not found" });
+    }
+    
+    // Update the subscription
+    const updatedSubscription = await db
+      .update(userSubscriptions)
+      .set({
+        status: status,
+        updatedAt: new Date(),
       })
-      .where(eq(userSubscriptions.id, subscriptionIdInt))
+      .where(
+        and(
+          eq(userSubscriptions.id, subscriptionId),
+          eq(userSubscriptions.userId, userId)
+        )
+      )
       .returning();
     
-    res.json({ 
-      message: "Subscription cancelled successfully", 
-      subscription: updatedSubscription 
-    });
+    return res.json(updatedSubscription[0]);
+    
   } catch (error) {
-    console.error("Error cancelling subscription:", error);
-    res.status(500).json({ 
-      message: "Error cancelling subscription",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-// Admin: Create or update subscription plan
-router.post("/admin/plans", async (req, res) => {
-  try {
-    const planData = insertSubscriptionPlanSchema.parse(req.body);
-
-    const [plan] = await db.insert(subscriptionPlans)
-      .values(planData)
-      .returning();
-
-    res.json(plan);
-  } catch (error) {
-    res.status(400).json({ 
-      message: "Error creating subscription plan",
-      error: error instanceof Error ? error.message : String(error)
-    });
-  }
-});
-
-// Admin: Update plan ordering
-router.patch("/admin/plans/reorder", async (req, res) => {
-  try {
-    const { planIds } = req.body; // Array of plan IDs in desired order
-
-    // Update positions for each plan
-    await Promise.all(
-      planIds.map((planId: number, index: number) =>
-        db.update(subscriptionPlans)
-          .set({ position: index })
-          .where(eq(subscriptionPlans.id, planId))
-      )
-    );
-
-    const updatedPlans = await db.query.subscriptionPlans.findMany({
-      orderBy: subscriptionPlans.position
-    });
-
-    res.json(updatedPlans);
-  } catch (error) {
-    res.status(400).json({ 
-      message: "Error reordering subscription plans",
-      error: error instanceof Error ? error.message : String(error)
+    console.error("Error updating subscription:", error);
+    return res.status(500).json({ 
+      message: "Failed to update subscription", 
+      error: (error as Error).message
     });
   }
 });

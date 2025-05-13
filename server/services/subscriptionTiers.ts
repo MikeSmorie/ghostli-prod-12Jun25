@@ -28,7 +28,7 @@ export const FEATURES = {
   VOCABULARY_CONTROL: "vocabulary_control",
   PLAGIARISM_DETECTION: "plagiarism_detection",
   SEO_OPTIMIZATION: "seo_optimization",
-  MULTIPLE_EXPORT_FORMATS: "multilple_export_formats"
+  MULTIPLE_EXPORT_FORMATS: "multiple_export_formats"
 };
 
 // Mapping of features to their tier levels
@@ -136,23 +136,16 @@ export async function updateUserFeatureAccess(userId: number, subscriptionId: nu
     
     const tierLevel = planMetadata.tierLevel || TIER_LITE;
     
-    // Enable/disable features based on tier level
-    const features = await db.select().from(featureFlags);
+    console.log(`User ${userId} subscription updated to tier ${tierLevel}`);
+
+    // We don't actually update any persistent feature flags here, instead we 
+    // rely on the hasFeatureAccess function to dynamically calculate access 
+    // based on the user's subscription tier when features are requested.
+    // This is a better approach as it avoids having to update feature flags 
+    // when subscription plans change.
     
-    for (const feature of features) {
-      const featureTierRequired = FEATURE_TIER_MAP[feature.name] || TIER_PRO;
-      
-      // Update the feature flag
-      const hasAccess = 
-        // Free tier features are available to everyone
-        featureTierRequired === TIER_LITE ||
-        // Premium tier has access to all features
-        tierLevel === TIER_PRO;
-        
-      await db.update(featureFlags)
-        .set({ enabled: hasAccess })
-        .where(eq(featureFlags.name, feature.name));
-    }
+    // If we need to store user-specific feature flag overrides in the future,
+    // this is where we would implement that logic.
     
   } catch (error) {
     console.error("Error updating user feature access:", error);
