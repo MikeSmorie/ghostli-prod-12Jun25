@@ -70,6 +70,7 @@ export interface WritingBrief {
   keywordFrequency: string;
   
   // Content Structure
+  contentStructure?: string;
   sections: string[];
   formatRequirements: string[];
   
@@ -101,6 +102,7 @@ const DEFAULT_BRIEF: WritingBrief = {
   primaryKeywords: [],
   secondaryKeywords: [],
   keywordFrequency: "medium",
+  contentStructure: "",
   sections: [],
   formatRequirements: [],
   sources: [],
@@ -810,8 +812,37 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
         
         {/* Step 4: Content Structure */}
         <div className={currentStep === 4 ? "block" : "hidden"}>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
+              <div className="flex items-center mb-2">
+                <Label htmlFor="contentStructure" className="text-base font-semibold">
+                  How should the content be organized?
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Please specify how you'd like the content to be organized. Include any specific flow or structural requirements.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Textarea
+                id="contentStructure"
+                placeholder="e.g., Start with a compelling hook, follow with three main arguments in order of importance, end with a strong call to action"
+                value={brief.contentStructure || ""}
+                onChange={(e) => updateBrief("contentStructure", e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+            
+            <div className="pt-4 border-t">
               <div className="flex items-center mb-2">
                 <Label className="text-base font-semibold">
                   What sections should the content include?
