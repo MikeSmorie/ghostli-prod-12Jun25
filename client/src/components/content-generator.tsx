@@ -26,6 +26,7 @@ import html2canvas from "html2canvas";
 import { WriteInMyStyle } from "./write-in-my-style";
 import { FeatureTabs } from "./ui/content-tabs";
 import { WritingBriefManager } from "./writing-brief-manager";
+import { PlagiarismReport } from "./plagiarism-report";
 
 // Types
 interface GenerationParams {
@@ -2059,6 +2060,20 @@ export default function ContentGenerator() {
                         </div>
                       )}
                     </TabsContent>
+                    
+                    {plagiarismResults && (
+                      <TabsContent value="plagiarism" className="space-y-4">
+                        <PlagiarismReport
+                          isPlagiarized={plagiarismResults.isPlagiarized}
+                          score={plagiarismResults.score}
+                          checkedTimestamp={plagiarismResults.checkedTimestamp}
+                          matchedSources={plagiarismResults.matchedSources}
+                          onRephrase={handleRephrase}
+                          onAddCitation={handleAddCitation}
+                          onRerunCheck={runPlagiarismCheck}
+                        />
+                      </TabsContent>
+                    )}
                     
                     <TabsContent value="export" className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
