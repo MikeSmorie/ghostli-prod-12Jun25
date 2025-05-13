@@ -1,21 +1,35 @@
 import express from "express";
 import { MockPaymentGateway } from "../payment/gateway";
+import { PayPalGateway } from "../payment/paypal-gateway";
 import { db } from "@db";
-import { clientPaymentGateways } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { clientPaymentGateways, payments, userSubscriptions, subscriptionPlans } from "@db/schema";
+import { eq, and } from "drizzle-orm";
 
 const router = express.Router();
-const paymentGateway = new MockPaymentGateway();
+const mockPaymentGateway = new MockPaymentGateway();
+const paypalGateway = new PayPalGateway();
 
-// Test endpoint for payment gateway
-router.get("/test", async (_req, res) => {
+// Test endpoint for mock payment gateway
+router.get("/test-mock", async (_req, res) => {
   try {
-    await paymentGateway.initialize();
-    const result = await paymentGateway.processPayment(10.00, "test-user");
-    res.json({ message: "Payment test successful", result });
+    await mockPaymentGateway.initialize();
+    const result = await mockPaymentGateway.processPayment(10.00, "test-user");
+    res.json({ message: "Mock payment test successful", result });
   } catch (error) {
-    console.error("[ERROR] Payment test failed:", error);
-    res.status(500).json({ error: "Payment test failed" });
+    console.error("[ERROR] Mock payment test failed:", error);
+    res.status(500).json({ error: "Mock payment test failed" });
+  }
+});
+
+// Test endpoint for PayPal payment gateway
+router.get("/test-paypal", async (_req, res) => {
+  try {
+    await paypalGateway.initialize();
+    const result = await paypalGateway.processPayment(10.00, "test-user");
+    res.json({ message: "PayPal payment test successful", result });
+  } catch (error) {
+    console.error("[ERROR] PayPal payment test failed:", error);
+    res.status(500).json({ error: "PayPal payment test failed" });
   }
 });
 

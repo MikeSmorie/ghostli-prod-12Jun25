@@ -77,6 +77,20 @@ export function registerRoutes(app: Express) {
   app.use("/api/admin", requireAdmin, adminLogsRoutes);
   app.use("/api/payment", paymentRoutes);
   
+  // PayPal integration routes
+  app.get("/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/paypal/order", async (req, res) => {
+    // Request body should contain: { intent, amount, currency }
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+  
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
 
