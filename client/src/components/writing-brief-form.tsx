@@ -39,7 +39,15 @@ import {
   MessageSquare,
   Bookmark,
   RefreshCw,
-  X
+  X,
+  Info,
+  Plus,
+  Trash2,
+  Sparkles,
+  Layers,
+  BookOpen,
+  Settings,
+  Sliders
 } from "lucide-react";
 import {
   Tooltip,
@@ -352,7 +360,7 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
       <CardContent className="pt-6">
         <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-100 dark:border-blue-900">
           <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
-            <Info className="w-4 h-4 mr-2 inline" />
+            <HelpCircle className="w-4 h-4 mr-2 inline" />
             Complete each section to create a comprehensive brief. All fields can be edited at any time.
           </p>
         </div>
@@ -509,48 +517,87 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
               </Select>
             </div>
 
-            <div>
-              <div className="flex items-center mb-2">
-                <Label htmlFor="gradeLevel" className="text-base font-semibold">
-                  Content Complexity Level:
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Select the appropriate reading level for your target audience.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
+            <div className="rounded-md border p-4 bg-gray-50 dark:bg-gray-950/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-blue-800 dark:text-blue-300">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Content Complexity Level
+              </h3>
               
-              <div className="space-y-4">
-                <RadioGroup
-                  value={brief.gradeLevel}
-                  onValueChange={(value) => updateBrief("gradeLevel", value)}
-                  className="grid grid-cols-1 gap-4"
-                >
-                  {GRADE_LEVELS.map((level) => (
-                    <div key={level.value} className="flex items-start space-x-3">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value={level.value} id={level.value} />
-                        <Label htmlFor={level.value} className="font-medium">
-                          {level.label}
-                        </Label>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between mb-3">
+                    <Label htmlFor="gradeLevel" className="text-base font-medium">
+                      Reading Level:
+                    </Label>
+                    <Badge variant="outline" className="font-medium">
+                      {GRADE_LEVELS.find(level => level.value === brief.gradeLevel)?.label}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="py-2">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-2">
+                        <span>Simple</span>
+                        <span>Intermediate</span>
+                        <span>Advanced</span>
+                        <span>College</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{level.description}</p>
+                      <div className="relative">
+                        <Slider
+                          id="gradeLevelSlider"
+                          min={0}
+                          max={3}
+                          step={1}
+                          value={[GRADE_LEVELS.findIndex(level => level.value === brief.gradeLevel)]}
+                          onValueChange={(value) => {
+                            const index = value[0];
+                            updateBrief("gradeLevel", GRADE_LEVELS[index].value);
+                          }}
+                          className="mb-6 mt-2"
+                        />
+                        <div className="absolute w-full flex justify-between -mt-1">
+                          <div className="w-1 h-3 bg-gray-300 dark:bg-gray-700" />
+                          <div className="w-1 h-3 bg-gray-300 dark:bg-gray-700" />
+                          <div className="w-1 h-3 bg-gray-300 dark:bg-gray-700" />
+                          <div className="w-1 h-3 bg-gray-300 dark:bg-gray-700" />
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </RadioGroup>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-xs flex items-center text-muted-foreground hover:text-foreground cursor-help">
+                            <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
+                            What does this mean?
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="w-80">
+                          <p className="mb-2 text-sm font-medium">Reading Level Complexity</p>
+                          <ul className="text-xs space-y-1.5">
+                            {GRADE_LEVELS.map((level) => (
+                              <li key={level.value} className="flex items-start">
+                                <span className="font-semibold min-w-24">{level.label}:</span>
+                                <span>{level.description}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
                 
-                <div className="mt-4 bg-muted/50 p-4 rounded-md">
-                  <h4 className="text-sm font-medium mb-2">Content Preview at {GRADE_LEVELS.find(level => level.value === brief.gradeLevel)?.label}</h4>
+                <div className="border rounded-md p-4 bg-white dark:bg-gray-900 shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-sm font-medium">Example at {GRADE_LEVELS.find(level => level.value === brief.gradeLevel)?.label} Level</h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {brief.gradeLevel === "grade-4-6" && "Flesch-Kincaid: 85-100"}
+                      {brief.gradeLevel === "grade-7-10" && "Flesch-Kincaid: 65-84"}
+                      {brief.gradeLevel === "grade-11-12" && "Flesch-Kincaid: 50-64"}
+                      {brief.gradeLevel === "college" && "Flesch-Kincaid: 30-49"}
+                    </Badge>
+                  </div>
                   <p className="text-sm italic text-muted-foreground">
                     {brief.gradeLevel === "grade-4-6" && 
                       "The cat sat on the mat. It was warm there. The sun made a bright spot. The cat liked to feel warm. It closed its eyes and went to sleep."}
