@@ -153,6 +153,77 @@ export const planFeatures = pgTable("plan_features", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Define cryptocurrency types
+export const cryptoTypeEnum = z.enum(["bitcoin", "solana", "usdt_erc20", "usdt_trc20"]);
+export type CryptoType = z.infer<typeof cryptoTypeEnum>;
+
+// Crypto transaction status enum
+export const cryptoTxStatusEnum = z.enum(["pending", "confirming", "confirmed", "failed"]);
+export type CryptoTxStatus = z.infer<typeof cryptoTxStatusEnum>;
+
+// Define crypto wallets table
+export const cryptoWallets = pgTable("crypto_wallets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  cryptoType: text("crypto_type").notNull(), // bitcoin, solana, usdt_erc20, usdt_trc20
+  walletAddress: text("wallet_address").notNull().unique(),
+  privateKey: text("private_key").notNull(), // Encrypted private key
+  publicKey: text("public_key").notNull(),
+  seedPhrase: text("seed_phrase"), // Encrypted seed phrase if needed
+  isActive: boolean("is_active").default(true),
+  balance: decimal("balance", { precision: 18, scale: 8 }).default("0"),
+  lastChecked: timestamp("last_checked"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+}, (table) => {
+  return {
+    userIdx: index("crypto_wallets_user_idx").on(table.userId),
+    typeIdx: index("crypto_wallets_type_idx").on(table.cryptoType),
+  }
+});
+
+// Define crypto transactions table
+export const cryptoTransactions = pgTable("crypto_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  walletId: integer("wallet_id").notNull().references(() => cryptoWallets.id),
+  subscriptionId: integer("subscription_id").references(() => userSubscriptions.id),
+  cryptoType: text("crypto_type").notNull(),
+  transactionHash: text("transaction_hash").notNull().unique(),
+  senderAddress: text("sender_address"),
+  amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+  amountUsd: decimal("amount_usd", { precision: 10, scale: 2 }),
+  feeAmount: decimal("fee_amount", { precision: 18, scale: 8 }),
+  status: text("status").notNull().default("pending"),
+  confirmations: integer("confirmations").default(0),
+  blockHeight: integer("block_height"),
+  blockTime: timestamp("block_time"),
+  memo: text("memo"),
+  rawData: jsonb("raw_data"), // Store raw blockchain transaction data
+  receiptSent: boolean("receipt_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+}, (table) => {
+  return {
+    userIdx: index("crypto_transactions_user_idx").on(table.userId),
+    statusIdx: index("crypto_transactions_status_idx").on(table.status),
+    walletIdx: index("crypto_transactions_wallet_idx").on(table.walletId),
+  }
+});
+
+// Define exchange rates table for price conversion
+export const cryptoExchangeRates = pgTable("crypto_exchange_rates", {
+  id: serial("id").primaryKey(),
+  cryptoType: text("crypto_type").notNull(),
+  rateUsd: decimal("rate_usd", { precision: 18, scale: 8 }).notNull(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  source: text("source").notNull() // Source of the exchange rate data
+}, (table) => {
+  return {
+    typeIdx: index("crypto_exchange_rates_type_idx").on(table.cryptoType),
+  }
+});
+
 // Define subscription tier levels
 export const tierLevelEnum = z.enum(["free", "basic", "premium", "enterprise"]);
 export type TierLevel = z.infer<typeof tierLevelEnum>;
@@ -172,7 +243,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   activityLogs: many(activityLogs),
   subscriptions: many(userSubscriptions),
   payments: many(payments),
-  paymentGateways: many(clientPaymentGateways)
+  paymentGateways: many(clientPaymentGateways),
+  cryptoWallets: many(cryptoWallets),
+  cryptoTransactions: many(cryptoTransactions)
 }));
 
 export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
@@ -229,6 +302,30 @@ export const planFeaturesRelations = relations(planFeatures, ({ one }) => ({
   plan: one(subscriptionPlans, {
     fields: [planFeatures.planId],
     references: [subscriptionPlans.id]
+  })
+}));
+
+// Define crypto relations
+export const cryptoWalletsRelations = relations(cryptoWallets, ({ one, many }) => ({
+  user: one(users, {
+    fields: [cryptoWallets.userId],
+    references: [users.id]
+  }),
+  transactions: many(cryptoTransactions)
+}));
+
+export const cryptoTransactionsRelations = relations(cryptoTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [cryptoTransactions.userId],
+    references: [users.id]
+  }),
+  wallet: one(cryptoWallets, {
+    fields: [cryptoTransactions.walletId],
+    references: [cryptoWallets.id]
+  }),
+  subscription: one(userSubscriptions, {
+    fields: [cryptoTransactions.subscriptionId],
+    references: [userSubscriptions.id]
   })
 }));
 
