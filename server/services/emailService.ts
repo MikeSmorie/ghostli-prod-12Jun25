@@ -3,6 +3,9 @@
  */
 import { MailService } from '@sendgrid/mail';
 
+// Constants
+const DEFAULT_EMAIL_FROM = 'noreply@ghostliai.com';
+
 // Initialize SendGrid
 const mailService = new MailService();
 
@@ -31,12 +34,18 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   }
 
   try {
+    // Ensure all required fields are provided
+    if (!params.to || !params.from || !params.subject) {
+      console.error('Missing required email parameters');
+      return false;
+    }
+
     await mailService.send({
       to: params.to,
       from: params.from, // Use verified sender in SendGrid
       subject: params.subject,
-      text: params.text,
-      html: params.html
+      text: params.text || '',
+      html: params.html || ''
     });
     
     console.log(`Email sent to ${params.to}`);
@@ -148,9 +157,10 @@ The GhostliAI Team
 `;
 
   // Send the email
+  const fromAddress = process.env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM;
   return sendEmail({
     to: email,
-    from: process.env.EMAIL_FROM || 'noreply@ghostliai.com',
+    from: fromAddress,
     subject,
     text,
     html
@@ -247,9 +257,10 @@ The GhostliAI Team
 `;
 
   // Send the email
+  const fromAddress = process.env.EMAIL_FROM ?? DEFAULT_EMAIL_FROM;
   return sendEmail({
     to: email,
-    from: process.env.EMAIL_FROM || 'noreply@ghostliai.com',
+    from: fromAddress,
     subject,
     text,
     html
