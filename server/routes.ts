@@ -15,6 +15,7 @@ import paymentRoutes from "./routes/payment";
 import { registerSupergodRoutes } from "./routes/supergod";
 import { logError } from "./utils/logger";
 import { requireRole, requireSupergod } from "./middleware/rbac";
+import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
