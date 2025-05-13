@@ -50,6 +50,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Types
 export interface WritingBrief {
@@ -332,22 +334,29 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
   
   return (
     <Card className="w-full">
-      <CardHeader className="bg-blue-50 dark:bg-blue-950 border-b">
+      <CardHeader className="bg-blue-100 dark:bg-blue-950/50 border-b">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl flex items-center">
-            <FilePlus className="mr-2 h-5 w-5" />
-            Structured Writing Brief
+            <FileText className="mr-2 h-5 w-5" />
+            Professional Writing Brief
           </CardTitle>
-          <Badge variant="outline" className="px-2 py-1 bg-blue-100 dark:bg-blue-900">
+          <Badge variant="outline" className="px-2 py-1 bg-blue-200 dark:bg-blue-900 font-medium">
             Pro Feature
           </Badge>
         </div>
-        <CardDescription>
-          Define your content requirements step-by-step for better results
+        <CardDescription className="text-blue-800 dark:text-blue-300">
+          Define your content requirements step-by-step for precise, professional results
         </CardDescription>
       </CardHeader>
       
       <CardContent className="pt-6">
+        <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-100 dark:border-blue-900">
+          <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center">
+            <Info className="w-4 h-4 mr-2 inline" />
+            Complete each section to create a comprehensive brief. All fields can be edited at any time.
+          </p>
+        </div>
+        
         {renderStepIndicator()}
         
         {/* Step 1: Content Purpose */}
