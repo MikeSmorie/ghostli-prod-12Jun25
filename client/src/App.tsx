@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import SubscriptionPlans from "@/pages/subscription-plans";
+import CryptoDashboard from "@/pages/crypto-dashboard";
 
 function ProtectedAdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useUser();
@@ -192,6 +193,7 @@ function Router() {
         <Route path="/content-generation" component={ContentGenerationPage} />
         <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
         <Route path="/clone-me" component={CloneMePage} />
+        <Route path="/crypto-dashboard" component={CryptoDashboard} />
         <Route component={NotFound} />
       </Switch>
 
