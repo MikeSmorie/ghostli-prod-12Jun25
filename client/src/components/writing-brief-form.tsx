@@ -306,36 +306,57 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
   };
   
   const renderStepIndicator = () => {
+    const stepLabels = [
+      { number: 1, label: "Purpose", icon: <Globe className="w-4 h-4" /> },
+      { number: 2, label: "Style", icon: <MessageSquare className="w-4 h-4" /> },
+      { number: 3, label: "Keywords", icon: <Bookmark className="w-4 h-4" /> },
+      { number: 4, label: "Structure", icon: <Layers className="w-4 h-4" /> },
+      { number: 5, label: "Sources", icon: <BookOpen className="w-4 h-4" /> },
+      { number: 6, label: "Revisions", icon: <RefreshCw className="w-4 h-4" /> },
+    ];
+    
     return (
-      <div className="flex justify-between mb-6">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const stepNumber = index + 1;
-          const isActive = stepNumber === currentStep;
-          const isCompleted = stepNumber < currentStep;
-          
-          return (
-            <div key={stepNumber} className="flex flex-col items-center flex-1">
-              <div
+      <div className="mb-8 border rounded-md p-2 md:p-4 bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-wrap justify-between">
+          {stepLabels.map((step) => {
+            const isActive = step.number === currentStep;
+            const isCompleted = step.number < currentStep;
+            
+            return (
+              <div 
+                key={step.number} 
                 className={`
-                  relative flex items-center justify-center w-8 h-8 rounded-full
-                  ${isActive ? "bg-primary text-primary-foreground" : 
-                    isCompleted ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"}
-                  ${index < totalSteps - 1 ? "after:content-[''] after:absolute after:top-1/2 after:h-[2px] after:w-full after:translate-y-[-50%] after:translate-x-[100%] after:bg-gray-200 dark:after:bg-gray-700" : ""}
+                  flex items-center py-2 px-1 md:px-3 cursor-pointer rounded-md transition-colors
+                  ${isActive ? "bg-blue-100 dark:bg-blue-800/40 text-primary" : 
+                    isCompleted ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/30"}
+                  ${step.number <= currentStep ? "cursor-pointer" : "cursor-not-allowed opacity-60"}
+                  mb-1 md:mb-0 w-1/3 md:w-auto
                 `}
+                onClick={() => {
+                  if (step.number <= currentStep) {
+                    setCurrentStep(step.number);
+                  }
+                }}
               >
-                {isCompleted ? <Check className="w-4 h-4" /> : stepNumber}
+                <div
+                  className={`
+                    flex items-center justify-center w-7 h-7 rounded-full mr-1 md:mr-2 flex-shrink-0
+                    ${isActive ? "bg-primary text-primary-foreground" : 
+                      isCompleted ? "bg-green-500 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"}
+                  `}
+                >
+                  {isCompleted ? <Check className="w-4 h-4" /> : step.icon}
+                </div>
+                <span className="text-xs font-medium hidden sm:block">
+                  {step.label}
+                </span>
+                <span className="text-xs font-medium sm:hidden">
+                  {step.number}
+                </span>
               </div>
-              <span className="text-xs mt-1 text-center hidden sm:block">
-                {stepNumber === 1 && "Purpose"}
-                {stepNumber === 2 && "Style"}
-                {stepNumber === 3 && "Keywords"}
-                {stepNumber === 4 && "Structure"}
-                {stepNumber === 5 && "Sources"}
-                {stepNumber === 6 && "Revisions"}
-              </span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -442,79 +463,128 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
         
         {/* Step 2: Tone & Style */}
         <div className={currentStep === 2 ? "block" : "hidden"}>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center mb-2">
-                <Label htmlFor="tone" className="text-base font-semibold">
-                  What tone should the content convey?
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        The tone defines how your message is expressed emotionally.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+          <div className="space-y-6">
+            <div className="rounded-md border p-4 bg-blue-50/50 dark:bg-blue-950/30">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-blue-800 dark:text-blue-300">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                Tone & Voice
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="tone" className="text-base font-medium">
+                      Content Tone
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <HelpCircle className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end" className="w-72">
+                          <p>The emotional quality of your content - how it makes readers feel</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  
+                  <Select
+                    value={brief.tone}
+                    onValueChange={(value) => updateBrief("tone", value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1">
+                        {TONES.map((tone) => (
+                          <SelectItem 
+                            key={tone} 
+                            value={tone.toLowerCase()}
+                            className="flex items-center px-3 py-2 rounded-md cursor-pointer"
+                          >
+                            {tone}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="text-xs text-muted-foreground italic pl-1">
+                    {brief.tone === "professional" && "Clear, direct, and business-appropriate language"}
+                    {brief.tone === "casual" && "Relaxed, conversational, and approachable"}
+                    {brief.tone === "formal" && "Proper, traditional, and academic language"}
+                    {brief.tone === "enthusiastic" && "Energetic, positive, and excited delivery"}
+                    {brief.tone === "authoritative" && "Expert, confident, and definitive voice"}
+                    {brief.tone === "friendly" && "Warm, inviting, and personable language"}
+                    {brief.tone === "persuasive" && "Convincing, compelling, and motivating"}
+                    {brief.tone === "empathetic" && "Understanding, caring, and compassionate"}
+                    {brief.tone === "humorous" && "Light-hearted, amusing, and entertaining"}
+                    {brief.tone === "serious" && "Focused, no-nonsense, and straightforward"}
+                    {brief.tone === "inspirational" && "Uplifting, motivating, and encouraging"}
+                    {brief.tone === "technical" && "Precise, factual, and specialized terminology"}
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="writingStyle" className="text-base font-medium">
+                      Writing Style
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <HelpCircle className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="end" className="w-72">
+                          <p>The structural approach to presenting information and engaging readers</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  
+                  <Select
+                    value={brief.writingStyle}
+                    onValueChange={(value) => updateBrief("writingStyle", value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select writing style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 p-1">
+                        {WRITING_STYLES.map((style) => (
+                          <SelectItem 
+                            key={style} 
+                            value={style.toLowerCase()}
+                            className="flex items-center px-3 py-2 rounded-md cursor-pointer"
+                          >
+                            {style}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                  
+                  <div className="text-xs text-muted-foreground italic pl-1">
+                    {brief.writingStyle === "informative" && "Provides clear, factual information to educate readers"}
+                    {brief.writingStyle === "conversational" && "Friendly, approachable style that feels like dialog"}
+                    {brief.writingStyle === "narrative" && "Storytelling approach with a clear sequence of events"}
+                    {brief.writingStyle === "technical" && "Detailed, precise language for specialized audiences"}
+                    {brief.writingStyle === "academic" && "Scholarly style with citations and formal structure"}
+                    {brief.writingStyle === "promotional" && "Persuasive content highlighting benefits and features"}
+                    {brief.writingStyle === "analytical" && "Examines evidence and presents logical conclusions"}
+                    {brief.writingStyle === "descriptive" && "Rich, sensory details that paint a vivid picture"}
+                    {brief.writingStyle === "journalistic" && "Factual reporting style with key information first"}
+                    {brief.writingStyle === "educational" && "Structured content that facilitates learning"}
+                    {brief.writingStyle === "persuasive" && "Convincing arguments that change opinions or behaviors"}
+                    {brief.writingStyle === "tutorial" && "Step-by-step instructions for completing tasks"}
+                  </div>
+                </div>
               </div>
-              <Select
-                value={brief.tone}
-                onValueChange={(value) => updateBrief("tone", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select tone" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TONES.map((tone) => (
-                    <SelectItem key={tone} value={tone.toLowerCase()}>
-                      {tone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <div className="flex items-center mb-2">
-                <Label htmlFor="writingStyle" className="text-base font-semibold">
-                  Choose a writing style:
-                </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="ml-2 h-5 w-5">
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        The writing style determines how information is structured and presented.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Select
-                value={brief.writingStyle}
-                onValueChange={(value) => updateBrief("writingStyle", value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select writing style" />
-                </SelectTrigger>
-                <SelectContent>
-                  {WRITING_STYLES.map((style) => (
-                    <SelectItem key={style} value={style.toLowerCase()}>
-                      {style}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="rounded-md border p-4 bg-gray-50 dark:bg-gray-950/50">
@@ -612,40 +682,61 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
               </div>
             </div>
 
-            <div className="mt-6 border-t pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="conciseStyle" 
-                    checked={brief.conciseStyle} 
-                    onCheckedChange={(checked) => updateBrief("conciseStyle", checked)}
-                  />
-                  <Label htmlFor="conciseStyle" className="text-base font-semibold">
-                    Enable Concise Writing Style
-                  </Label>
+            <div className="mt-6 rounded-md border p-4 bg-gray-50 dark:bg-gray-950/50">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-blue-800 dark:text-blue-300">
+                <Sparkles className="h-5 w-5 mr-2" />
+                Writing Style Enhancements
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-md bg-white dark:bg-gray-900">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Label htmlFor="conciseStyle" className="text-base font-medium">
+                        Concise Writing Style
+                      </Label>
+                      <Badge variant="outline" className="text-xs">Recommended</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3 sm:mb-0">
+                      Removes redundant phrases for clearer, more direct writing
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <HelpCircle className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="w-80">
+                          <div className="space-y-2">
+                            <p className="font-medium">Concise Writing Style</p>
+                            <p className="text-sm">Automatically removes filler phrases and redundant expressions to make your content more direct and impactful.</p>
+                            <div className="bg-slate-100 dark:bg-slate-800 rounded-md p-2 text-sm mt-2">
+                              <p className="mb-1 font-medium text-xs">Example:</p>
+                              <p className="text-muted-foreground">
+                                <span className="line-through text-red-500 dark:text-red-400">This isn't just</span> AI; it's about creating...
+                              </p>
+                              <p className="text-green-600 dark:text-green-400 mt-2">
+                                This is AI, designed to create...
+                              </p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <Switch 
+                      id="conciseStyle" 
+                      checked={brief.conciseStyle} 
+                      onCheckedChange={(checked) => updateBrief("conciseStyle", checked)}
+                      className="data-[state=checked]:bg-green-500"
+                    />
+                  </div>
                 </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-5 w-5">
-                        <HelpCircle className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="max-w-xs">
-                        <p className="mb-2">Removes redundant phrases like "not just" for clearer, more direct writing.</p>
-                        <div className="border-t pt-2">
-                          <p className="text-sm text-muted-foreground mb-1">Instead of: "This isn't just AI; it's about creating..."</p>
-                          <p className="text-sm font-medium">It becomes: "This is AI, designed to create..."</p>
-                        </div>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Makes content more professional and direct by removing filler phrases and using clear, concise language.
-              </p>
             </div>
           </div>
         </div>
