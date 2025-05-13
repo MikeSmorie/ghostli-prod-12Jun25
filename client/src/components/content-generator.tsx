@@ -1777,6 +1777,38 @@ export default function ContentGenerator() {
                     </div>
                   </div>
 
+                  {/* Plagiarism Detection Controls - PRO Feature */}
+                  <div className="mt-4 p-3 bg-purple-50 dark:bg-purple-950/30 rounded-md border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-sm font-bold text-purple-800 dark:text-purple-400">Plagiarism Detection</h3>
+                      <Badge className="ml-2 bg-purple-600 dark:bg-purple-700 text-[10px]">PRO</Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-1 cursor-help">
+                              <Info className="h-3 w-3 text-purple-600 dark:text-purple-500" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="w-80 p-3">
+                            <p className="mb-1"><strong>Plagiarism Detection:</strong></p>
+                            <p className="mb-1">Automatically check generated content for potential plagiarism.</p>
+                            <p className="mb-1">This feature will analyze your content against online sources to ensure originality.</p>
+                            <p className="text-xs italic">Pro users can remediate plagiarism by rephrasing content or adding proper citations.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="check-plagiarism"
+                        checked={checkPlagiarism}
+                        onCheckedChange={setCheckPlagiarism}
+                      />
+                      <Label htmlFor="check-plagiarism">Check content for plagiarism</Label>
+                    </div>
+                  </div>
+                  
                   {/* E-A-T & Content Quality Controls */}
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center mb-2">
@@ -1920,8 +1952,16 @@ export default function ContentGenerator() {
               ) : generatedContent ? (
                 <div className="space-y-4">
                   <Tabs defaultValue="preview">
-                    <TabsList className="grid w-full grid-cols-2">
+                    <TabsList className="grid w-full grid-cols-3">
                       <TabsTrigger value="preview">Preview</TabsTrigger>
+                      {plagiarismResults && (
+                        <TabsTrigger value="plagiarism" className="relative">
+                          Plagiarism Report
+                          {plagiarismResults.isPlagiarized && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                          )}
+                        </TabsTrigger>
+                      )}
                       <TabsTrigger value="export">Export Options</TabsTrigger>
                     </TabsList>
                     
