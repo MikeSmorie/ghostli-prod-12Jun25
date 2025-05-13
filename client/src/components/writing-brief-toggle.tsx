@@ -1,154 +1,72 @@
-import React, { useState } from "react";
-import { ProWritingBrief } from "./pro-writing-brief";
-import { LiteWritingBrief } from "./lite-writing-brief";
-import { useFeature } from "@/hooks/use-feature-flags";
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
-import { Lock } from "lucide-react";
+import { useState } from "react";
+import { useFeatureFlags, FEATURES } from "../hooks/use-feature-flags";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FeatureGuard } from "./feature-guard";
+import { WritingBriefForm } from "./writing-brief-form"; // Import the regular/lite brief form
+import { ProWritingBrief } from "./pro-writing-brief"; // Import the pro brief form
 
-interface WritingBriefToggleProps {
-  onSubmit: (params: any) => void;
-  isSubmitting: boolean;
-}
+export function WritingBriefToggle() {
+  const { hasFeature, isProUser } = useFeatureFlags();
+  const [activeTab, setActiveTab] = useState<string>(
+    isProUser() ? "pro" : "lite"
+  );
 
-export function WritingBriefToggle({ onSubmit, isSubmitting }: WritingBriefToggleProps) {
-  const { hasAccess: hasProAccess } = useFeature("proWritingBrief");
-  const { hasAccess: hasLiteAccess } = useFeature("liteWritingBrief");
-  
-  // Default to Lite mode if user doesn't have Pro access
-  // or Pro mode if user has Pro access but not Lite access
-  const [usePro, setUsePro] = useState(hasProAccess && !hasLiteAccess);
-  
-  // If neither feature is accessible, don't render anything
-  if (!hasProAccess && !hasLiteAccess) {
-    return null;
-  }
-  
-  // If user only has access to one form type, show that with an inactive toggle
-  if (hasProAccess && !hasLiteAccess) {
-    return (
-      <>
-        <Card className="mb-2 p-2 flex items-center justify-end bg-gray-50 dark:bg-gray-900 border-blue-200 dark:border-blue-800">
-          <div className="flex items-center space-x-4">
-            <Label 
-              htmlFor="form-toggle-disabled" 
-              className="text-muted-foreground cursor-not-allowed"
-            >
-              Quick Brief
-            </Label>
-            
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative flex items-center">
-                    <Switch
-                      id="form-toggle-disabled"
-                      checked={true}
-                      disabled
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Your current subscription only includes Detailed Brief</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            <Label 
-              htmlFor="form-toggle-disabled" 
-              className="font-medium text-blue-600 dark:text-blue-400"
-            >
-              Detailed Brief
-            </Label>
-          </div>
-        </Card>
-        <ProWritingBrief onSubmit={onSubmit} isSubmitting={isSubmitting} />
-      </>
-    );
-  }
-  
-  if (!hasProAccess && hasLiteAccess) {
-    return (
-      <>
-        <Card className="mb-2 p-2 flex items-center justify-end bg-gray-50 dark:bg-gray-900 border-blue-200 dark:border-blue-800">
-          <div className="flex items-center space-x-4">
-            <Label 
-              htmlFor="form-toggle-disabled" 
-              className="font-medium text-blue-600 dark:text-blue-400"
-            >
-              Quick Brief
-            </Label>
-            
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="relative flex items-center">
-                    <Switch
-                      id="form-toggle-disabled"
-                      checked={false}
-                      disabled
-                    />
-                    <Lock className="absolute -right-6 h-3.5 w-3.5 text-muted-foreground" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Upgrade to Pro to access Detailed Brief</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            <Label 
-              htmlFor="form-toggle-disabled" 
-              className="text-muted-foreground cursor-not-allowed"
-            >
-              Detailed Brief
-            </Label>
-          </div>
-        </Card>
-        <LiteWritingBrief onSubmit={onSubmit} isSubmitting={isSubmitting} />
-      </>
-    );
-  }
-  
-  // User has access to both, show the toggle
+  // Handler for tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
   return (
-    <>
-      <Card className="mb-2 p-2 flex items-center justify-end bg-gray-50 dark:bg-gray-900 border-blue-200 dark:border-blue-800">
-        <div className="flex items-center space-x-4">
-          <Label 
-            htmlFor="form-toggle" 
-            className={`cursor-pointer ${!usePro ? 'font-medium text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Content Generation Brief</CardTitle>
+        <CardDescription>
+          Define your content requirements and let our AI generate high-quality content
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* If user has access to pro, show the tabs to toggle between lite and pro */}
+        {hasFeature(FEATURES.WRITING_BRIEF_PRO) ? (
+          <Tabs
+            defaultValue={activeTab}
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="w-full"
           >
-            Quick Brief
-          </Label>
-          
-          <Switch
-            id="form-toggle"
-            checked={usePro}
-            onCheckedChange={setUsePro}
-          />
-          
-          <Label 
-            htmlFor="form-toggle" 
-            className={`cursor-pointer ${usePro ? 'font-medium text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}
-          >
-            Detailed Brief
-          </Label>
-        </div>
-      </Card>
-      
-      {usePro ? (
-        <ProWritingBrief onSubmit={onSubmit} isSubmitting={isSubmitting} />
-      ) : (
-        <LiteWritingBrief onSubmit={onSubmit} isSubmitting={isSubmitting} />
-      )}
-    </>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="lite">Quick Brief</TabsTrigger>
+              <TabsTrigger value="pro">Advanced Brief</TabsTrigger>
+            </TabsList>
+            <TabsContent value="lite">
+              <WritingBriefForm />
+            </TabsContent>
+            <TabsContent value="pro">
+              <ProWritingBrief />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          // If user only has lite access, show lite form with option to upgrade
+          <>
+            <WritingBriefForm />
+            
+            <div className="mt-8 p-4 border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 rounded-md">
+              <h3 className="font-semibold text-lg mb-2">Want more control?</h3>
+              <p className="mb-4">
+                Upgrade to Pro for advanced content customization options, including humanization settings,
+                Clone Me voice replication, and premium content generation up to 5,000 words.
+              </p>
+              <FeatureGuard
+                featureName={FEATURES.WRITING_BRIEF_PRO}
+                showUpgradeDialog={true}
+              >
+                <Button>Access Pro Features</Button>
+              </FeatureGuard>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

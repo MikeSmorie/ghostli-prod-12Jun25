@@ -1,242 +1,127 @@
-import React, { useState } from "react";
-import { useFeatureFlags, type FeatureFlag } from "@/hooks/use-feature-flags";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFeatureFlags, FEATURES } from "../hooks/use-feature-flags";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
-import { Plus, Trash, Edit, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Crown, Sparkles, Lock, Unlock, ExternalLink } from "lucide-react";
 
-/**
- * Admin-only component for managing feature flags
- */
 export function FeatureFlagManager() {
-  const { features, isLoading, updateFeature, deleteFeature, isUpdating, isDeleting } = useFeatureFlags();
-  const [newFeature, setNewFeature] = useState<Partial<FeatureFlag>>({
-    featureName: "",
-    isEnabled: true,
-    tierLevel: "premium",
-    description: ""
-  });
-  const [editMode, setEditMode] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [featureToDelete, setFeatureToDelete] = useState<string | null>(null);
+  const { features, getUserTier, isProUser, isLoading } = useFeatureFlags();
 
-  const handleCreateOrUpdate = () => {
-    if (!newFeature.featureName) return;
-    
-    updateFeature({
-      featureName: newFeature.featureName,
-      isEnabled: newFeature.isEnabled ?? true,
-      tierLevel: newFeature.tierLevel ?? "premium",
-      description: newFeature.description ?? null
-    });
-    
-    // Reset form
-    setNewFeature({
-      featureName: "",
-      isEnabled: true,
-      tierLevel: "premium",
-      description: ""
-    });
-    setEditMode(false);
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const tier = getUserTier();
+  const isPro = isProUser();
+
+  // Group features by category
+  const featuresByCategory: Record<string, { name: string; enabled: boolean }[]> = {
+    "Content Generation": [
+      { name: FEATURES.CONTENT_GENERATION_BASIC, enabled: features[FEATURES.CONTENT_GENERATION_BASIC] || false },
+      { name: FEATURES.CONTENT_GENERATION_PREMIUM, enabled: features[FEATURES.CONTENT_GENERATION_PREMIUM] || false },
+    ],
+    "Interface": [
+      { name: FEATURES.WRITING_BRIEF_LITE, enabled: features[FEATURES.WRITING_BRIEF_LITE] || false },
+      { name: FEATURES.WRITING_BRIEF_PRO, enabled: features[FEATURES.WRITING_BRIEF_PRO] || false },
+    ],
+    "Personalization": [
+      { name: FEATURES.CLONE_ME, enabled: features[FEATURES.CLONE_ME] || false },
+      { name: FEATURES.HUMANIZATION_SETTINGS, enabled: features[FEATURES.HUMANIZATION_SETTINGS] || false },
+      { name: FEATURES.VOCABULARY_CONTROL, enabled: features[FEATURES.VOCABULARY_CONTROL] || false },
+    ],
+    "Quality & Optimization": [
+      { name: FEATURES.PLAGIARISM_DETECTION, enabled: features[FEATURES.PLAGIARISM_DETECTION] || false },
+      { name: FEATURES.SEO_OPTIMIZATION, enabled: features[FEATURES.SEO_OPTIMIZATION] || false },
+    ],
+    "Export": [
+      { name: FEATURES.EXPORT_BASIC, enabled: features[FEATURES.EXPORT_BASIC] || false },
+      { name: FEATURES.MULTIPLE_EXPORT_FORMATS, enabled: features[FEATURES.MULTIPLE_EXPORT_FORMATS] || false },
+    ],
   };
 
-  const handleEdit = (feature: FeatureFlag) => {
-    setNewFeature({
-      featureName: feature.featureName,
-      isEnabled: feature.isEnabled,
-      tierLevel: feature.tierLevel,
-      description: feature.description
-    });
-    setEditMode(true);
-  };
-
-  const confirmDelete = (featureName: string) => {
-    setFeatureToDelete(featureName);
-    setDialogOpen(true);
-  };
-
-  const handleDelete = () => {
-    if (featureToDelete) {
-      deleteFeature(featureToDelete);
-      setFeatureToDelete(null);
-      setDialogOpen(false);
-    }
+  // Function to format feature name for display
+  const formatFeatureName = (name: string) => {
+    return name
+      .replace(/_/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {editMode ? "Edit Feature Flag" : "Create New Feature Flag"}
-          </CardTitle>
-          <CardDescription>
-            {editMode 
-              ? "Update an existing feature flag's settings" 
-              : "Define a new feature that can be controlled by subscription tier"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="featureName">Feature Name</Label>
-            <Input
-              id="featureName"
-              placeholder="advancedAnalytics"
-              value={newFeature.featureName}
-              onChange={(e) => setNewFeature({ ...newFeature, featureName: e.target.value })}
-              disabled={editMode}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isEnabled">Enabled</Label>
-            <Switch
-              id="isEnabled"
-              checked={newFeature.isEnabled}
-              onCheckedChange={(checked) => setNewFeature({ ...newFeature, isEnabled: checked })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tierLevel">Required Tier</Label>
-            <Select
-              value={newFeature.tierLevel}
-              onValueChange={(value) => setNewFeature({ ...newFeature, tierLevel: value as any })}
-            >
-              <SelectTrigger id="tierLevel">
-                <SelectValue placeholder="Select tier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="basic">Basic</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Detailed analytics with advanced metrics and visualizations"
-              value={newFeature.description || ""}
-              onChange={(e) => setNewFeature({ ...newFeature, description: e.target.value })}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => {
-            setNewFeature({
-              featureName: "",
-              isEnabled: true,
-              tierLevel: "premium",
-              description: ""
-            });
-            setEditMode(false);
-          }}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCreateOrUpdate} 
-            disabled={!newFeature.featureName || isUpdating}
-          >
-            {editMode ? "Update" : "Create"} Feature
-          </Button>
-        </CardFooter>
-      </Card>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Feature Access</CardTitle>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Current Tier:</span>
+          {isPro ? (
+            <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700">
+              <Crown className="h-3 w-3 mr-1" />
+              Pro
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700">
+              <Sparkles className="h-3 w-3 mr-1" />
+              Lite
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-8">
+          {Object.entries(featuresByCategory).map(([category, categoryFeatures]) => (
+            <div key={category}>
+              <h3 className="font-medium text-lg mb-3">{category}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {categoryFeatures.map((feature) => (
+                  <div
+                    key={feature.name}
+                    className={`p-3 rounded-md border ${
+                      feature.enabled
+                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                        : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      {feature.enabled ? (
+                        <Unlock className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <Lock className="h-4 w-4 mr-2 text-gray-400" />
+                      )}
+                      <span className="text-sm font-medium">
+                        {formatFeatureName(feature.name)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          // Show skeleton cards when loading
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="opacity-50">
-              <CardHeader>
-                <div className="h-6 bg-muted rounded w-2/3"></div>
-                <div className="h-4 bg-muted rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-4 bg-muted rounded w-full mb-2"></div>
-                <div className="h-4 bg-muted rounded w-3/4"></div>
-              </CardContent>
-              <CardFooter>
-                <div className="h-10 bg-muted rounded w-full"></div>
-              </CardFooter>
-            </Card>
-          ))
-        ) : (
-          // Show actual feature cards
-          features?.map((feature) => (
-            <Card key={feature.featureName}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-base">
-                    {feature.featureName}
-                  </CardTitle>
-                  {feature.isEnabled ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </div>
-                <CardDescription>
-                  Required tier: <span className="capitalize">{feature.tierLevel}</span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {feature.description || "No description provided"}
+          {!isPro && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">Unlock All Features</h3>
+                <p className="text-muted-foreground mb-4">
+                  Upgrade to Pro to access premium features and enhance your content generation experience.
                 </p>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEdit(feature)}
-                >
-                  <Edit className="h-4 w-4 mr-2" /> Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => confirmDelete(feature.featureName)}
-                  disabled={isDeleting}
-                >
-                  <Trash className="h-4 w-4 mr-2" /> Delete
-                </Button>
-              </CardFooter>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {/* Confirmation dialog for deleting features */}
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the feature flag "{featureToDelete}".
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+                <Link href="/subscription">
+                  <Button className="gap-2">
+                    <Crown className="h-4 w-4" />
+                    View Pro Plans
+                    <ExternalLink className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -14,7 +14,7 @@ const router = Router();
 /**
  * Get the current user's subscription status and feature access
  */
-router.get("/api/subscription/features", async (req: Request, res: Response) => {
+router.get("/features", async (req: Request, res: Response) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -54,7 +54,7 @@ router.get("/api/subscription/features", async (req: Request, res: Response) => 
 /**
  * Get details of a specific subscription
  */
-router.get("/api/subscription/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -92,7 +92,7 @@ router.get("/api/subscription/:id", async (req: Request, res: Response) => {
 /**
  * Update a subscription (e.g. cancel it)
  */
-router.put("/api/subscription/:id", async (req: Request, res: Response) => {
+router.put("/:id", async (req: Request, res: Response) => {
   try {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
@@ -124,7 +124,6 @@ router.put("/api/subscription/:id", async (req: Request, res: Response) => {
       .update(userSubscriptions)
       .set({
         status: status,
-        updatedAt: new Date(),
       })
       .where(
         and(

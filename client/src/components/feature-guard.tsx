@@ -1,100 +1,88 @@
-import React from "react";
-import { useFeature } from "@/hooks/use-feature-flags";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import { ReactNode } from "react";
+import { useFeatureFlags } from "../hooks/use-feature-flags";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Lock } from "lucide-react";
 
 interface FeatureGuardProps {
-  /**
-   * The name of the feature to check access for
-   */
+  /** The name of the feature to check access for */
   featureName: string;
-  /**
-   * The content to render if the user has access to the feature
-   */
-  children: React.ReactNode;
-  /**
-   * Optional fallback component to render if the user doesn't have access
-   */
-  fallback?: React.ReactNode;
-  /**
-   * Whether to show a loading state while checking access
-   */
-  showLoading?: boolean;
+  /** Content to render if the user has access to the feature */
+  children: ReactNode;
+  /** Alternative content to render if the user doesn't have access (optional) */
+  fallback?: ReactNode;
+  /** Whether to show an upgrade dialog (default: true) */
+  showUpgradeDialog?: boolean;
 }
 
 /**
- * A component that conditionally renders its children based on feature flag access
+ * A component that conditionally renders its children based on whether
+ * the current user has access to a specific feature.
  */
 export function FeatureGuard({
   featureName,
   children,
   fallback,
-  showLoading = true,
+  showUpgradeDialog = true,
 }: FeatureGuardProps) {
-  const { hasAccess, isLoading } = useFeature(featureName);
-
-  // Show loading state if requested and still checking access
-  if (showLoading && isLoading) {
-    return <Skeleton className="w-full h-28" />;
+  const { hasFeature, isLoading } = useFeatureFlags();
+  
+  // Wait for features to load
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  // User has access, render the children
-  if (hasAccess) {
+  // If user has access to the feature, render the children
+  if (hasFeature(featureName)) {
     return <>{children}</>;
   }
 
-  // User doesn't have access, render the fallback or the default locked content
-  return (
-    <>
-      {fallback || (
-        <Card className="p-4 flex flex-col items-center justify-center opacity-80 min-h-28">
-          <Lock className="h-8 w-8 mb-2 text-muted-foreground" />
-          <p className="text-center text-sm text-muted-foreground">
-            This feature requires a higher subscription tier
-          </p>
-        </Card>
-      )}
-    </>
-  );
-}
+  // If no fallback is provided and we don't want to show upgrade dialog, render nothing
+  if (!fallback && !showUpgradeDialog) {
+    return null;
+  }
 
-/**
- * A component that shows a dialog for features that require a higher tier
- */
-export function FeatureRequiredDialog({
-  featureName,
-  isOpen,
-  onClose,
-  tierRequired = "premium",
-}: {
-  featureName: string;
-  isOpen: boolean;
-  onClose: () => void;
-  tierRequired?: string;
-}) {
+  // If a fallback is provided, render it
+  if (fallback) {
+    return <>{fallback}</>;
+  }
+
+  // Otherwise show the upgrade dialog
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="default">Access this feature</Button>
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Subscription Required</AlertDialogTitle>
+          <AlertDialogTitle>Pro Feature Required</AlertDialogTitle>
           <AlertDialogDescription>
-            The <strong>{featureName}</strong> feature requires a{" "}
-            <strong className="capitalize">{tierRequired}</strong> subscription.
-            Please upgrade your subscription to access this feature.
+            This feature requires a Pro subscription. Upgrade now to unlock
+            advanced content generation features, including premium humanization,
+            Clone Me, and more.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={onClose}>Close</AlertDialogAction>
+          <AlertDialogCancel>Maybe Later</AlertDialogCancel>
+          <AlertDialogAction asChild>
+            <Link href="/subscription">
+              <Button>View Plans</Button>
+            </Link>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
