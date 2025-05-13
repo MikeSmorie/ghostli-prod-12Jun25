@@ -1051,13 +1051,16 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
         
         {/* Step 6: Revision/Feedback Instructions */}
         <div className={currentStep === 6 ? "block" : "hidden"}>
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-primary">Revisions Section</h3>
-            <p className="text-sm text-muted-foreground">
-              Specify how you'd like feedback and revisions to be handled for this content.
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-primary flex items-center">
+              <RefreshCw className="mr-2 h-5 w-5" />
+              Enhanced Revisions Section
+            </h3>
+            <p className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-100 dark:border-blue-900">
+              Specify how you'd like your content to be refined after the initial draft. Clear instructions here will help you get the perfect result with fewer iterations.
             </p>
 
-            <div>
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border">
               <div className="flex items-center mb-2">
                 <Label htmlFor="revisionInstructions" className="text-base font-semibold">
                   Revision Instructions:
@@ -1070,9 +1073,10 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs">
-                        Please outline any specific changes you'd like to see in the first draft.
-                      </p>
+                      <div className="max-w-xs p-2">
+                        <p className="mb-2">Describe any specific changes you'd like to see in the first draft.</p>
+                        <p className="text-sm text-muted-foreground italic">Example: "Emphasize data points more prominently" or "Make the intro more compelling"</p>
+                      </div>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1084,12 +1088,15 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                 onChange={(e) => updateBrief("revisionInstructions", e.target.value)}
                 className="min-h-[150px]"
               />
+              <p className="text-sm text-muted-foreground mt-2">
+                Be specific about what elements you want refined in subsequent drafts.
+              </p>
             </div>
 
-            <div>
-              <div className="flex items-center mb-2">
+            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border mt-4">
+              <div className="flex items-center mb-3">
                 <Label htmlFor="revisionRounds" className="text-base font-semibold">
-                  Revision Rounds:
+                  Number of Revision Rounds:
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -1099,28 +1106,34 @@ export function WritingBriefForm({ onSubmit, isSubmitting }: WritingBriefFormPro
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="max-w-xs">
-                        How many rounds of revisions would you prefer before final approval?
-                      </p>
+                      <div className="max-w-xs p-2">
+                        <p className="mb-2">Select how many revisions you anticipate needing.</p>
+                        <p className="text-sm text-muted-foreground">More complex content may require multiple rounds of refinement.</p>
+                      </div>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <Select
-                value={brief.revisionRounds.toString()}
-                onValueChange={(value) => updateBrief("revisionRounds", Number(value))}
-              >
-                <SelectTrigger className="w-full md:w-1/3">
-                  <SelectValue placeholder="Select number of rounds" />
-                </SelectTrigger>
-                <SelectContent>
-                  {REVISION_ROUNDS.map((round) => (
-                    <SelectItem key={round.value} value={round.value.toString()}>
-                      {round.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-3">
+                {REVISION_ROUNDS.map((round) => (
+                  <div 
+                    key={round.value}
+                    className={`
+                      flex items-center gap-2 p-3 rounded-md border cursor-pointer transition-colors
+                      ${brief.revisionRounds === round.value 
+                        ? 'bg-primary text-primary-foreground border-primary' 
+                        : 'bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800'}
+                    `}
+                    onClick={() => updateBrief("revisionRounds", round.value)}
+                  >
+                    {brief.revisionRounds === round.value && <Check className="h-4 w-4" />}
+                    <span className="font-medium">{round.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground mt-3">
+                Each revision round allows you to refine your content further based on the initial output.
+              </p>
             </div>
             
             <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-md border border-blue-200 dark:border-blue-800 mt-6">
