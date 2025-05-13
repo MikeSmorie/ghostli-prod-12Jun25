@@ -21,6 +21,22 @@ import {
 import { Separator } from '@/components/ui/separator';
 
 /**
+ * Helper function to check if a notification is subscription-related
+ */
+const isSubscriptionNotification = (title: string): boolean => {
+  // Check for subscription message type identifiers in the title
+  const subscriptionIdentifiers = [
+    'welcome_pro',
+    'upgrade_reminder',
+    'expiration_notice',
+  ];
+  
+  return subscriptionIdentifiers.some(identifier => 
+    title.toLowerCase().includes(identifier)
+  );
+};
+
+/**
  * Notification Center component that shows user notifications
  * with special handling for subscription-related messages
  */

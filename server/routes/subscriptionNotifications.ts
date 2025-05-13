@@ -114,7 +114,7 @@ router.post(
       
       // Check if user already has an active Pro subscription
       const service = await getLifecycleService();
-      const hasPro = await service.userHasActiveProSubscription(userId);
+      const hasPro = await service.hasActivePremiumSubscription(userId);
       
       // Only send reminder if user doesn't have Pro
       if (!hasPro) {
@@ -122,14 +122,13 @@ router.post(
         const formattedFeature = featureTriggered
           ? featureTriggered.toLowerCase()
               .split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
               .join(' ')
           : 'premium features';
         
         // Send the upgrade reminder
-        const result = await service.notificationService.sendUpgradeReminder(
+        const result = await service.sendUpgradeReminder(
           userId,
-          user.username,
           formattedFeature
         );
         

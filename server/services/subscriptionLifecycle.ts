@@ -218,8 +218,9 @@ export class SubscriptionLifecycleService {
 
   /**
    * Check if a user has an active premium subscription
+   * Public method for API access
    */
-  private async hasActivePremiumSubscription(userId: number): Promise<boolean> {
+  async hasActivePremiumSubscription(userId: number): Promise<boolean> {
     const activeSubscriptions = await db
       .select()
       .from(userSubscriptions)
