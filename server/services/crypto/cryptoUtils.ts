@@ -5,8 +5,7 @@ import * as bip39 from 'bip39';
 import * as bitcoin from 'bitcoinjs-lib';
 import { BIP32Factory } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
-import * as web3 from 'web3';
-import { web3 as Web3, utils } from 'web3';
+import Web3 from 'web3';
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import * as crypto from 'crypto';
 
@@ -222,9 +221,8 @@ function generateERC20Wallet(
     
     // Create Web3 instance and wallet
     const web3Instance = new Web3();
-    const account = web3Instance.eth.accounts.privateKeyToAccount(
-      '0x' + privateKeyBuffer.toString('hex')
-    );
+    const privateKeyHex = '0x' + privateKeyBuffer.toString('hex');
+    const account = web3Instance.eth.accounts.privateKeyToAccount(privateKeyHex);
     
     // Get the wallet details
     const address = account.address;
@@ -326,7 +324,8 @@ export function validateAddress(
         return PublicKey.isOnCurve(new PublicKey(address).toBytes());
       case 'usdt_erc20':
         // Validate Ethereum address
-        return utils.isAddress(address);
+        const web3Instance = new Web3();
+        return web3Instance.utils.isAddress(address);
       case 'usdt_trc20':
         // Simplified Tron address validation (starts with T and is 34 characters)
         return address.startsWith('T') && address.length === 34;
@@ -334,7 +333,7 @@ export function validateAddress(
         return false;
     }
   } catch (error) {
-    console.error(`Error validating ${cryptoType} address:`, error);
+    console.error(`Error validating ${cryptoType} address:`, error instanceof Error ? error.message : String(error));
     return false;
   }
 }

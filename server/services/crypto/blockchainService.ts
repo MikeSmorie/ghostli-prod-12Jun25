@@ -3,7 +3,7 @@
  */
 import axios from 'axios';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { web3 as Web3 } from 'web3';
+import Web3 from 'web3';
 import { CryptoType } from '@db/schema';
 import { updateTransactionStatus } from './walletService';
 
@@ -75,11 +75,12 @@ export async function isTransactionConfirmed(
         throw new Error(`Unsupported crypto type: ${cryptoType}`);
     }
   } catch (error) {
-    console.error(`Error checking transaction ${transactionHash}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Error checking transaction ${transactionHash}:`, errorMessage);
     return {
       confirmed: false,
       confirmations: 0,
-      raw: { error: error.message }
+      raw: { error: errorMessage }
     };
   }
 }
@@ -173,7 +174,12 @@ async function checkSolanaTransaction(
     // Extract sender and recipient (simplified, in reality this is more complex)
     let from, to, amount;
     if (txData.transaction.message && txData.meta?.postTokenBalances) {
-      const accounts = txData.transaction.message.accountKeys;
+      // Handle different message versions in Solana transactions
+      const message = txData.transaction.message;
+      const accounts = message.getAccountKeys ? 
+        message.getAccountKeys() : 
+        message.staticAccountKeys || [];
+        
       from = accounts[0]?.toBase58();
       to = accounts[1]?.toBase58();
       
