@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "../hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
 import PayPalButton from "@/components/PayPalButton";
 
 import {
@@ -81,7 +81,7 @@ interface Payment {
 const SubscriptionPage: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user } = useUser();
   const userId = user?.id;
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [autoRenew, setAutoRenew] = useState(true);
@@ -183,7 +183,7 @@ const SubscriptionPage: React.FC = () => {
   });
   
   // Track the loading state
-  const isCancelMutationLoading = cancelSubscriptionMutation.status === "loading";
+  const isCancelMutationLoading = cancelSubscriptionMutation.status === "pending";
 
   // Initialize selected plan from user subscription
   useEffect(() => {

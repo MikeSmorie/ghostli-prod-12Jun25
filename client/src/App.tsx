@@ -14,7 +14,7 @@ import AppCentral from "@/pages/app-central";
 import ModuleView from "@/pages/module-view";
 import MockDashboard from "@/pages/mock-dashboard";
 import MockSettings from "@/pages/mock-settings";
-import SubscriptionPage from "@/pages/subscriptions";
+import SubscriptionPage from "./pages/subscription-page";
 import SubscriptionManager from "@/pages/subscription-manager";
 import SubscriptionFeatures from "@/pages/subscription-features";
 import SubscriptionManagement from "@/pages/subscription-management";
@@ -185,6 +185,7 @@ function Router() {
         <Route path="/subscription" component={SubscriptionManagement} />
         <Route path="/subscription/plans" component={SubscriptionPlans} />
         <Route path="/subscription/features" component={SubscriptionFeatures} />
+        <Route path="/subscription/pro" component={SubscriptionPage} />
         <Route path="/features-demo" component={FeatureFlagsDemoPage} />
         <Route path="/content-generation" component={ContentGenerationPage} />
         <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
