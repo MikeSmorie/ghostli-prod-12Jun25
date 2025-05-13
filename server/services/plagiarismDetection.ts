@@ -93,7 +93,7 @@ export async function checkPlagiarism(textContent: string): Promise<PlagiarismCh
       isPlagiarized: false,
       score: 0,
       matchedSources: [],
-      originalContent: content,
+      originalContent: textContent,
       checkedTimestamp: new Date()
     };
   }

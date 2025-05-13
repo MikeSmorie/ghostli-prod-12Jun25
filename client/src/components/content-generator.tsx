@@ -90,6 +90,10 @@ interface GenerationParams {
   maxIterations?: number;
   wordCountTolerance?: number;
   runAIDetectionTest?: boolean;
+  
+  // Plagiarism detection options
+  checkPlagiarism?: boolean;
+  userTier?: string;
 }
 
 interface GenerationMetadata {

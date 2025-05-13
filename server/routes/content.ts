@@ -162,7 +162,16 @@ const ContentGenerationRequestSchema = z.object({
   useFootnotes: z.preprocess(
     (val) => val === "true" || val === true || val === 1 || val === "1", 
     z.boolean().default(false)
-  )
+  ),
+  
+  // Plagiarism detection options
+  checkPlagiarism: z.preprocess(
+    (val) => val === "true" || val === true || val === 1 || val === "1", 
+    z.boolean().default(false)
+  ),
+  
+  // User tier for feature access control
+  userTier: z.string().optional().default("free")
 })
 .passthrough(); // Allow any additional fields to pass through
 
@@ -259,7 +268,47 @@ export function registerContentRoutes(app: Express) {
           result = await generateContent(params);
         }
         
-        // Return the generated content
+        // Check for plagiarism if requested and user has Pro access
+        let plagiarismResults = undefined;
+        
+        if (params.checkPlagiarism && (
+          params.userTier === 'premium' || 
+          params.userTier === 'enterprise' || 
+          await isFeatureEnabled('plagiarismDetection', req.user?.id || 0)
+        )) {
+          console.log("Running plagiarism check for premium/enterprise user");
+          try {
+            // Run plagiarism detection
+            const plagiarismCheck = await checkPlagiarism(result.content);
+            
+            // If plagiarized content is detected, include the results in the response
+            if (plagiarismCheck.isPlagiarized) {
+              console.log(`Plagiarism detected! Score: ${plagiarismCheck.score}%`);
+              
+              // Format the plagiarism check result for the response
+              plagiarismResults = {
+                isPlagiarized: plagiarismCheck.isPlagiarized,
+                score: plagiarismCheck.score,
+                checkedTimestamp: plagiarismCheck.checkedTimestamp.toISOString(),
+                matchedSources: plagiarismCheck.matchedSources
+              };
+            } else {
+              console.log("Content passed plagiarism check");
+              // Include a passing result
+              plagiarismResults = {
+                isPlagiarized: false,
+                score: 0,
+                checkedTimestamp: new Date().toISOString(),
+                matchedSources: []
+              };
+            }
+          } catch (error) {
+            console.error("Error during plagiarism check:", error);
+            // Don't fail the request if plagiarism check fails
+          }
+        }
+
+        // Return the generated content with plagiarism results if applicable
         return res.json({
           content: result.content,
           contentWithFootnotes: result.contentWithFootnotes,
@@ -275,6 +324,8 @@ export function registerContentRoutes(app: Express) {
               total: result.metadata.totalTokens
             }
           },
+          // Include plagiarism results if available
+          ...(plagiarismResults && { plagiarismResults }),
           seo: result.seo || [],
           hashtags: result.hashtags || [],
           keywords: result.keywords || []
@@ -330,7 +381,47 @@ export function registerContentRoutes(app: Express) {
         // Use the rewriteContent function
         const result = await rewriteContent(params);
         
-        // Return the rewritten content
+        // Check for plagiarism if requested and user has Pro access
+        let plagiarismResults = undefined;
+        
+        if (params.checkPlagiarism && (
+          params.userTier === 'premium' || 
+          params.userTier === 'enterprise' || 
+          await isFeatureEnabled('plagiarismDetection', req.user?.id || 0)
+        )) {
+          console.log("Running plagiarism check for premium/enterprise user");
+          try {
+            // Run plagiarism detection
+            const plagiarismCheck = await checkPlagiarism(result.content);
+            
+            // If plagiarized content is detected, include the results in the response
+            if (plagiarismCheck.isPlagiarized) {
+              console.log(`Plagiarism detected! Score: ${plagiarismCheck.score}%`);
+              
+              // Format the plagiarism check result for the response
+              plagiarismResults = {
+                isPlagiarized: plagiarismCheck.isPlagiarized,
+                score: plagiarismCheck.score,
+                checkedTimestamp: plagiarismCheck.checkedTimestamp.toISOString(),
+                matchedSources: plagiarismCheck.matchedSources
+              };
+            } else {
+              console.log("Content passed plagiarism check");
+              // Include a passing result
+              plagiarismResults = {
+                isPlagiarized: false,
+                score: 0,
+                checkedTimestamp: new Date().toISOString(),
+                matchedSources: []
+              };
+            }
+          } catch (error) {
+            console.error("Error during plagiarism check:", error);
+            // Don't fail the request if plagiarism check fails
+          }
+        }
+
+        // Return the rewritten content with plagiarism results if applicable
         return res.json({
           content: result.content,
           contentWithFootnotes: result.contentWithFootnotes,
@@ -346,6 +437,8 @@ export function registerContentRoutes(app: Express) {
               total: result.metadata.totalTokens
             }
           },
+          // Include plagiarism results if available
+          ...(plagiarismResults && { plagiarismResults }),
           seo: result.seo || [],
           hashtags: result.hashtags || [],
           keywords: result.keywords || []
