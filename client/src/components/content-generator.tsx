@@ -389,11 +389,28 @@ export default function ContentGenerator() {
     onSuccess: (data) => {
       setGeneratedContent(data.content);
       setMetadata(data.metadata);
-      toast({
-        title: "Content Generated",
-        description: "Your content has been successfully generated!",
-        variant: "default",
-      });
+      setPlagiarismResults(data.plagiarismResults || null);
+      
+      // Show different toast based on plagiarism check results
+      if (data.plagiarismResults?.isPlagiarized) {
+        toast({
+          title: "Content Generated - Plagiarism Detected",
+          description: `Your content has been generated, but potential plagiarism was detected with a score of ${data.plagiarismResults.score}%.`,
+          variant: "destructive",
+        });
+      } else if (data.plagiarismResults && !data.plagiarismResults.isPlagiarized) {
+        toast({
+          title: "Content Generated - Plagiarism Free",
+          description: "Your content has been successfully generated and passed the plagiarism check!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Content Generated",
+          description: "Your content has been successfully generated!",
+          variant: "default",
+        });
+      }
       
       // Reset progress after success
       setTimeout(() => setProgress(0), 500);
@@ -646,6 +663,10 @@ export default function ContentGenerator() {
       simplifyLanguage,
       inclusiveLanguage,
       addEmotionalImpact,
+      
+      // Include plagiarism detection options
+      checkPlagiarism,
+      userTier,
     };
     
     mutate(params);
@@ -655,6 +676,143 @@ export default function ContentGenerator() {
   const handleReset = () => {
     setGeneratedContent(null);
     setMetadata(null);
+    setPlagiarismResults(null);
+  };
+  
+  // Handle rephrasing content for plagiarism remediation
+  const handleRephrase = async (source: any) => {
+    if (!generatedContent) return;
+    
+    try {
+      toast({
+        title: "Rephrasing Content",
+        description: "Replacing plagiarized section with original wording...",
+        variant: "default",
+      });
+      
+      // Call the API to rephrase the content
+      const response = await apiRequest("POST", "/api/content/rephrase", {
+        content: generatedContent,
+        matchedSource: source
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to rephrase content");
+      }
+      
+      const result = await response.json();
+      
+      // Update the content with the rephrased version
+      setGeneratedContent(result.content);
+      
+      toast({
+        title: "Content Rephrased",
+        description: "Plagiarized section has been successfully rephrased.",
+        variant: "default",
+      });
+      
+      // Run plagiarism check again
+      runPlagiarismCheck();
+      
+    } catch (error) {
+      toast({
+        title: "Rephrasing Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle adding citation for plagiarism remediation
+  const handleAddCitation = async (source: any) => {
+    if (!generatedContent) return;
+    
+    try {
+      toast({
+        title: "Adding Citation",
+        description: "Adding proper attribution to the content...",
+        variant: "default",
+      });
+      
+      // Call the API to add citation
+      const response = await apiRequest("POST", "/api/content/add-citation", {
+        content: generatedContent,
+        matchedSource: source
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to add citation");
+      }
+      
+      const result = await response.json();
+      
+      // Update the content with the cited version
+      setGeneratedContent(result.content);
+      
+      toast({
+        title: "Citation Added",
+        description: "Proper attribution has been added to the content.",
+        variant: "default",
+      });
+      
+      // Run plagiarism check again
+      runPlagiarismCheck();
+      
+    } catch (error) {
+      toast({
+        title: "Citation Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Function to run plagiarism check on demand
+  const runPlagiarismCheck = async () => {
+    if (!generatedContent) return;
+    
+    try {
+      toast({
+        title: "Running Plagiarism Check",
+        description: "Analyzing content for potential plagiarism...",
+        variant: "default",
+      });
+      
+      // Call the API to check for plagiarism
+      const response = await apiRequest("POST", "/api/check-plagiarism", {
+        content: generatedContent
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to check plagiarism");
+      }
+      
+      const result = await response.json();
+      
+      // Update the plagiarism results
+      setPlagiarismResults(result);
+      
+      if (result.isPlagiarized) {
+        toast({
+          title: "Plagiarism Detected",
+          description: `Potential plagiarism detected with a score of ${result.score}%.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "No Plagiarism Detected",
+          description: "Your content appears to be original!",
+          variant: "default",
+        });
+      }
+      
+    } catch (error) {
+      toast({
+        title: "Plagiarism Check Failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   // Copy to clipboard function
