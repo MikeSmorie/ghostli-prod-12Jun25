@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
 import PayPalButton from "@/components/PayPalButton";
+import CryptoPayment from "@/components/crypto/CryptoPayment";
 
 import {
   Card,
@@ -42,6 +43,8 @@ import {
   Receipt,
   ArrowRight,
   Zap,
+  Bitcoin,
+  Coins,
 } from "lucide-react";
 
 interface SubscriptionPlan {
@@ -88,6 +91,12 @@ const SubscriptionPage: React.FC = () => {
   const [paymentStep, setPaymentStep] = useState<"select" | "checkout" | "confirmation">("select");
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "crypto">("paypal");
+  const [cryptoRates, setCryptoRates] = useState({
+    bitcoin: 0,
+    solana: 0,
+    usdt: 1 // USDT is pegged to USD
+  });
 
   // Fetch subscription plans
   const {

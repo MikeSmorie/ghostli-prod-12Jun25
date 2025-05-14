@@ -1,212 +1,347 @@
-# Omega API Documentation
+# GhostliAI API Documentation
 
-## Authentication Endpoints
+## Cryptocurrency Payment API Endpoints
 
-### POST /api/login
-Authenticates a user and creates a session.
-```typescript
-Request:
+### Authentication
+
+Most endpoints require JWT authentication. Include the JWT token in the Authorization header:
+
+```
+Authorization: Bearer <your_token>
+```
+
+### User Wallets
+
+#### Get All User Wallets
+
+```
+GET /api/crypto/wallets
+```
+
+Returns all cryptocurrency wallets associated with the authenticated user.
+
+**Response Example:**
+```json
 {
-  username: string;
-  password: string;
+  "success": true,
+  "wallets": [
+    {
+      "id": 1,
+      "cryptoType": "bitcoin",
+      "walletAddress": "bc1q...",
+      "isActive": true,
+      "balance": "0.00000000",
+      "lastChecked": "2025-05-13T20:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "cryptoType": "solana",
+      "walletAddress": "9xj7...",
+      "isActive": true,
+      "balance": "0.00000000",
+      "lastChecked": "2025-05-13T20:00:00.000Z"
+    }
+  ]
 }
+```
 
-Response:
+#### Get Wallet by ID
+
+```
+GET /api/crypto/wallets/:walletId
+```
+
+Returns details for a specific wallet by ID.
+
+**Response Example:**
+```json
 {
-  id: number;
-  username: string;
-  role: "user" | "admin";
-  email?: string;
+  "success": true,
+  "wallet": {
+    "id": 1,
+    "cryptoType": "bitcoin",
+    "walletAddress": "bc1q...",
+    "isActive": true,
+    "balance": "0.00000000",
+    "lastChecked": "2025-05-13T20:00:00.000Z"
+  }
 }
 ```
 
-### POST /api/logout
-Ends the current user session.
-```typescript
-Response: 200 OK
+#### Get Wallet by Cryptocurrency Type
+
+```
+GET /api/crypto/wallets/type/:cryptoType
 ```
 
-### GET /api/user
-Returns the current authenticated user's information.
-```typescript
-Response:
+Returns the wallet for a specific cryptocurrency type (bitcoin, solana, usdt_erc20, usdt_trc20).
+
+**Response Example:**
+```json
 {
-  id: number;
-  username: string;
-  role: "user" | "admin";
-  email?: string;
-  createdAt: string;
-  lastLogin: string;
+  "success": true,
+  "wallet": {
+    "id": 1,
+    "cryptoType": "bitcoin",
+    "walletAddress": "bc1q...",
+    "isActive": true,
+    "balance": "0.00000000",
+    "lastChecked": "2025-05-13T20:00:00.000Z"
+  }
 }
 ```
 
-## Error Logging Endpoints
+#### Setup Wallets
 
-### GET /api/admin/logs
-Returns system error logs (admin only).
-```typescript
-Response:
+```
+POST /api/crypto/wallets/setup
+```
+
+Creates cryptocurrency wallets for all supported cryptocurrencies for the authenticated user.
+
+**Response Example:**
+```json
 {
-  id: number;
-  timestamp: string;
-  level: "INFO" | "WARNING" | "ERROR";
-  message: string;
-  source: string;
-  stackTrace?: string;
-  resolved: boolean;
-}[]
+  "success": true,
+  "message": "Crypto wallets setup complete",
+  "wallets": [
+    {
+      "id": 1,
+      "cryptoType": "bitcoin",
+      "walletAddress": "bc1q...",
+      "isActive": true
+    },
+    {
+      "id": 2,
+      "cryptoType": "solana",
+      "walletAddress": "9xj7...",
+      "isActive": true
+    }
+  ]
+}
 ```
 
-### POST /api/admin/logs/clear
-Clears all system logs (admin only).
-```typescript
-Response:
+### Payment Management
+
+#### Create Payment Request
+
+```
+POST /api/crypto/payment/request
+```
+
+**Request Body:**
+```json
 {
-  message: string;
+  "planId": 1,
+  "cryptoType": "bitcoin"
 }
 ```
 
-## Communication Endpoints
+Creates a payment request for a subscription plan using the specified cryptocurrency.
 
-### GET /api/messages
-Retrieves all announcements.
-```typescript
-Response:
+**Response Example:**
+```json
 {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
-}[]
+  "success": true,
+  "paymentInfo": {
+    "walletAddress": "bc1q...",
+    "cryptoType": "bitcoin",
+    "amountCrypto": "0.00450000",
+    "amountUsd": "199.99",
+    "expiresAt": "2025-05-14T22:00:00.000Z",
+    "referenceId": "a1b2c3d4e5f6"
+  }
+}
 ```
 
-### POST /api/messages
-Creates a new announcement (admin only).
-```typescript
-Request:
+#### Verify Payment
+
+```
+POST /api/crypto/payment/verify
+```
+
+**Request Body:**
+```json
 {
-  title: string;
-  content: string;
-}
-
-Response: 200 OK
-```
-
-## Environment Variables
-
-Required environment variables for the application:
-
-```bash
-# Database Configuration
-DATABASE_URL=postgresql://user:password@host:port/database
-PGHOST=localhost
-PGPORT=5432
-PGUSER=postgres
-PGPASSWORD=yourpassword
-PGDATABASE=omega
-
-# Session Configuration
-SESSION_SECRET=your-session-secret
-
-# API Keys (if needed)
-OPENAI_API_KEY=your-openai-key
-STRIPE_SECRET_KEY=your-stripe-key
-
-# Application Configuration
-NODE_ENV=development|production
-PORT=5000
-```
-
-## Error Codes
-
-Common error responses:
-
-- `400`: Bad Request - Invalid input
-- `401`: Unauthorized - Not authenticated
-- `403`: Forbidden - Not authorized
-- `404`: Not Found - Resource doesn't exist
-- `500`: Internal Server Error - Server-side error
-
-## Rate Limiting
-
-The API implements rate limiting:
-- 100 requests per minute for authenticated users
-- 30 requests per minute for unauthenticated users
-
-## Websocket Events
-
-Real-time events for system monitoring:
-
-```typescript
-// Error log events
-interface ErrorLogEvent {
-  type: "error_log";
-  data: {
-    id: number;
-    level: "INFO" | "WARNING" | "ERROR";
-    message: string;
-    timestamp: string;
-  };
-}
-
-// System status events
-interface SystemStatusEvent {
-  type: "system_status";
-  data: {
-    cpu: number;
-    memory: number;
-    timestamp: string;
-  };
+  "transactionHash": "0x123...",
+  "cryptoType": "bitcoin",
+  "walletId": 1
 }
 ```
 
-## Database Schema Types
+Verifies a cryptocurrency payment transaction.
 
-Core types used throughout the API:
-
-```typescript
-interface User {
-  id: number;
-  username: string;
-  role: "user" | "admin";
-  email?: string;
-  createdAt: string;
-  lastLogin: string;
-}
-
-interface ErrorLog {
-  id: number;
-  timestamp: string;
-  level: "INFO" | "WARNING" | "ERROR";
-  message: string;
-  source: string;
-  stackTrace?: string;
-  resolved: boolean;
-  resolvedAt?: string;
-  resolvedBy?: number;
-}
-
-interface Message {
-  id: number;
-  title: string;
-  content: string;
-  createdAt: string;
+**Response Example:**
+```json
+{
+  "success": true,
+  "transaction": {
+    "id": 1,
+    "transactionHash": "0x123...",
+    "cryptoType": "bitcoin",
+    "amount": "0.00450000",
+    "status": "confirmed",
+    "confirmations": 6
+  },
+  "status": "confirmed",
+  "confirmations": 6,
+  "message": "Transaction confirmed and payment processed"
 }
 ```
 
-## Testing
+#### Get Pending Payment
 
-Example test cases for API endpoints:
+```
+GET /api/crypto/payment/pending
+```
 
-```typescript
-// Authentication tests
-test("POST /api/login - successful login")
-test("POST /api/login - invalid credentials")
-test("GET /api/user - authenticated user")
-test("GET /api/user - unauthenticated access")
+Returns any pending payment request for the authenticated user.
 
-// Error logging tests
-test("GET /api/admin/logs - admin access")
-test("GET /api/admin/logs - unauthorized access")
-test("POST /api/admin/logs/clear - admin access")
+**Response Example:**
+```json
+{
+  "success": true,
+  "hasPendingPayment": true,
+  "payment": {
+    "id": 1,
+    "planId": 1,
+    "cryptoType": "bitcoin",
+    "walletAddress": "bc1q...",
+    "amountCrypto": "0.00450000",
+    "amountUsd": "199.99",
+    "expiresAt": "2025-05-14T22:00:00.000Z",
+    "status": "pending"
+  }
+}
+```
+
+### Transaction History
+
+#### Get User Transactions
+
+```
+GET /api/crypto/transactions
+```
+
+Returns the transaction history for the authenticated user.
+
+**Query Parameters:**
+- `limit` (optional): Number of transactions to return (default: 20)
+- `offset` (optional): Pagination offset (default: 0)
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "transactions": [
+    {
+      "id": 1,
+      "cryptoType": "bitcoin",
+      "transactionHash": "0x123...",
+      "amount": "0.00450000",
+      "amountUsd": "199.99",
+      "status": "confirmed",
+      "confirmations": 6,
+      "blockHeight": 800000,
+      "blockTime": "2025-05-13T21:30:00.000Z",
+      "createdAt": "2025-05-13T21:25:00.000Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+#### Get Transaction by ID
+
+```
+GET /api/crypto/transactions/:transactionId
+```
+
+Returns details for a specific transaction by ID.
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "transaction": {
+    "id": 1,
+    "cryptoType": "bitcoin",
+    "transactionHash": "0x123...",
+    "amount": "0.00450000",
+    "amountUsd": "199.99",
+    "status": "confirmed",
+    "confirmations": 6,
+    "blockHeight": 800000,
+    "blockTime": "2025-05-13T21:30:00.000Z",
+    "createdAt": "2025-05-13T21:25:00.000Z"
+  }
+}
+```
+
+### Webhook API
+
+#### Payment Notification Webhook
+
+```
+POST /api/crypto/webhook/payment-notification
+```
+
+**Request Headers:**
+```
+X-Webhook-Secret: your_webhook_secret
+```
+
+**Request Body:**
+```json
+{
+  "transactionHash": "0x123...",
+  "cryptoType": "bitcoin",
+  "walletAddress": "bc1q...",
+  "amount": "0.00450000",
+  "confirmations": 6,
+  "blockHeight": 800000,
+  "blockTime": 1715607300,
+  "gatewayProvider": "blockchair"
+}
+```
+
+Processes cryptocurrency payment notifications from external services or blockchain monitors.
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "Payment notification processed successfully",
+  "transactionId": 1
+}
+```
+
+### Admin Only
+
+#### Update Exchange Rates
+
+```
+POST /api/crypto/exchange-rates/update
+```
+
+Updates the exchange rates for all supported cryptocurrencies. Requires admin role.
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "message": "Exchange rates updated",
+  "rates": [
+    {
+      "cryptoType": "bitcoin",
+      "rateUsd": "54321.87000000",
+      "lastUpdated": "2025-05-13T22:30:00.000Z"
+    },
+    {
+      "cryptoType": "solana",
+      "rateUsd": "178.50000000",
+      "lastUpdated": "2025-05-13T22:30:00.000Z"
+    }
+  ]
+}
 ```
