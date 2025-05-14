@@ -128,6 +128,29 @@ const SubscriptionPage: React.FC = () => {
     },
     enabled: !!userId,
   });
+  
+  // Fetch crypto exchange rates
+  const {
+    data: exchangeRates,
+    isLoading: isLoadingRates,
+  } = useQuery({
+    queryKey: ["/api/crypto/exchange-rates"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/crypto/exchange-rates");
+      const data = await response.json();
+      
+      // Update crypto rates in state
+      const rates = {
+        bitcoin: data.find((rate: any) => rate.cryptoType === "bitcoin")?.rateUsd || 0,
+        solana: data.find((rate: any) => rate.cryptoType === "solana")?.rateUsd || 0,
+        usdt: 1 // USDT is pegged to USD
+      };
+      setCryptoRates(rates);
+      
+      return data;
+    },
+    enabled: paymentStep === "checkout" && paymentMethod === "crypto",
+  });
 
   // Fetch user's payment history
   const {
@@ -262,6 +285,28 @@ const SubscriptionPage: React.FC = () => {
       style: "currency",
       currency: "USD",
     }).format(price);
+  };
+  
+  // Calculate crypto price based on USD amount and crypto rate
+  const calculateCryptoPrice = (usdAmount: number, cryptoType: string): string => {
+    if (cryptoType === "bitcoin" && cryptoRates.bitcoin > 0) {
+      return (usdAmount / cryptoRates.bitcoin).toFixed(8);
+    } else if (cryptoType === "solana" && cryptoRates.solana > 0) {
+      return (usdAmount / cryptoRates.solana).toFixed(6);
+    } else if (cryptoType === "usdt") {
+      return usdAmount.toFixed(2);
+    }
+    return "0.00";
+  };
+  
+  // Handle crypto payment success
+  const handleCryptoPaymentSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/subscription/user"] });
+    setPaymentStep("confirmation");
+    toast({
+      title: "Crypto payment successful",
+      description: "Your subscription has been activated.",
+    });
   };
 
   // Get subscription status label and color
@@ -596,19 +641,79 @@ const SubscriptionPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Secure Payment Section */}
-                  <div className="py-4">
-                    <div className="flex items-center justify-center mb-6">
-                      <Button variant="outline" className="h-16 w-60 flex flex-col gap-1 items-center">
-                        <paypal-button id="paypal-button"></paypal-button>
-                      </Button>
-                    </div>
-                    
-                    <PayPalButton
-                      amount={paymentAmount.toString()}
-                      currency="USD"
-                      intent="CAPTURE"
-                    />
+                  {/* Payment Method Selection */}
+                  <div className="mb-6">
+                    <Label className="mb-2 block">Select Payment Method</Label>
+                    <Tabs 
+                      defaultValue="paypal" 
+                      value={paymentMethod} 
+                      onValueChange={(value) => setPaymentMethod(value as "paypal" | "crypto")}
+                      className="w-full"
+                    >
+                      <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="paypal" className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          PayPal
+                        </TabsTrigger>
+                        <TabsTrigger value="crypto" className="flex items-center gap-2">
+                          <Bitcoin className="h-4 w-4" />
+                          Cryptocurrency
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      {/* PayPal Payment Option */}
+                      <TabsContent value="paypal" className="py-4">
+                        <div className="flex items-center justify-center mb-6">
+                          <Button variant="outline" className="h-16 w-60 flex flex-col gap-1 items-center">
+                            <paypal-button id="paypal-button"></paypal-button>
+                          </Button>
+                        </div>
+                        
+                        <PayPalButton
+                          amount={paymentAmount.toString()}
+                          currency="USD"
+                          intent="CAPTURE"
+                        />
+                      </TabsContent>
+                      
+                      {/* Crypto Payment Option */}
+                      <TabsContent value="crypto" className="py-4">
+                        <div className="mb-4 p-4 bg-muted rounded-lg">
+                          <h3 className="text-sm font-medium mb-2">Equivalent Crypto Prices:</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="flex items-center gap-2 p-3 bg-background rounded-md">
+                              <Bitcoin className="h-5 w-5 text-amber-500" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Bitcoin (BTC)</p>
+                                <p className="font-mono">{calculateCryptoPrice(paymentAmount, "bitcoin")} BTC</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-3 bg-background rounded-md">
+                              <Coins className="h-5 w-5 text-purple-500" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">Solana (SOL)</p>
+                                <p className="font-mono">{calculateCryptoPrice(paymentAmount, "solana")} SOL</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-3 bg-background rounded-md">
+                              <CreditCard className="h-5 w-5 text-teal-500" />
+                              <div>
+                                <p className="text-xs text-muted-foreground">USDT</p>
+                                <p className="font-mono">{calculateCryptoPrice(paymentAmount, "usdt")} USDT</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <CryptoPayment
+                          planId={selectedPlan.id}
+                          planName={selectedPlan.name}
+                          planPrice={paymentAmount.toString()}
+                          onSuccess={handleCryptoPaymentSuccess}
+                          onCancel={() => setPaymentStep("select")}
+                        />
+                      </TabsContent>
+                    </Tabs>
                     
                     <div className="mt-4 text-xs text-center text-muted-foreground">
                       <div className="flex items-center justify-center mb-2">
@@ -668,7 +773,7 @@ const SubscriptionPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Payment Method:</span>
-                        <span>PayPal</span>
+                        <span>{paymentMethod === "crypto" ? "Cryptocurrency" : "PayPal"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Amount:</span>
