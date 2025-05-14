@@ -140,4 +140,60 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Get all available subscription plans
+ */
+router.get("/plans", async (req: Request, res: Response) => {
+  try {
+    // For plans endpoint, we don't require authentication
+    // to allow viewing subscription options before login
+    
+    // Get all active subscription plans
+    const plans = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(asc(subscriptionPlans.position));
+    
+    return res.json(plans);
+    
+  } catch (error) {
+    console.error("Error fetching subscription plans:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch subscription plans", 
+      error: (error as Error).message
+    });
+  }
+});
+
+/**
+ * Get user subscription details
+ */
+router.get("/user/:userId", async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    
+    // Get the user's current subscription
+    const subscription = await db.query.userSubscriptions.findFirst({
+      where: eq(userSubscriptions.userId, userId),
+      with: {
+        plan: true
+      }
+    });
+    
+    if (!subscription) {
+      return res.status(404).json({ message: "No subscription found for this user" });
+    }
+    
+    return res.json(subscription);
+    
+  } catch (error) {
+    console.error("Error fetching user subscription:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch user subscription", 
+      error: (error as Error).message
+    });
+  }
+});
+
 export default router;

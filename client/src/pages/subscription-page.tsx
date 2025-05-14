@@ -107,9 +107,13 @@ const SubscriptionPage: React.FC = () => {
     queryKey: ["/api/subscription/plans"],
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/subscription/plans");
+      if (!response.ok) {
+        console.error(`Failed to fetch plans: ${response.statusText}`);
+        return [];
+      }
       return response.json();
     },
-    enabled: paymentStep === "select",
+    enabled: true, // Always fetch plans
   });
 
   // Fetch user's current subscription
@@ -326,7 +330,9 @@ const SubscriptionPage: React.FC = () => {
   };
 
   // Get selected plan details
-  const selectedPlan = plans?.find((plan) => plan.id === selectedPlanId);
+  const selectedPlan = Array.isArray(plans) 
+    ? plans.find((plan) => plan.id === selectedPlanId)
+    : null;
 
   // Generate payment amount based on selected plan and billing cycle
   const paymentAmount = selectedPlan 
@@ -334,9 +340,9 @@ const SubscriptionPage: React.FC = () => {
     : 0;
 
   // Check if a plan feature is included by searching for keywords
-  const hasFeature = (plan: SubscriptionPlan, feature: string): boolean => {
+  const hasFeature = (plan: SubscriptionPlan | null, feature: string): boolean => {
     try {
-      if (!plan.features) return false;
+      if (!plan || !plan.features) return false;
       const featuresList = typeof plan.features === 'string' 
         ? JSON.parse(plan.features) 
         : plan.features;
@@ -381,8 +387,8 @@ const SubscriptionPage: React.FC = () => {
     );
   }
 
-  const sortedPlans = plans
-    ? [...plans].sort((a, b) => a.position - b.position)
+  const sortedPlans = Array.isArray(plans)
+    ? [...plans].sort((a, b) => (a.position || 0) - (b.position || 0))
     : [];
 
   return (
