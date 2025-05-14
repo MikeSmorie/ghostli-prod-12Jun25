@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { db } from "@db";
 import { userSubscriptions, featureFlags, subscriptionPlans } from "@db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { getUserFeatures, hasFeatureAccess, getUserSubscriptionTier, updateUserSubscription } from "../services/subscriptionFeatures";
 import { FEATURES, SUBSCRIPTION_TIERS } from "../services/subscriptionTiers";
 
