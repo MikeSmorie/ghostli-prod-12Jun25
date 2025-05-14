@@ -42,7 +42,7 @@ export async function apiRequest(
  * Generate a queryFn that can be customized for error handling
  */
 export function getQueryFn(options: QueryFnOptions = {}) {
-  return async ({ queryKey }: { queryKey: (string | number)[] }) => {
+  return async ({ queryKey }: any) => {
     const endpoint = queryKey[0] as string;
     
     try {
@@ -108,10 +108,16 @@ export function getQueryFn(options: QueryFnOptions = {}) {
   };
 }
 
+// Extend window interface to include queryClient
+declare global {
+  interface Window {
+    queryClient: QueryClient;
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn(),
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: Infinity,
@@ -122,3 +128,6 @@ export const queryClient = new QueryClient({
     }
   },
 });
+
+// Make queryClient globally available
+window.queryClient = queryClient;

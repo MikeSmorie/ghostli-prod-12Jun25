@@ -88,6 +88,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (responseData.token) {
         console.log("Storing auth token in localStorage");
         localStorage.setItem('auth_token', responseData.token);
+        
+        // Invalidate any existing cached data to force a refetch with the new token
+        if (window.queryClient) {
+          window.queryClient.invalidateQueries({
+            queryKey: ["/api/user"],
+          });
+        }
       } else {
         console.warn("No auth token found in login response");
       }
@@ -167,6 +174,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       // Clear the JWT token from localStorage
       localStorage.removeItem('auth_token');
+      
+      // Invalidate user data in the cache
+      if (window.queryClient) {
+        window.queryClient.invalidateQueries({
+          queryKey: ["/api/user"],
+        });
+        window.queryClient.setQueryData(["/api/user"], null);
+      }
       
       setUser(null);
       

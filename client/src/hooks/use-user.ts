@@ -1,36 +1,26 @@
-import { useQuery } from "@tanstack/react-query";
-import { getQueryFn } from "@/lib/queryClient";
+import { useContext } from "react";
+import { UserContext } from "@/contexts/user-context";
 
-// Define the shape of user data returned from the API
+// Export the user interface for compatibility with existing code
 export interface User {
   id: number;
   username: string;
   email?: string;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
- * Hook for accessing the logged-in user's data
+ * Hook for accessing the logged-in user's data and auth operations
  */
 export function useUser() {
-  const {
-    data: user,
-    isLoading,
-    error,
-    isError,
-  } = useQuery<User | null>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const authContext = useContext(UserContext);
+  
+  // Throw an error if the hook is used outside of a UserProvider
+  if (!authContext) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
 
-  return {
-    user,
-    isLoading,
-    error,
-    isError,
-    isAuthenticated: !!user,
-  };
+  return authContext;
 }
