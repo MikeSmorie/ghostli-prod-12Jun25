@@ -48,6 +48,32 @@ router.get("/features", async (req: Request, res: Response) => {
 });
 
 /**
+ * Get all available subscription plans
+ */
+router.get("/plans", async (req: Request, res: Response) => {
+  try {
+    // For plans endpoint, we don't require authentication
+    // to allow viewing subscription options before login
+    
+    // Get all active subscription plans
+    const plans = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(asc(subscriptionPlans.position));
+    
+    return res.json(plans);
+    
+  } catch (error) {
+    console.error("Error fetching subscription plans:", error);
+    return res.status(500).json({ 
+      message: "Failed to fetch subscription plans", 
+      error: (error as Error).message
+    });
+  }
+});
+
+/**
  * Get details of a specific subscription
  */
 router.get("/:id", async (req: Request, res: Response) => {
@@ -135,32 +161,6 @@ router.put("/:id", async (req: Request, res: Response) => {
     console.error("Error updating subscription:", error);
     return res.status(500).json({ 
       message: "Failed to update subscription", 
-      error: (error as Error).message
-    });
-  }
-});
-
-/**
- * Get all available subscription plans
- */
-router.get("/plans", async (req: Request, res: Response) => {
-  try {
-    // For plans endpoint, we don't require authentication
-    // to allow viewing subscription options before login
-    
-    // Get all active subscription plans
-    const plans = await db
-      .select()
-      .from(subscriptionPlans)
-      .where(eq(subscriptionPlans.isActive, true))
-      .orderBy(asc(subscriptionPlans.position));
-    
-    return res.json(plans);
-    
-  } catch (error) {
-    console.error("Error fetching subscription plans:", error);
-    return res.status(500).json({ 
-      message: "Failed to fetch subscription plans", 
       error: (error as Error).message
     });
   }
