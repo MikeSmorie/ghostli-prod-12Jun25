@@ -140,6 +140,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Store the JWT token in localStorage for future API requests
       if (responseData.token) {
         localStorage.setItem('auth_token', responseData.token);
+        
+        // Invalidate any existing cached data to force a refetch with the new token
+        if (window.queryClient) {
+          window.queryClient.invalidateQueries({
+            queryKey: ["/api/user"],
+          });
+        }
       }
       
       setUser(responseData.user || responseData);

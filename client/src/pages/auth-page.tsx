@@ -21,10 +21,9 @@ const authSchema = z.object({
 type AuthFormData = z.infer<typeof authSchema>;
 
 export default function AuthPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
-  const { login, register, user, isAuthenticated } = useUser();
+  const { login, register, user, isAuthenticated, isLoading } = useUser();
   const [, navigate] = useLocation();
   
   // Redirect if already logged in
@@ -44,7 +43,6 @@ export default function AuthPage() {
   });
 
   const onSubmit = async (data: AuthFormData, isLogin: boolean) => {
-    setIsLoading(true);
     try {
       console.log(`Attempting to ${isLogin ? 'login' : 'register'} user:`, data.username);
       const result = await (isLogin ? login(data) : register(data));
@@ -55,10 +53,7 @@ export default function AuthPage() {
       
       console.log(`${isLogin ? 'Login' : 'Registration'} successful, user:`, result.user);
       
-      toast({
-        title: isLogin ? "Logged in successfully" : "Registered successfully",
-        description: `Welcome ${data.username}!`,
-      });
+      // No need for a toast here as login/register functions already show toasts
       
       // Redirect to home page after successful login/registration
       console.log("Redirecting to home page");
@@ -70,8 +65,6 @@ export default function AuthPage() {
         title: "Error",
         description: error.message,
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
