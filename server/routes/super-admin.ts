@@ -269,8 +269,7 @@ router.post("/reset-password", async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await db.update(users)
       .set({ 
-        password: hashedPassword,
-        lastLogin: new Date() // Update last login time
+        password: hashedPassword
       })
       .where(eq(users.id, userId));
     
