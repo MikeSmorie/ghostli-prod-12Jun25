@@ -7,8 +7,8 @@ import AuthPage from "@/pages/auth-page";
 import AdminRegisterPage from "@/pages/admin-register";
 import SupergodRegisterPage from "@/pages/supergod-register";
 import SupergodDashboard from "@/pages/supergod-dashboard";
-import GodModeDashboard from "@/pages/god-mode";
-import EmergencyLogin from "@/pages/emergency-login";
+import GodModeAdmin from "@/pages/god-mode-admin";
+import EmergencyLoginPage from "@/pages/emergency-login-page";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminCommunications from "@/pages/admin-communications";
 import LogsDashboard from "@/pages/admin/logs-dashboard";
@@ -131,7 +131,8 @@ function Router() {
       <Switch>
         <Route path="/admin-register" component={AdminRegisterPage} />
         <Route path="/supergod-register" component={SupergodRegisterPage} />
-        <Route path="/emergency-login" component={EmergencyLogin} />
+        <Route path="/emergency-login" component={EmergencyLoginPage} />
+        <Route path="/god-mode-admin" component={GodModeAdmin} />
         <Route path="*" component={AuthPage} />
       </Switch>
     );
@@ -181,7 +182,7 @@ function Router() {
         
         {/* Supergod exclusive routes (high-security) */}
         <Route path="/supergod" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
-        <Route path="/god-mode" component={() => <ProtectedSupergodRoute component={GodModeDashboard} />} />
+        <Route path="/god-mode" component={GodModeAdmin} />
         
         {/* Normal routes */}
         <Route path="/" component={AppCentral} />
