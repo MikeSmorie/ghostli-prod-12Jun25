@@ -5,8 +5,7 @@ import {
   activityLogs, 
   errorLogs, 
   userSubscriptions, 
-  subscriptionPlans,
-  messages
+  subscriptionPlans
 } from "@db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -33,9 +32,7 @@ const requireSupergod = (req: Request, res: Response, next: Function) => {
   db.insert(activityLogs).values({
     userId: req.user.id,
     action: "SUPERGOD_ACTION",
-    details: action,
-    ipAddress: req.ip,
-    userAgent: req.headers["user-agent"] || "Unknown"
+    details: action
   }).execute();
   
   next();
@@ -159,13 +156,11 @@ router.get("/user-activity", async (req: Request, res: Response) => {
       username: users.username,
       action: activityLogs.action,
       details: activityLogs.details,
-      ipAddress: activityLogs.ipAddress,
-      userAgent: activityLogs.userAgent,
-      timestamp: activityLogs.createdAt
+      timestamp: activityLogs.timestamp
     })
     .from(activityLogs)
     .leftJoin(users, eq(activityLogs.userId, users.id))
-    .orderBy(desc(activityLogs.createdAt))
+    .orderBy(desc(activityLogs.timestamp))
     .limit(50);
     
     res.json(recentActivity);
@@ -183,7 +178,7 @@ router.get("/user-activity", async (req: Request, res: Response) => {
  */
 router.get("/error-logs", async (req: Request, res: Response) => {
   try {
-    const logs = await db.select().from(errorLogs).orderBy(desc(errorLogs.createdAt)).limit(30);
+    const logs = await db.select().from(errorLogs).orderBy(desc(errorLogs.timestamp)).limit(30);
     res.json(logs);
   } catch (error) {
     console.error("Error fetching error logs:", error);
@@ -219,18 +214,15 @@ router.post("/emergency-access", async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     await db.update(users)
       .set({ 
-        password: hashedPassword, 
-        updatedAt: new Date()
+        password: hashedPassword
       })
       .where(eq(users.id, userId));
     
     // Log this action
     await db.insert(activityLogs).values({
-      userId: req.user.id,
+      userId: req.user?.id || 0,
       action: "EMERGENCY_ACCESS_CREATED",
-      details: `Emergency access created for user ${user.username} (ID: ${userId})`,
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"] || "Unknown"
+      details: `Emergency access created for user ${user.username} (ID: ${userId})`
     });
     
     // Set expiration to 24 hours from now
@@ -277,18 +269,16 @@ router.post("/reset-password", async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await db.update(users)
       .set({ 
-        password: hashedPassword, 
-        updatedAt: new Date()
+        password: hashedPassword,
+        lastLogin: new Date() // Update last login time
       })
       .where(eq(users.id, userId));
     
     // Log this action
     await db.insert(activityLogs).values({
-      userId: req.user.id,
+      userId: req.user?.id || 0,
       action: "PASSWORD_RESET",
-      details: `Password reset for user ${user.username} (ID: ${userId})`,
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"] || "Unknown"
+      details: `Password reset for user ${user.username} (ID: ${userId})`
     });
     
     res.json({
@@ -328,11 +318,9 @@ router.post("/execute-command", async (req: Request, res: Response) => {
     
     // Log this potentially dangerous action
     await db.insert(activityLogs).values({
-      userId: req.user.id,
+      userId: req.user?.id || 0,
       action: "SYSTEM_COMMAND_EXECUTED",
-      details: `Executed command: ${command}`,
-      ipAddress: req.ip,
-      userAgent: req.headers["user-agent"] || "Unknown"
+      details: `Executed command: ${command}`
     });
     
     // Execute the command with a timeout
@@ -346,12 +334,10 @@ router.post("/execute-command", async (req: Request, res: Response) => {
     
     // Log the error
     await db.insert(errorLogs).values({
-      userId: req.user?.id,
-      errorCode: "COMMAND_EXECUTION_FAILED",
+      level: "ERROR",
       message: (error as Error).message,
-      stackTrace: (error as Error).stack || "",
-      path: req.originalUrl,
-      resolved: false
+      source: "command-execution",
+      stackTrace: (error as Error).stack || ""
     });
     
     res.status(500).json({ 
@@ -393,9 +379,7 @@ router.post("/emergency-login", async (req: Request, res: Response) => {
       await db.insert(activityLogs).values({
         userId: supergodUser.id,
         action: "EMERGENCY_TOKEN_LOGIN",
-        details: "Used emergency token to gain system access",
-        ipAddress: req.ip,
-        userAgent: req.headers["user-agent"] || "Unknown"
+        details: "Used emergency token to gain system access"
       });
       
       return res.json({
@@ -437,9 +421,7 @@ router.post("/emergency-login", async (req: Request, res: Response) => {
       await db.insert(activityLogs).values({
         userId: user.id,
         action: "EMERGENCY_PASSWORD_LOGIN",
-        details: "Used emergency password login",
-        ipAddress: req.ip,
-        userAgent: req.headers["user-agent"] || "Unknown"
+        details: "Used emergency password login"
       });
       
       return res.json({

@@ -14,6 +14,7 @@ import adminLogsRoutes from "./routes/admin-logs";
 import paymentRoutes from "./routes/payment";
 import subscriptionNotificationsRoutes from "./routes/subscriptionNotifications";
 import { registerSupergodRoutes } from "./routes/supergod";
+import superAdminRoutes from "./routes/super-admin";
 import { logError } from "./utils/logger";
 import { requireRole, requireSupergod } from "./middleware/rbac";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
@@ -89,6 +90,9 @@ export function registerRoutes(app: Express) {
   
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
+  
+  // Register super admin routes for God Mode
+  app.use("/api/super-admin", superAdminRoutes);
 
   // Error handler must be last
   app.use(errorHandler);
