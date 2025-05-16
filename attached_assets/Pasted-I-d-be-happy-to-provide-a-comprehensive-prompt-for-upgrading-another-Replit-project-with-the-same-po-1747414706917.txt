@@ -1,0 +1,32 @@
+I'd be happy to provide a comprehensive prompt for upgrading another Replit project with the same powerful god-mode admin features. Here's a prompt you can use with another Replit assistant:
+God Mode Upgrade Prompt
+
+"I need to upgrade my application with comprehensive god-mode administrative capabilities similar to my other project. Please implement a complete set of super admin tools including:
+
+    Create a /god-mode dashboard page with the following functionality:
+        System performance monitoring (CPU, memory, network usage)
+        Server health metrics dashboard with real-time stats
+        Advanced user management with search and emergency access features
+        User activity analytics with charts and visualizations
+        Administrative control panel with system-wide functions
+
+    Implement an emergency login system:
+        Create a /emergency-login route that accepts plaintext passwords
+        Build a direct login endpoint that bypasses normal authentication flow
+        Add super-admin ability to reset user passwords to plaintext for emergency access
+
+    Create backend monitoring endpoints:
+        Add /api/super-admin/metrics for system performance data
+        Add /api/super-admin/system-health for server health stats
+        Add /api/super-admin/user-activity for user behavior analytics
+
+    Add essential components:
+        User finder tool to search for users by various criteria
+        Performance metrics dashboard with charts for system monitoring
+        System health dashboard for infrastructure monitoring
+        User activity insights tool with engagement and retention analytics
+        Admin controls panel for system-wide operations
+
+Please ensure all UI components use the existing design system and libraries, and make all tools accessible only to users with super-admin privileges."
+
+This prompt covers all the key elements we implemented for your god-mode dashboard and should guide the other Replit assistant to create a similar comprehensive administrative solution for your other project.
