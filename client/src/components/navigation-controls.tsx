@@ -261,12 +261,50 @@ export function NavigationControls() {
                       </a>
                     </NavigationMenuLink>
                   </li>
+                  <li>
+                    <NavigationMenuLink asChild>
+                      <a
+                        className={cn(
+                          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800",
+                          navigationMenuTriggerStyle()
+                        )}
+                        onClick={() => navigate("/god-mode-admin")}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ShieldAlert className="h-4 w-4 text-red-500" />
+                          <div className="text-sm font-medium leading-none">God Mode Dashboard</div>
+                          <span className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 px-2 py-0.5 rounded text-xs font-semibold">Advanced</span>
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Access advanced system controls and monitoring tools
+                        </p>
+                      </a>
+                    </NavigationMenuLink>
+                  </li>
                 </ul>
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       )}
+      
+      {/* Emergency God Mode Button - Always visible for direct access */}
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuLink asChild>
+              <Button 
+                variant="ghost" 
+                className="text-xs gap-1 h-8"
+                onClick={() => navigate("/emergency-login")}
+              >
+                <ShieldAlert className="h-3.5 w-3.5 text-red-500" />
+                Emergency Access
+              </Button>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
     </div>
   );
 }
