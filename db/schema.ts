@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"),
   email: text("email").unique(),
   credits: integer("credits").default(0).notNull(),
+  creditExempt: boolean("credit_exempt").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login")
 });
@@ -26,8 +27,18 @@ export const activityLogs = pgTable("activity_logs", {
 });
 
 // Credit transaction types
-export const transactionTypeEnum = z.enum(["PURCHASE", "USAGE", "BONUS", "ADJUSTMENT"]);
+export const transactionTypeEnum = z.enum(["PURCHASE", "USAGE", "BONUS", "ADJUSTMENT", "CONSUMPTION"]);
 export type TransactionType = z.infer<typeof transactionTypeEnum>;
+
+// Global settings table for system configurations
+export const globalSettings = pgTable("global_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: text("setting_key").unique().notNull(),
+  settingValue: text("setting_value").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
 
 // Credit transactions table
 export const creditTransactions = pgTable("credit_transactions", {

@@ -1,0 +1,66 @@
+**Prompt 6 of 5**
+
+**Instruction for Replit Agent**:  
+Implement a new **"Credits Management" panel** inside the existing **Supergod dashboard** in GhostliAI.  
+This panel should provide the following 3 Supergod controls:
+
+---
+
+**1️⃣ Per-User Token Exemption Toggle**
+
+- Add new field `credit_exempt` (boolean, default false) to `users` table.
+- In Credits Management panel:
+    - List all users (table view or dropdown search)
+    - Display current `credit_exempt` status
+    - Provide toggle ON/OFF control
+- In content generation flow:  
+    - If `credit_exempt = true`, skip credit deduction and allow unlimited use.
+
+---
+
+**2️⃣ Manual Credit Allocation (Per User)**
+
+- In Credits Management panel:
+    - For each user, display current `credits` balance.
+    - Provide an "Add Credits" input field + submit button.
+    - When submitted:
+        - Add specified amount to `users.credits`.
+        - Insert corresponding `credit_transactions` record with:
+            - transaction_type = ADJUSTMENT
+            - amount = entered value
+            - source = MANUAL
+            - tx_id = NULL
+- Display success/failure notification.
+
+---
+
+**3️⃣ Default First-Time Subscriber Credits**
+
+- Add new global setting: `default_first_time_credits` (integer).
+- In Credits Management panel:
+    - Display current value.
+    - Provide input to change value + save button.
+    - When a new user is created (registration or first payment), grant this amount of credits automatically.
+
+---
+
+**Additional UI Requirements**:
+
+- Place this Credits Management panel clearly within the existing **Supergod dashboard**.
+- Display current **user credits**, **credit_exempt status**, and allow searching/filtering users.
+- Ensure responsive design (desktop & mobile).
+- All actions should be protected by proper Supergod-level permission checks.
+
+---
+
+**Final Testing Checklist**:
+
+✅ Toggling credit_exempt ON/OFF works in real time.  
+✅ Adding credits manually updates user balance correctly.  
+✅ Changing `default_first_time_credits` applies to new users.  
+✅ All actions logged in `credit_transactions` for audit.  
+✅ Content generation respects credit_exempt flag.
+
+---
+
+Please proceed with full implementation of this Credits Management panel in Supergod dashboard.

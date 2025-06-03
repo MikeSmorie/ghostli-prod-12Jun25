@@ -24,6 +24,7 @@ import creditsRoutes from "./routes/credits";
 import creditsTestRoutes from "./routes/credits-test";
 import creditsConsumptionTestRoutes from "./routes/credits-consumption-test";
 import creditsUIRoutes from "./routes/credits-ui";
+import supergodCreditsRoutes from "./routes/supergod-credits";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -97,6 +98,9 @@ export function registerRoutes(app: Express) {
   app.use("/api/credits-test", creditsTestRoutes);
   app.use("/api/credits-consumption-test", creditsConsumptionTestRoutes);
   app.use("/api/credits", creditsUIRoutes);
+  
+  // Supergod credits management routes
+  app.use("/api/supergod/credits", supergodCreditsRoutes);
   
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
