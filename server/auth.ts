@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
 import { users, insertUserSchema, type SelectUser } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
+import { UserRegistrationService } from "./services/user-registration";
 
 // JWT Configuration
 const JWT_SECRET = process.env.JWT_SECRET || "writeright-security-key";
@@ -213,6 +214,9 @@ export function setupAuth(app: Express) {
           lastLogin: new Date() // Set initial login time
         })
         .returning();
+
+      // Grant default first-time credits to new user
+      await UserRegistrationService.handleNewUserRegistration(newUser.id);
 
       // Generate JWT token
       const token = crypto.generateToken({
