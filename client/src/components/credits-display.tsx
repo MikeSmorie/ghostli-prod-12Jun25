@@ -1,362 +1,173 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useUser } from "@/hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Coins, 
-  Plus, 
-  History, 
-  Loader2, 
-  CreditCard,
-  Bitcoin,
-  Wallet
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Coins, Zap, TrendingUp, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { getQueryFn } from "@/lib/queryClient";
 
-interface CreditTransaction {
-  id: number;
-  transactionType: string;
-  amount: number;
-  source: string;
-  txId: string | null;
-  createdAt: string;
+interface CreditInfo {
+  balance: number;
+  tier: string;
+  creditsPerGeneration: number;
+  generationsRemaining: number;
+  lastTransactions: Array<{
+    id: number;
+    type: string;
+    amount: number;
+    source: string;
+    createdAt: string;
+  }>;
 }
 
-interface CreditsDisplayProps {
-  showHistory?: boolean;
-  showPurchaseButton?: boolean;
-  compact?: boolean;
-}
+export default function CreditsDisplay() {
+  const { user } = useAuth();
 
-export function CreditsDisplay({ 
-  showHistory = false, 
-  showPurchaseButton = true, 
-  compact = false 
-}: CreditsDisplayProps) {
-  const { user } = useUser();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [purchaseAmount, setPurchaseAmount] = useState("");
-
-  // Fetch user's credit balance
-  const { data: credits, isLoading: creditsLoading } = useQuery({
+  const { data: creditInfo, isLoading, error } = useQuery<CreditInfo>({
     queryKey: ["/api/credits/balance"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/credits/balance");
-      return await response.json();
-    },
+    queryFn: getQueryFn(),
     enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
-
-  // Fetch credit transaction history
-  const { data: historyData, isLoading: historyLoading } = useQuery({
-    queryKey: ["/api/credits/history"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/credits/history");
-      return await response.json();
-    },
-    enabled: historyOpen && !!user,
-  });
-
-  // Purchase credits mutation
-  const purchaseCreditsMutation = useMutation({
-    mutationFn: async (data: { amount: number; paymentMethod: string }) => {
-      const response = await apiRequest("POST", "/api/credits/purchase", data);
-      return await response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Credits Added Successfully",
-        description: `${data.amount || purchaseAmount} credits have been added to your account`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/credits/balance"] });
-      setPurchaseAmount("");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Purchase Failed",
-        description: error.message || "Failed to purchase credits",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handlePurchaseCredits = () => {
-    const amount = parseInt(purchaseAmount);
-    if (amount > 0) {
-      purchaseCreditsMutation.mutate({
-        amount,
-        paymentMethod: "Manual",
-      });
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getTransactionTypeColor = (type: string) => {
-    switch (type) {
-      case "PURCHASE":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "USAGE":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "BONUS":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "ADJUSTMENT":
-        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-    }
-  };
 
   if (!user) {
     return null;
   }
 
-  if (compact) {
+  if (isLoading) {
     return (
-      <div className="flex items-center gap-2 text-sm">
-        <Coins className="h-4 w-4 text-yellow-500" />
-        <span className="font-medium">
-          {creditsLoading ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            credits?.credits || 0
-          )}
-        </span>
-        <span className="text-muted-foreground">credits</span>
-      </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5" />
+            Ghostli Credits
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse">
+            <div className="h-8 bg-muted rounded mb-4"></div>
+            <div className="h-4 bg-muted rounded mb-2"></div>
+            <div className="h-4 bg-muted rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
+  if (error || !creditInfo) {
+    return (
+      <Card className="w-full border-destructive">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            Credit System Error
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Unable to load credit information. Please refresh the page.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { balance, tier, creditsPerGeneration, generationsRemaining } = creditInfo;
+  const isLowCredits = balance < creditsPerGeneration * 3; // Warning when less than 3 generations left
+  const isCriticalCredits = balance < creditsPerGeneration; // Critical when can't afford 1 generation
+
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2">
-          <Coins className="h-5 w-5 text-yellow-500" />
-          Ghostli Credits
+    <Card className={`w-full ${isCriticalCredits ? 'border-destructive' : isLowCredits ? 'border-orange-500' : ''}`}>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Coins className="h-5 w-5" />
+            Ghostli Credits
+          </div>
+          <Badge variant={tier === 'lite' ? 'secondary' : tier === 'pro' ? 'default' : 'premium'}>
+            {tier.toUpperCase()}
+          </Badge>
         </CardTitle>
-        <CardDescription>
-          Your credit balance for content generation and premium features
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-3xl font-bold">
-              {creditsLoading ? (
-                <Loader2 className="h-8 w-8 animate-spin" />
-              ) : (
-                credits?.credits || 0
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">Available Credits</p>
+        {/* Current Balance */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-2xl font-bold">{balance.toLocaleString()}</span>
+            <span className="text-sm text-muted-foreground">credits</span>
           </div>
           
-          <div className="flex gap-2">
-            {showHistory && (
-              <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <History className="h-4 w-4 mr-2" />
-                    History
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                  <DialogHeader>
-                    <DialogTitle>Credit Transaction History</DialogTitle>
-                    <DialogDescription>
-                      View all your credit purchases, usage, and adjustments
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {historyLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin" />
-                    </div>
-                  ) : (
-                    <div className="max-h-96 overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Source</TableHead>
-                            <TableHead>Transaction ID</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {historyData?.transactions?.map((transaction: CreditTransaction) => (
-                            <TableRow key={transaction.id}>
-                              <TableCell className="font-mono text-xs">
-                                {formatDate(transaction.createdAt)}
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={getTransactionTypeColor(transaction.transactionType)}>
-                                  {transaction.transactionType}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className={transaction.amount > 0 ? "text-green-600" : "text-red-600"}>
-                                {transaction.amount > 0 ? "+" : ""}{transaction.amount}
-                              </TableCell>
-                              <TableCell>{transaction.source}</TableCell>
-                              <TableCell className="font-mono text-xs">
-                                {transaction.txId || "—"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                          {(!historyData?.transactions || historyData.transactions.length === 0) && (
-                            <TableRow>
-                              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                No transactions found
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
-                </DialogContent>
-              </Dialog>
-            )}
-            
-            {showPurchaseButton && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Credits
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Purchase Credits</DialogTitle>
-                    <DialogDescription>
-                      Add credits to your account for content generation and premium features
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Credit Amount</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        placeholder="Enter number of credits"
-                        value={purchaseAmount}
-                        onChange={(e) => setPurchaseAmount(e.target.value)}
-                        min="1"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setPurchaseAmount("100")}
-                      >
-                        100 Credits
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setPurchaseAmount("500")}
-                      >
-                        500 Credits
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setPurchaseAmount("1000")}
-                      >
-                        1000 Credits
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Payment Methods</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={handlePurchaseCredits}
-                          disabled={!purchaseAmount || purchaseCreditsMutation.isPending}
-                        >
-                          <CreditCard className="h-4 w-4" />
-                          PayPal
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={handlePurchaseCredits}
-                          disabled={!purchaseAmount || purchaseCreditsMutation.isPending}
-                        >
-                          <Bitcoin className="h-4 w-4" />
-                          Bitcoin
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={handlePurchaseCredits}
-                          disabled={!purchaseAmount || purchaseCreditsMutation.isPending}
-                        >
-                          <Wallet className="h-4 w-4" />
-                          Manual
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {purchaseCreditsMutation.isPending && (
-                      <div className="flex items-center justify-center py-4">
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                        <span className="ml-2">Processing purchase...</span>
-                      </div>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+          {/* Generation capacity indicator */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span>Generations remaining:</span>
+              <span className={`font-medium ${isCriticalCredits ? 'text-destructive' : isLowCredits ? 'text-orange-600' : 'text-green-600'}`}>
+                {generationsRemaining}
+              </span>
+            </div>
+            <Progress 
+              value={Math.min(100, (generationsRemaining / 10) * 100)} 
+              className="h-2"
+            />
           </div>
         </div>
-        
-        <div className="text-xs text-muted-foreground">
-          Credits are used for content generation, AI features, and premium tools.
+
+        {/* Tier Information */}
+        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            <span className="text-sm font-medium">Cost per generation:</span>
+          </div>
+          <span className="text-sm font-bold">{creditsPerGeneration} credits</span>
         </div>
+
+        {/* Low Credits Warning */}
+        {isLowCredits && (
+          <div className={`p-3 rounded-lg border ${isCriticalCredits ? 'bg-destructive/10 border-destructive' : 'bg-orange-50 border-orange-200'}`}>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className={`h-4 w-4 ${isCriticalCredits ? 'text-destructive' : 'text-orange-600'}`} />
+              <span className={`text-sm font-medium ${isCriticalCredits ? 'text-destructive' : 'text-orange-600'}`}>
+                {isCriticalCredits ? 'Insufficient Credits' : 'Low Credit Balance'}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isCriticalCredits 
+                ? 'Please top up your credits to continue generating content.'
+                : 'Consider purchasing more credits to avoid interruptions.'
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Purchase Credits Button */}
+        <Button 
+          className="w-full" 
+          variant={isCriticalCredits ? "default" : "outline"}
+          onClick={() => window.location.href = '/subscription'}
+        >
+          <TrendingUp className="h-4 w-4 mr-2" />
+          {isCriticalCredits ? 'Buy Credits Now' : 'Top Up Credits'}
+        </Button>
+
+        {/* Recent Activity Summary */}
+        {creditInfo.lastTransactions && creditInfo.lastTransactions.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium">Recent Activity</h4>
+            <div className="space-y-1">
+              {creditInfo.lastTransactions.slice(0, 3).map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {transaction.source}
+                  </span>
+                  <span className={`font-medium ${transaction.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

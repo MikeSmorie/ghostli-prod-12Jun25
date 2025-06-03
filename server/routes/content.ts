@@ -9,6 +9,8 @@ import {
 } from "../services/openai";
 import { checkPlagiarism, rephraseContent, addCitations } from "../services/plagiarismDetection";
 import { isFeatureEnabled } from "../services/featureFlags";
+import { requireCredits, consumeCredits, addCreditInfoToResponse } from "../middleware/credits-guard";
+import { authenticateJWT } from "../auth";
 import OpenAI from "openai";
 
 // Schema for keyword frequency requirements
@@ -230,7 +232,11 @@ export function registerContentRoutes(app: Express) {
    * Generate content using OpenAI
    * POST /api/content/generate
    */
-  app.post("/api/content/generate", async (req: Request, res: Response) => {
+  app.post("/api/content/generate", 
+    authenticateJWT,
+    requireCredits("content_generation"),
+    addCreditInfoToResponse,
+    async (req: Request, res: Response) => {
     try {
       // Log the request body for debugging
       console.log("Content generation request body:", JSON.stringify(req.body, null, 2));
@@ -307,6 +313,9 @@ export function registerContentRoutes(app: Express) {
             // Don't fail the request if plagiarism check fails
           }
         }
+
+        // Consume credits after successful generation
+        await consumeCredits(req, res, () => {});
 
         // Return the generated content with plagiarism results if applicable
         return res.json({
