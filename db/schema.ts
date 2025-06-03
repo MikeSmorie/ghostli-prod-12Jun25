@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
   email: text("email").unique(),
+  credits: integer("credits").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login")
 });
@@ -22,6 +23,21 @@ export const activityLogs = pgTable("activity_logs", {
   action: text("action").notNull(),
   timestamp: timestamp("timestamp").defaultNow(),
   details: text("details")
+});
+
+// Credit transaction types
+export const transactionTypeEnum = z.enum(["PURCHASE", "USAGE", "BONUS", "ADJUSTMENT"]);
+export type TransactionType = z.infer<typeof transactionTypeEnum>;
+
+// Credit transactions table
+export const creditTransactions = pgTable("credit_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  transactionType: text("transaction_type").notNull(),
+  amount: integer("amount").notNull(), // positive for add, negative for consume
+  source: text("source").notNull(), // PayPal, Bitcoin, Manual, System
+  txId: text("tx_id"), // optional, store PayPal or Bitcoin transaction ID
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 export const errorLogs = pgTable("error_logs", {
@@ -245,7 +261,15 @@ export const usersRelations = relations(users, ({ many }) => ({
   payments: many(payments),
   paymentGateways: many(clientPaymentGateways),
   cryptoWallets: many(cryptoWallets),
-  cryptoTransactions: many(cryptoTransactions)
+  cryptoTransactions: many(cryptoTransactions),
+  creditTransactions: many(creditTransactions)
+}));
+
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [creditTransactions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
@@ -427,6 +451,11 @@ export const selectUserSchema = createSelectSchema(users);
 export const insertActivityLogSchema = createInsertSchema(activityLogs);
 export const selectActivityLogSchema = createSelectSchema(activityLogs);
 
+export const insertCreditTransactionSchema = createInsertSchema(creditTransactions, {
+  transactionType: transactionTypeEnum,
+});
+export const selectCreditTransactionSchema = createSelectSchema(creditTransactions);
+
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
 export const selectSubscriptionPlanSchema = createSelectSchema(subscriptionPlans);
@@ -462,6 +491,8 @@ export type InsertUser = typeof users.$inferInsert;
 export type SelectUser = typeof users.$inferSelect;
 export type InsertActivityLog = typeof activityLogs.$inferInsert;
 export type SelectActivityLog = typeof activityLogs.$inferSelect;
+export type InsertCreditTransaction = typeof creditTransactions.$inferInsert;
+export type SelectCreditTransaction = typeof creditTransactions.$inferSelect;
 export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
 export type SelectSubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;

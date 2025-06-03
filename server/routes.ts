@@ -20,6 +20,7 @@ import { requireRole, requireSupergod } from "./middleware/rbac";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import paypalRoutes from "./routes/paypal";
 import cryptoRoutes from "./routes/crypto";
+import creditsRoutes from "./routes/credits";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -87,6 +88,9 @@ export function registerRoutes(app: Express) {
   
   // Crypto payment integration routes
   app.use("/api/crypto", cryptoRoutes);
+  
+  // Credits system routes
+  app.use("/api/credits", creditsRoutes);
   
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
