@@ -3,6 +3,8 @@ import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "../pay
 import { db } from "@db";
 import { userSubscriptions, payments } from "@db/schema";
 import { and, eq } from "drizzle-orm";
+import { CreditsService } from "../services/credits";
+import { convertUsdToCredits } from "../utils/credits-config";
 
 const router = express.Router();
 
@@ -36,6 +38,28 @@ router.post("/order/:orderID/capture", async (req, res) => {
       const userId = req.user?.id;
       
       if (userId) {
+        // Extract payment amount from PayPal response
+        const purchaseUnits = paypalResponseData.purchase_units;
+        if (purchaseUnits && purchaseUnits.length > 0) {
+          const captureAmount = purchaseUnits[0].payments?.captures?.[0]?.amount?.value;
+          
+          if (captureAmount) {
+            const usdAmount = parseFloat(captureAmount);
+            const creditsToAdd = convertUsdToCredits(usdAmount);
+            
+            // Add credits to user account
+            const creditsResult = await CreditsService.addCredits(
+              userId,
+              creditsToAdd,
+              "PayPal",
+              "PURCHASE",
+              paypalResponseData.id
+            );
+            
+            console.log(`PayPal payment completed: Added ${creditsToAdd} credits to user ${userId}`);
+          }
+        }
+        
         // Find the most recent pending subscription for this user
         const pendingSubscriptions = await db
           .select()

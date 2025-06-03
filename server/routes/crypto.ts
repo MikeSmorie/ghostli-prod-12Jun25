@@ -29,6 +29,8 @@ import {
 } from '../services/emailService';
 import { SubscriptionNotificationService } from '../services/subscriptionNotifications';
 import crypto from 'crypto';
+import { CreditsService } from '../services/credits';
+import { convertUsdToCredits } from '../utils/credits-config';
 
 const router = Router();
 
@@ -484,6 +486,22 @@ router.post('/webhook/payment-notification', async (req: Request, res: Response)
       }).returning();
       
       transaction = newTransaction;
+      
+      // Add credits to user account for confirmed crypto payment
+      const usdAmount = parseFloat(isConfirmed.amountUsd || '0');
+      if (usdAmount > 0) {
+        const creditsToAdd = convertUsdToCredits(usdAmount);
+        
+        const creditsResult = await CreditsService.addCredits(
+          wallet.userId,
+          creditsToAdd,
+          `${payload.cryptoType.charAt(0).toUpperCase() + payload.cryptoType.slice(1)}`,
+          "PURCHASE",
+          payload.transactionHash
+        );
+        
+        console.log(`Crypto payment confirmed: Added ${creditsToAdd} credits to user ${wallet.userId} for ${payload.cryptoType} transaction ${payload.transactionHash}`);
+      }
     }
     
     // Find associated pending payment
