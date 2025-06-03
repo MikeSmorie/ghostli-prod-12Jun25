@@ -27,6 +27,7 @@ import { WriteInMyStyle } from "./write-in-my-style";
 import { FeatureTabs } from "./ui/content-tabs";
 import { WritingBriefManager } from "./writing-brief-manager";
 import { PlagiarismReport } from "./plagiarism-report";
+import CreditCostDisplay from "./credit-cost-display";
 
 // Types
 interface GenerationParams {
@@ -1914,6 +1915,11 @@ export default function ContentGenerator() {
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              {/* Credit Cost Display */}
+              <div className="mb-4">
+                <CreditCostDisplay />
               </div>
               
               <Button 
