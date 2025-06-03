@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Clock, FileText, AlertTriangle, CheckCircle, Download, Copy, RefreshCw, Search, HelpCircle, Settings, Info, KeySquare, X, Plus, BookMarked, Library, Globe, BookOpen, ChevronDown, ChevronUp, Coins, Zap } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -25,6 +25,10 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { WriteInMyStyle } from "../components/write-in-my-style";
 import { FeatureSection } from "../components/feature-section";
+import CreditsDisplay from "@/components/credits-display";
+import { useUser } from "@/hooks/use-user";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 
 // Types
 interface GenerationParams {

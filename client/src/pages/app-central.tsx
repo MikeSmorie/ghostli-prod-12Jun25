@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import CreditsDisplay from "@/components/credits-display";
 import { 
   FileText, 
   Sparkles, 
@@ -73,6 +74,11 @@ export default function AppCentral() {
         <p className="text-muted-foreground text-lg">
           Advanced content generation system with AI-detection avoidance
         </p>
+      </div>
+
+      {/* Credits Display Section */}
+      <div className="mb-8">
+        <CreditsDisplay />
       </div>
       
       <div className="bg-gradient-to-br from-blue-100 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8 shadow-sm">

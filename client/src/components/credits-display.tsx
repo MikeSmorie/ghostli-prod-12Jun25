@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Coins, Zap, TrendingUp, AlertTriangle } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
 import { getQueryFn } from "@/lib/queryClient";
 
 interface CreditInfo {
@@ -22,7 +22,7 @@ interface CreditInfo {
 }
 
 export default function CreditsDisplay() {
-  const { user } = useAuth();
+  const { user } = useUser();
 
   const { data: creditInfo, isLoading, error } = useQuery<CreditInfo>({
     queryKey: ["/api/credits/balance"],
@@ -85,7 +85,7 @@ export default function CreditsDisplay() {
             <Coins className="h-5 w-5" />
             Ghostli Credits
           </div>
-          <Badge variant={tier === 'lite' ? 'secondary' : tier === 'pro' ? 'default' : 'premium'}>
+          <Badge variant={tier === 'lite' ? 'secondary' : 'default'}>
             {tier.toUpperCase()}
           </Badge>
         </CardTitle>
