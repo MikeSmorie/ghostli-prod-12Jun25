@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Loader2, ShieldAlert, Users, Database, Terminal } from "lucide-react";
+import { Loader2, ShieldAlert, Users, Database, Terminal, CreditCard } from "lucide-react";
+import CreditsManagementPanel from "@/components/credits-management-panel";
 import { 
   Dialog,
   DialogContent,
@@ -254,6 +255,22 @@ export default function SupergodDashboard() {
             Refresh Status
           </Button>
         </CardFooter>
+      </Card>
+
+      {/* Credits Management Panel */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Credits Management
+          </CardTitle>
+          <CardDescription>
+            Manage user credits, exemptions, and global credit settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreditsManagementPanel />
+        </CardContent>
       </Card>
 
       {/* Command Terminal Card */}

@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { CreditsService } from "../services/credits";
 import { getContentGenerationCost, getFeatureCost } from "../utils/content-pricing";
+import { db } from "@db";
+import { users } from "@db/schema";
+import { eq } from "drizzle-orm";
 
 // Extend Request interface to include credit cost information
 declare global {
@@ -26,8 +29,35 @@ export const requireCredits = (operation: string = "content_generation") => {
         });
       }
 
+      // Check if user is credit exempt first
+      const userRecord = await db
+        .select({
+          creditExempt: users.creditExempt,
+          tier: users.role
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (userRecord.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found",
+          code: "USER_NOT_FOUND"
+        });
+      }
+
+      const user = userRecord[0];
+      
+      // If user is credit exempt, skip all credit checks
+      if (user.creditExempt) {
+        req.creditCost = 0; // Set to 0 so no credits are consumed
+        req.userTier = user.tier || "lite";
+        return next(); // Skip credit checks and proceed
+      }
+
       // Determine user tier (from subscription or default to lite)
-      const userTier = (req.user as any)?.tier || "lite";
+      const userTier = user.tier || "lite";
       req.userTier = userTier;
 
       // Calculate credit cost based on operation and tier
@@ -83,8 +113,8 @@ export const consumeCredits = async (req: Request, res: Response, next: NextFunc
     const creditCost = req.creditCost;
     const userTier = req.userTier || "lite";
 
-    if (!userId || !creditCost) {
-      return next(); // Skip if no user or cost defined
+    if (!userId || !creditCost || creditCost === 0) {
+      return next(); // Skip if no user, no cost defined, or user is credit exempt (cost = 0)
     }
 
     // Consume the credits
