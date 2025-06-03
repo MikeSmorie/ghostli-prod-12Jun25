@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { SubscriptionComparison } from "@/components/subscription-comparison";
+import CreditsDisplay from "@/components/credits-display";
 
 interface Plan {
   id: number;
@@ -140,6 +141,11 @@ export default function SubscriptionManagement() {
         <Button variant="outline" onClick={() => navigate("/")}>
           Back to App Central
         </Button>
+      </div>
+
+      {/* Credits Balance */}
+      <div className="mb-6">
+        <CreditsDisplay />
       </div>
 
       {/* Current Subscription Status */}
