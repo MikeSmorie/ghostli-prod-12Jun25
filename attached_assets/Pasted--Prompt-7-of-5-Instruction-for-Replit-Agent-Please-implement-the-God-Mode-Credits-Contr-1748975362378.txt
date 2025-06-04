@@ -1,0 +1,68 @@
+**Prompt 7 of 5**
+
+**Instruction for Replit Agent**:  
+Please implement the **God Mode Credits Control System** inside the existing **Supergod dashboard**.  
+
+This must include the following 3 features:
+
+---
+
+**1️⃣ Per-User Token Exemption Toggle**
+
+- Add new field to `users` table:  
+    - `credit_exempt` BOOLEAN DEFAULT false
+- In Supergod dashboard → add **Credits Management panel**:
+    - Display list of users (table or dropdown search)
+    - For each user, show **current credit_exempt status** (true/false)
+    - Provide a **toggle switch** to set credit_exempt ON/OFF
+    - When set to true → user will not consume credits when generating content.
+
+---
+
+**2️⃣ Manual Credit Allocation (Per User)**
+
+- In Credits Management panel:
+    - For each user, show **current credits balance**
+    - Provide **input field** and **Add Credits** button
+    - On submit:
+        - Add specified credits to `users.credits`
+        - Insert record into `credit_transactions`:
+            - transaction_type = ADJUSTMENT
+            - amount = (entered value)
+            - source = MANUAL
+            - tx_id = NULL
+- Show success/failure message after submission.
+
+---
+
+**3️⃣ Global Setting: Default First-Time Subscriber Credits**
+
+- Add new global config variable: `default_first_time_credits` (integer).
+- In Credits Management panel:
+    - Show current value of `default_first_time_credits`
+    - Provide **input field** to change value and Save button.
+    - When updated, new users registering or subscribing will be granted this amount of credits automatically.
+    - No retroactive change to existing users.
+
+---
+
+**UI Integration Notes**:
+
+✅ Place new **Credits Management panel** in existing Supergod dashboard.  
+✅ Clearly label all controls.  
+✅ Ensure responsive layout (desktop/mobile).  
+✅ Protect with Supergod permission checks.  
+
+---
+
+**Testing Checklist**:
+
+✅ Toggle `credit_exempt` ON → user should generate content without consuming credits.  
+✅ Toggle `credit_exempt` OFF → credits should be consumed normally.  
+✅ Manually add credits → balance updates, `credit_transactions` recorded.  
+✅ Change `default_first_time_credits` → new users get correct initial credits.  
+✅ UI behaves correctly across all devices.
+
+---
+
+Please implement this entire **God Mode Credits Control System** now.

@@ -73,9 +73,12 @@ export default function CreditsDisplay() {
     );
   }
 
-  const { balance, tier, creditsPerGeneration, generationsRemaining } = creditInfo;
-  const isLowCredits = balance < creditsPerGeneration * 3; // Warning when less than 3 generations left
-  const isCriticalCredits = balance < creditsPerGeneration; // Critical when can't afford 1 generation
+  const { balance = 0, tier, creditsPerGeneration, generationsRemaining } = creditInfo || {};
+  const userTier = tier || user.role || 'lite'; // Fallback to user role or 'lite' if tier is undefined
+  const creditCost = creditsPerGeneration || 10; // Default cost if undefined
+  const currentBalance = balance || 0; // Ensure balance is never undefined
+  const isLowCredits = currentBalance < creditCost * 3; // Warning when less than 3 generations left
+  const isCriticalCredits = currentBalance < creditCost; // Critical when can't afford 1 generation
 
   return (
     <Card className={`w-full ${isCriticalCredits ? 'border-destructive' : isLowCredits ? 'border-orange-500' : ''}`}>
@@ -85,8 +88,8 @@ export default function CreditsDisplay() {
             <Coins className="h-5 w-5" />
             Ghostli Credits
           </div>
-          <Badge variant={tier === 'lite' ? 'secondary' : 'default'}>
-            {tier.toUpperCase()}
+          <Badge variant={userTier === 'lite' ? 'secondary' : 'default'}>
+            {userTier.toUpperCase()}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -94,7 +97,7 @@ export default function CreditsDisplay() {
         {/* Current Balance */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold">{balance.toLocaleString()}</span>
+            <span className="text-2xl font-bold">{currentBalance.toLocaleString()}</span>
             <span className="text-sm text-muted-foreground">credits</span>
           </div>
           
@@ -103,11 +106,11 @@ export default function CreditsDisplay() {
             <div className="flex items-center justify-between text-sm">
               <span>Generations remaining:</span>
               <span className={`font-medium ${isCriticalCredits ? 'text-destructive' : isLowCredits ? 'text-orange-600' : 'text-green-600'}`}>
-                {generationsRemaining}
+                {generationsRemaining || Math.floor(currentBalance / creditCost)}
               </span>
             </div>
             <Progress 
-              value={Math.min(100, (generationsRemaining / 10) * 100)} 
+              value={Math.min(100, ((generationsRemaining || Math.floor(currentBalance / creditCost)) / 10) * 100)} 
               className="h-2"
             />
           </div>
@@ -119,7 +122,7 @@ export default function CreditsDisplay() {
             <Zap className="h-4 w-4" />
             <span className="text-sm font-medium">Cost per generation:</span>
           </div>
-          <span className="text-sm font-bold">{creditsPerGeneration} credits</span>
+          <span className="text-sm font-bold">{creditCost} credits</span>
         </div>
 
         {/* Low Credits Warning */}

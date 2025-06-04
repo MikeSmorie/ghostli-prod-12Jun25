@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { CreditsService } from "../services/credits";
 import { authenticateJWT } from "../auth";
+import { getContentGenerationCost } from "../utils/content-pricing";
 import { z } from "zod";
 
 const router = Router();
