@@ -14,8 +14,34 @@ router.get("/balance", authenticateJWT, async (req, res) => {
       return res.status(401).json({ error: "User not authenticated" });
     }
 
-    const credits = await CreditsService.getUserCredits(userId);
-    res.json({ credits });
+    // Get current balance
+    const balance = await CreditsService.getUserCredits(userId);
+    
+    // Get user tier (default to lite if not set)
+    const userTier = (req.user as any)?.role || "lite";
+    
+    // Calculate credits per generation for this tier
+    const creditsPerGeneration = getContentGenerationCost(userTier);
+    
+    // Calculate generations remaining
+    const generationsRemaining = Math.floor(balance / creditsPerGeneration);
+    
+    // Get recent transactions
+    const transactions = await CreditsService.getCreditHistory(userId, 5, 0);
+
+    res.json({
+      balance,
+      tier: userTier,
+      creditsPerGeneration,
+      generationsRemaining,
+      lastTransactions: transactions.map((tx: any) => ({
+        id: tx.id,
+        type: tx.transactionType,
+        amount: tx.amount,
+        source: tx.source,
+        createdAt: tx.createdAt
+      }))
+    });
   } catch (error) {
     console.error("Error fetching credit balance:", error);
     res.status(500).json({ error: "Failed to fetch credit balance" });
