@@ -268,7 +268,7 @@ export function NavigationControls() {
                           "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800",
                           navigationMenuTriggerStyle()
                         )}
-                        onClick={() => navigate("/god-mode-admin")}
+                        onClick={() => navigate("/supergod")}
                       >
                         <div className="flex items-center gap-2">
                           <ShieldAlert className="h-4 w-4 text-red-500" />

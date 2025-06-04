@@ -182,6 +182,7 @@ function Router() {
         
         {/* Supergod exclusive routes (high-security) */}
         <Route path="/supergod" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
+        <Route path="/supergod-dashboard" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
         <Route path="/god-mode" component={GodModeAdmin} />
         
         {/* Normal routes */}
