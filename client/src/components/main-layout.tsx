@@ -152,8 +152,17 @@ export function MainLayout({ children }: LayoutProps) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => (
+          <nav className="hidden md:flex items-center space-x-2">
+            <Button
+              variant={isActive("/") ? "default" : "ghost"}
+              onClick={() => handleNavigation("/")}
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              Dashboard
+            </Button>
+            
+            {navigationItems.slice(1).map((item) => (
               <Button
                 key={item.id}
                 variant={isActive(item.path) ? "default" : "ghost"}
@@ -196,8 +205,8 @@ export function MainLayout({ children }: LayoutProps) {
             
             {/* User Display and Controls */}
             {user && (
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 px-2 py-1 bg-muted rounded-md">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
                   <div className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-medium text-xs">
                       {user.username?.charAt(0).toUpperCase()}
@@ -212,7 +221,7 @@ export function MainLayout({ children }: LayoutProps) {
                 <Button
                   variant="ghost"
                   onClick={() => handleNavigation("/subscription")}
-                  className="hidden md:flex items-center gap-2"
+                  className="hidden lg:flex items-center gap-2"
                   title="Subscription"
                 >
                   <CreditCard className="h-4 w-4" />
@@ -220,12 +229,13 @@ export function MainLayout({ children }: LayoutProps) {
                 </Button>
                 
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
                   onClick={handleLogout}
+                  className="flex items-center gap-2"
                   title="Logout"
                 >
                   <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
               </div>
             )}
