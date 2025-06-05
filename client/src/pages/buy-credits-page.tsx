@@ -1,0 +1,344 @@
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  CreditCard, 
+  Zap, 
+  Crown, 
+  ArrowLeft,
+  DollarSign,
+  Gift,
+  Star,
+  Sparkles
+} from "lucide-react";
+import { useLocation } from "wouter";
+import { useUser } from "@/hooks/use-user";
+import CreditsDisplay from "@/components/credits-display";
+
+// Import the actual PayPal component
+import PayPalButton from "@/components/PayPalButton";
+
+interface CreditPackage {
+  id: string;
+  name: string;
+  credits: number;
+  price: number;
+  bonus: number;
+  popular?: boolean;
+  badge?: string;
+}
+
+export default function BuyCreditsPage() {
+  const [, navigate] = useLocation();
+  const [customAmount, setCustomAmount] = useState("");
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const { user } = useUser();
+
+  const creditPackages: CreditPackage[] = [
+    {
+      id: "starter",
+      name: "Starter Pack",
+      credits: 500,
+      price: 5,
+      bonus: 0
+    },
+    {
+      id: "popular",
+      name: "Popular Pack",
+      credits: 1000,
+      price: 10,
+      bonus: 200,
+      popular: true,
+      badge: "Best Value"
+    },
+    {
+      id: "pro",
+      name: "Pro Pack",
+      credits: 2500,
+      price: 25,
+      bonus: 750,
+      badge: "Most Credits"
+    },
+    {
+      id: "enterprise",
+      name: "Enterprise Pack",
+      credits: 5000,
+      price: 50,
+      bonus: 2000,
+      badge: "Maximum Savings"
+    }
+  ];
+
+  const handlePackageSelect = (packageId: string) => {
+    setSelectedPackage(packageId);
+    setCustomAmount("");
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value);
+    setSelectedPackage(null);
+  };
+
+  const getPaymentAmount = () => {
+    if (selectedPackage) {
+      const pkg = creditPackages.find(p => p.id === selectedPackage);
+      return pkg?.price.toString() || "0";
+    }
+    return customAmount || "0";
+  };
+
+  const getCreditsForAmount = (amount: number) => {
+    return amount * 100; // 100 credits per $1
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold">Buy Credits</h1>
+          </div>
+        </div>
+        <CreditsDisplay />
+      </div>
+
+      {/* PRO Benefits Banner */}
+      <Card className="mb-8 bg-gradient-to-r from-purple-50 to-primary/5 border-purple-200">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Crown className="h-6 w-6 text-purple-600" />
+            <h2 className="text-xl font-semibold">Unlock PRO Features</h2>
+            <Badge className="bg-purple-600 text-white">Auto Upgrade</Badge>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Purchase any amount of credits and automatically unlock PRO tier with 20% better credit efficiency and access to all premium features.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              <span>Clone Me Feature</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4 text-purple-600" />
+              <span>AI Detection Shield</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-purple-600" />
+              <span>20% Credit Efficiency</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Gift className="h-4 w-4 text-purple-600" />
+              <span>Priority Support</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Credit Packages */}
+        <div className="lg:col-span-2">
+          <h3 className="text-lg font-semibold mb-4">Choose a Credit Package</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {creditPackages.map((pkg) => (
+              <Card 
+                key={pkg.id}
+                className={`cursor-pointer transition-all ${
+                  selectedPackage === pkg.id 
+                    ? 'ring-2 ring-primary border-primary' 
+                    : 'hover:shadow-md'
+                } ${pkg.popular ? 'relative border-purple-200' : ''}`}
+                onClick={() => handlePackageSelect(pkg.id)}
+              >
+                {pkg.popular && (
+                  <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-purple-600 text-white">
+                    {pkg.badge}
+                  </Badge>
+                )}
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                    {pkg.badge && !pkg.popular && (
+                      <Badge variant="outline">{pkg.badge}</Badge>
+                    )}
+                  </div>
+                  <CardDescription className="text-2xl font-bold text-primary">
+                    ${pkg.price}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Base Credits:</span>
+                      <span className="font-medium">{pkg.credits.toLocaleString()}</span>
+                    </div>
+                    {pkg.bonus > 0 && (
+                      <div className="flex items-center justify-between text-green-600">
+                        <span className="text-sm">Bonus Credits:</span>
+                        <span className="font-medium">+{pkg.bonus.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <hr />
+                    <div className="flex items-center justify-between font-semibold">
+                      <span>Total Credits:</span>
+                      <span className="text-primary">{(pkg.credits + pkg.bonus).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Custom Amount */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Custom Amount</CardTitle>
+              <CardDescription>
+                Enter any amount from $1 to $1000 (100 credits per $1)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="custom-amount">Amount (USD)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="custom-amount"
+                      type="number"
+                      min="1"
+                      max="1000"
+                      step="0.01"
+                      placeholder="Enter amount"
+                      value={customAmount}
+                      onChange={(e) => handleCustomAmountChange(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                {customAmount && parseFloat(customAmount) > 0 && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span>You'll receive:</span>
+                      <span className="font-semibold text-primary">
+                        {getCreditsForAmount(parseFloat(customAmount)).toLocaleString()} credits
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Payment Section */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedPackage ? (
+                (() => {
+                  const pkg = creditPackages.find(p => p.id === selectedPackage);
+                  return pkg ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Package:</span>
+                        <span className="font-medium">{pkg.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Price:</span>
+                        <span className="font-medium">${pkg.price}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Credits:</span>
+                        <span className="font-medium">{(pkg.credits + pkg.bonus).toLocaleString()}</span>
+                      </div>
+                      <hr />
+                      <div className="flex justify-between font-semibold">
+                        <span>Total:</span>
+                        <span className="text-primary">${pkg.price}</span>
+                      </div>
+                    </div>
+                  ) : null;
+                })()
+              ) : customAmount && parseFloat(customAmount) > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span>Amount:</span>
+                    <span className="font-medium">${parseFloat(customAmount).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Credits:</span>
+                    <span className="font-medium">{getCreditsForAmount(parseFloat(customAmount)).toLocaleString()}</span>
+                  </div>
+                  <hr />
+                  <div className="flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span className="text-primary">${parseFloat(customAmount).toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  Select a package or enter a custom amount
+                </div>
+              )}
+
+              {(selectedPackage || (customAmount && parseFloat(customAmount) > 0)) && (
+                <div className="space-y-3 pt-4">
+                  <PayPalButton 
+                    amount={getPaymentAmount()}
+                    currency="USD"
+                    intent="CAPTURE"
+                  />
+                  
+                  <div className="text-xs text-muted-foreground text-center">
+                    Secure payment processed by PayPal
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Benefits Reminder */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">What You Get</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-purple-600" />
+                <span>Instant PRO tier upgrade</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-green-600" />
+                <span>20% better credit efficiency</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                <span>Access to all premium features</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-orange-600" />
+                <span>Priority customer support</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
