@@ -128,6 +128,19 @@ export function registerRoutes(app: Express) {
   app.use("/api/payment", paymentRoutes);
   app.use("/api/subscription-notification", subscriptionNotificationsRoutes);
   
+  // PayPal direct routes for live testing
+  app.get("/api/paypal/setup", async (req, res) => {
+    await loadPaypalDefault(req, res);
+  });
+
+  app.post("/api/paypal/order", async (req, res) => {
+    await createPaypalOrder(req, res);
+  });
+
+  app.post("/api/paypal/order/:orderID/capture", async (req, res) => {
+    await capturePaypalOrder(req, res);
+  });
+  
   // PayPal integration routes
   app.use("/paypal", paypalRoutes);
   
