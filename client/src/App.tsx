@@ -12,32 +12,21 @@ import EmergencyLoginPage from "@/pages/emergency-login-page";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminCommunications from "@/pages/admin-communications";
 import LogsDashboard from "@/pages/admin/logs-dashboard";
-import AppCentral from "@/pages/app-central";
-import ModuleView from "@/pages/module-view";
-import MockDashboard from "@/pages/mock-dashboard";
-import MockSettings from "@/pages/mock-settings";
+import UnifiedDashboard from "@/pages/unified-dashboard";
 import SubscriptionPage from "./pages/subscription-page";
 import SubscriptionManager from "@/pages/subscription-manager";
 import SubscriptionFeatures from "@/pages/subscription-features";
 import SubscriptionManagement from "@/pages/subscription-management";
 import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
-import FeatureFlagsDemoPage from "@/pages/feature-flags-demo";
-import ContentGenerationPage from "./pages/content-generation";
 import ContentGeneratorNewPage from "./pages/content-generator-new";
 import CloneMePage from "./pages/clone-me";
 import { useUser } from "@/hooks/use-user";
-import { Loader2, LogOut } from "lucide-react";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { FontSizeControls } from "@/components/font-size-controls";
-import { NavigationControls } from "@/components/navigation-controls";
-import { AdminToggle } from "@/components/admin-toggle";
-import { AIAssistant } from "@/components/ai-assistant";
-import { NotificationCenter } from "@/components/notification-center";
-import { AdminProvider } from "@/contexts/admin-context";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { MainLayout } from "@/components/main-layout";
+import { AdminProvider } from "@/contexts/admin-context";
 import SubscriptionPlans from "@/pages/subscription-plans";
 import CryptoDashboard from "@/pages/crypto-dashboard";
 
@@ -139,72 +128,41 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen">
-      <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
-        <div className="container flex h-16 items-center px-4">
-          <NavigationControls />
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="flex items-center gap-2">
-              <AIAssistant />
-              <span className="text-sm font-medium hidden md:inline">AI Assistant</span>
-            </div>
-            <NotificationCenter />
-            <span className="text-sm font-medium">
-              {user.username}
-            </span>
-            {user.role === "supergod" && (
-              <span className="text-sm font-bold text-red-500">
-                👑 Super-God Mode Active
-              </span>
-            )}
-            <FontSizeControls />
-            <ThemeToggle />
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
-            </Button>
-          </div>
-        </div>
-      </nav>
-
+    <MainLayout>
       <Switch>
-        {/* Admin routes */}
+        {/* Admin routes - hidden from main navigation */}
         <Route path="/admin" component={() => <ProtectedAdminRoute component={AdminDashboard} />} />
         <Route path="/admin/logs" component={() => <ProtectedAdminRoute component={LogsDashboard} />} />
         <Route path="/admin/subscription-manager" component={() => <ProtectedAdminRoute component={SubscriptionManager} />} />
         <Route path="/admin/communications" component={() => <ProtectedAdminRoute component={AdminCommunications} />} />
         <Route path="/admin/feature-flags" component={() => <ProtectedAdminRoute component={FeatureFlagsManagerPage} />} />
         
-        {/* Supergod exclusive routes (high-security) */}
+        {/* Supergod exclusive routes (high-security) - hidden from main navigation */}
         <Route path="/supergod" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
         <Route path="/supergod-dashboard" component={() => <ProtectedSupergodRoute component={SupergodDashboard} />} />
         <Route path="/god-mode" component={GodModeAdmin} />
         
-        {/* Normal routes */}
-        <Route path="/" component={AppCentral} />
-        <Route path="/dashboard" component={AppCentral} />
-        <Route path="/module/:id" component={ModuleView} />
-        <Route path="/mock-dashboard" component={MockDashboard} />
-        <Route path="/mock-settings" component={MockSettings} />
+        {/* Main public routes with unified dashboard */}
+        <Route path="/" component={UnifiedDashboard} />
+        <Route path="/dashboard" component={UnifiedDashboard} />
+        <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
+        <Route path="/clone-me" component={CloneMePage} />
         <Route path="/subscription" component={SubscriptionManagement} />
         <Route path="/subscription/plans" component={SubscriptionPlans} />
         <Route path="/subscription/features" component={SubscriptionFeatures} />
         <Route path="/subscription/pro" component={SubscriptionPage} />
-        <Route path="/features-demo" component={FeatureFlagsDemoPage} />
-        <Route path="/content-generation" component={ContentGenerationPage} />
-        <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
-        <Route path="/clone-me" component={CloneMePage} />
         <Route path="/crypto-dashboard" component={CryptoDashboard} />
+        
+        {/* Placeholder routes for new features */}
+        <Route path="/analytics" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Performance Analytics</h1><p>Coming soon...</p></div>} />
+        <Route path="/ai-shield" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">AI Detection Shield</h1><p>Coming soon...</p></div>} />
+        <Route path="/export" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Output & Export</h1><p>Coming soon...</p></div>} />
+        <Route path="/settings" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Settings</h1><p>Coming soon...</p></div>} />
+        <Route path="/profile" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Profile</h1><p>Coming soon...</p></div>} />
+        
         <Route component={NotFound} />
       </Switch>
-
-      <AdminToggle />
-    </div>
+    </MainLayout>
   );
 }
 
