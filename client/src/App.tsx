@@ -21,6 +21,7 @@ import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
 import ContentGeneratorNewPage from "./pages/content-generator-new";
 import CloneMePage from "./pages/clone-me";
 import FundPage from "./pages/fund-page";
+import AIShieldPage from "./pages/ai-shield-page";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -132,10 +133,10 @@ function Router() {
         <Route path="/subscription/pro" component={SubscriptionPage} />
         <Route path="/crypto-dashboard" component={CryptoDashboard} />
         <Route path="/fund" component={FundPage} />
+        <Route path="/ai-shield" component={AIShieldPage} />
         
         {/* Placeholder routes for new features */}
         <Route path="/analytics" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Performance Analytics</h1><p>Coming soon...</p></div>} />
-        <Route path="/ai-shield" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">AI Detection Shield</h1><p>Coming soon...</p></div>} />
         <Route path="/export" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Output & Export</h1><p>Coming soon...</p></div>} />
         <Route path="/settings" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Settings</h1><p>Coming soon...</p></div>} />
         <Route path="/profile" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Profile</h1><p>Coming soon...</p></div>} />

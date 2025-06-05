@@ -599,6 +599,15 @@ export default function ContentGeneratorNew() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-foreground">Generated Content</h2>
                   <div className="flex items-center space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setLocation(`/ai-shield?content=${encodeURIComponent(generatedContent)}`)}
+                      className="bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                    >
+                      <Shield className="h-4 w-4 mr-1" />
+                      Run AI Detection Shield
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleReset}>
                       <RefreshCw className="h-4 w-4 mr-1" />
                       Reset
