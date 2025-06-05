@@ -121,7 +121,7 @@ export default function UnifiedDashboard() {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Welcome to GhostliAI
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
           Transform your content creation with AI-powered writing that bypasses detection systems
         </p>
       </div>
@@ -188,7 +188,7 @@ export default function UnifiedDashboard() {
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-2">Quick Actions</h2>
-          <p className="text-muted-foreground">Choose an action to get started with GhostliAI</p>
+          <p className="text-foreground/70">Choose an action to get started with GhostliAI</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -218,7 +218,7 @@ export default function UnifiedDashboard() {
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription className="text-center mt-2 text-sm">
+                  <CardDescription className="text-center mt-2 text-sm text-foreground/75">
                     {action.description}
                   </CardDescription>
                 </div>
@@ -255,7 +255,7 @@ export default function UnifiedDashboard() {
             <CardTitle>Anti-AI Detection</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-muted-foreground">
+            <p className="text-foreground/75">
               Advanced humanization technology that bypasses AI detection systems
             </p>
           </CardContent>
@@ -267,7 +267,7 @@ export default function UnifiedDashboard() {
             <CardTitle>Performance Analytics</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-muted-foreground">
+            <p className="text-foreground/75">
               Track your content performance and optimization metrics
             </p>
           </CardContent>
@@ -279,7 +279,7 @@ export default function UnifiedDashboard() {
             <CardTitle>Writing Style Cloning</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
-            <p className="text-muted-foreground">
+            <p className="text-foreground/75">
               Generate content that matches your unique voice and style
             </p>
           </CardContent>

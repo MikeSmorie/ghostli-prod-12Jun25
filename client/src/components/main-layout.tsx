@@ -146,13 +146,13 @@ export function MainLayout({ children }: LayoutProps) {
           <div className="flex items-center gap-4 ml-auto">
             <div className="flex items-center gap-2">
               <AIAssistant />
-              <span className="text-sm font-medium hidden md:inline">AI Assistant</span>
+              <span className="text-sm font-medium text-foreground hidden md:inline">AI Assistant</span>
             </div>
             
             <NotificationCenter />
             
             {user && (
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-foreground">
                 {user.username}
               </span>
             )}
