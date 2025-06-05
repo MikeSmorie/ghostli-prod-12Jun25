@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AIAssistant } from "@/components/ai-assistant";
 import { NotificationCenter } from "@/components/notification-center";
+import { FontSizeControls } from "@/components/font-size-controls";
 import CreditsDisplay from "@/components/credits-display";
 import { 
   FileText, 
@@ -101,17 +102,25 @@ export function MainLayout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
       });
-      navigate("/auth");
+      
+      if (response.ok) {
+        toast({
+          title: "Logged out successfully",
+          description: "You have been logged out of your account.",
+        });
+        window.location.href = "/auth";
+      } else {
+        throw new Error("Logout failed");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to logout",
       });
     }
   };
@@ -182,15 +191,29 @@ export function MainLayout({ children }: LayoutProps) {
               <span className="text-sm font-medium hidden sm:inline">AI Assistant</span>
             </div>
             
+            <FontSizeControls />
             <ThemeToggle />
             
-            {/* User Menu */}
+            {/* User Display and Controls */}
             {user && (
               <div className="flex items-center gap-2">
+                <div className="hidden sm:flex items-center gap-2 px-2 py-1 bg-muted rounded-md">
+                  <div className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium text-xs">
+                      {user.username?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium">{user.username}</span>
+                  {user.role === "supergod" && (
+                    <span className="text-xs font-bold text-red-500">👑 Super-God</span>
+                  )}
+                </div>
+                
                 <Button
                   variant="ghost"
                   onClick={() => handleNavigation("/subscription")}
-                  className="hidden sm:flex items-center gap-2"
+                  className="hidden md:flex items-center gap-2"
+                  title="Subscription"
                 >
                   <CreditCard className="h-4 w-4" />
                   <span className="capitalize">{user.role}</span>

@@ -1,56 +1,106 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Minus } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Type, Minus, Plus } from "lucide-react";
 
 export function FontSizeControls() {
   const [fontSize, setFontSize] = useState(16);
 
-  const adjustFontSize = (change: number) => {
-    const newSize = fontSize + change;
-    if (newSize >= 12 && newSize <= 24) {
-      setFontSize(newSize);
-      document.documentElement.style.fontSize = `${newSize}px`;
+  useEffect(() => {
+    // Load saved font size from localStorage
+    const savedSize = localStorage.getItem('ghostli-font-size');
+    if (savedSize) {
+      const size = parseInt(savedSize);
+      setFontSize(size);
+      document.documentElement.style.fontSize = `${size}px`;
     }
+  }, []);
+
+  const updateFontSize = (newSize: number) => {
+    const clampedSize = Math.max(12, Math.min(24, newSize));
+    setFontSize(clampedSize);
+    document.documentElement.style.fontSize = `${clampedSize}px`;
+    localStorage.setItem('ghostli-font-size', clampedSize.toString());
+  };
+
+  const resetFontSize = () => {
+    updateFontSize(16);
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" title="Font Size">
+          <Type className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64" align="end">
+        <div className="space-y-4">
+          <h4 className="font-semibold">Font Size</h4>
+          
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               size="icon"
-              onClick={() => adjustFontSize(-1)}
-              className="h-8 w-8"
+              onClick={() => updateFontSize(fontSize - 1)}
+              disabled={fontSize <= 12}
             >
               <Minus className="h-4 w-4" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Decrease font size</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
+            
+            <span className="text-sm font-medium">{fontSize}px</span>
+            
             <Button
               variant="outline"
               size="icon"
-              onClick={() => adjustFontSize(1)}
-              className="h-8 w-8"
+              onClick={() => updateFontSize(fontSize + 1)}
+              disabled={fontSize >= 24}
             >
               <Plus className="h-4 w-4" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Increase font size</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateFontSize(14)}
+              className="w-full"
+            >
+              Small (14px)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateFontSize(16)}
+              className="w-full"
+            >
+              Medium (16px)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => updateFontSize(18)}
+              className="w-full"
+            >
+              Large (18px)
+            </Button>
+          </div>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={resetFontSize}
+            className="w-full"
+          >
+            Reset to Default
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -117,7 +117,7 @@ export default function UnifiedDashboard() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Welcome Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-4 mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Welcome to GhostliAI
         </h1>
@@ -185,23 +185,27 @@ export default function UnifiedDashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-2">Quick Actions</h2>
+          <p className="text-muted-foreground">Choose an action to get started with GhostliAI</p>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {quickActions.map((action) => (
             <Card 
               key={action.id}
               className={`cursor-pointer transition-all hover:shadow-lg hover:scale-105 ${
-                action.primary ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                action.primary ? 'ring-2 ring-blue-500 ring-opacity-50 shadow-md' : ''
               }`}
               onClick={() => navigate(action.path)}
             >
-              <CardHeader className="text-center space-y-4">
+              <CardHeader className="text-center space-y-4 pb-4">
                 <div className="flex justify-center">
                   {action.icon}
                 </div>
                 <div>
-                  <CardTitle className="flex items-center justify-center gap-2">
+                  <CardTitle className="flex items-center justify-center gap-2 text-lg">
                     {action.title}
                     {action.badge && (
                       <Badge variant="secondary" className="text-xs">
@@ -214,7 +218,7 @@ export default function UnifiedDashboard() {
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription className="text-center mt-2">
+                  <CardDescription className="text-center mt-2 text-sm">
                     {action.description}
                   </CardDescription>
                 </div>
@@ -223,6 +227,7 @@ export default function UnifiedDashboard() {
                 <Button 
                   className="w-full"
                   variant={action.primary ? "default" : "outline"}
+                  size="lg"
                 >
                   {action.primary ? (
                     <>
