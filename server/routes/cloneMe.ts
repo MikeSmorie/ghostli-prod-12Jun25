@@ -5,6 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { z } from "zod";
 import OpenAI from "openai";
 import { authenticateJWT } from "../auth";
+import { SubscriptionService } from "../subscription-service";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -398,11 +399,29 @@ function calculateMaxTokens(wordCount: number): number {
  * @param app Express application
  */
 export function registerCloneMeRoutes(app: Express): void {
-  // Middleware to check for feature access
+  // Middleware to check for Clone Me feature access (PRO tier required)
   const checkCloneMeAccess = async (req: Request, res: Response, next: Function) => {
-    // Check if user is premium or has access to the Clone Me feature
-    // This is a simplified version - in a real app, you'd check against user subscription
-    return next();
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    // Check if user is credit exempt (supergod) or has PRO tier access
+    if (req.user.creditExempt) {
+      return next();
+    }
+
+    const hasAccess = await SubscriptionService.checkFeatureAccess(userId, 'hasCloneMe');
+    if (hasAccess) {
+      return next();
+    }
+
+    return res.status(403).json({ 
+      error: "Clone Me feature requires Pro subscription",
+      feature: "hasCloneMe",
+      upgradeRequired: true,
+      message: "Upgrade to Pro to create personalized writing styles"
+    });
   };
 
   /**

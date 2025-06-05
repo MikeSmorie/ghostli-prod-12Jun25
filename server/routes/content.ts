@@ -11,6 +11,7 @@ import { checkPlagiarism, rephraseContent, addCitations } from "../services/plag
 import { isFeatureEnabled } from "../services/featureFlags";
 import { requireCredits, consumeCredits, addCreditInfoToResponse } from "../middleware/credits-guard";
 import { authenticateJWT } from "../auth";
+import { SubscriptionService } from "../subscription-service";
 import OpenAI from "openai";
 
 // Schema for keyword frequency requirements
@@ -253,6 +254,41 @@ export function registerContentRoutes(app: Express) {
       
       // Extract validated parameters
       const params: ContentGenerationParams = validationResult.data;
+      
+      // Check subscription tier limits for word count
+      const userId = req.user?.id;
+      if (userId && !req.user?.creditExempt) {
+        const tier = await SubscriptionService.getUserTier(userId);
+        const limits = SubscriptionService.getTierLimits(tier);
+        
+        // Enforce word count limits
+        if (params.wordCount > limits.maxWordCount) {
+          return res.status(403).json({
+            error: `Word count exceeds ${tier} tier limit`,
+            maxWordCount: limits.maxWordCount,
+            requestedWordCount: params.wordCount,
+            tier,
+            upgradeRequired: tier === "FREE"
+          });
+        }
+        
+        // Check if detailed brief features are being used (PRO only)
+        const usingDetailedFeatures = params.keywordFrequencies?.length > 0 || 
+                                     params.requiredSources?.length > 0 ||
+                                     params.strictToneAdherence ||
+                                     params.technicalAccuracy ||
+                                     params.legalCompliance;
+        
+        if (usingDetailedFeatures && !limits.hasDetailedBrief) {
+          return res.status(403).json({
+            error: "Detailed Brief features require Pro subscription",
+            feature: "hasDetailedBrief",
+            tier,
+            upgradeRequired: true,
+            message: "Upgrade to Pro to access advanced content generation options"
+          });
+        }
+      }
       
       // Check for API key
       if (!process.env.OPENAI_API_KEY) {

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { CreditsService } from "../services/credits";
 import { getContentGenerationCost, getFeatureCost } from "../utils/content-pricing";
+import { SubscriptionService } from "../subscription-service";
 import { db } from "@db";
 import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
