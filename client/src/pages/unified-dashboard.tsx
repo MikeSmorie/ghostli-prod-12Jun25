@@ -290,7 +290,7 @@ export default function UnifiedDashboard() {
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <CardContent className="text-center py-8">
           <h3 className="text-2xl font-bold mb-4">Ready to Create Amazing Content?</h3>
-          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+          <p className="text-foreground/75 mb-6 max-w-2xl mx-auto">
             Start generating AI-powered content that passes detection systems and engages your audience.
           </p>
           <Button 
