@@ -6,6 +6,9 @@ import { relations } from "drizzle-orm";
 export const userRoleEnum = z.enum(["user", "admin", "supergod"]);
 export type UserRole = z.infer<typeof userRoleEnum>;
 
+export const subscriptionTierEnum = z.enum(["FREE", "PRO"]);
+export type SubscriptionTier = z.infer<typeof subscriptionTierEnum>;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
@@ -14,6 +17,7 @@ export const users = pgTable("users", {
   email: text("email").unique(),
   credits: integer("credits").default(0).notNull(),
   creditExempt: boolean("credit_exempt").default(false).notNull(),
+  subscriptionTier: text("subscription_tier").notNull().default("FREE"),
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login")
 });

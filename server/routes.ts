@@ -17,6 +17,7 @@ import { registerSupergodRoutes } from "./routes/supergod";
 import superAdminRoutes from "./routes/super-admin";
 import { logError } from "./utils/logger";
 import { requireRole, requireSupergod } from "./middleware/rbac";
+import { SubscriptionService } from "./subscription-service";
 import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault } from "./paypal";
 import paypalRoutes from "./routes/paypal";
 import cryptoRoutes from "./routes/crypto";
@@ -35,6 +36,45 @@ const requireAuth = (req: any, res: any, next: any) => {
 const requireAdmin = (req: any, res: any, next: any) => {
   if (req.isAuthenticated() && req.user.role === "admin") return next();
   res.status(403).json({ message: "Not authorized" });
+};
+
+// Subscription tier middleware
+const requireProTier = async (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  
+  const tier = await SubscriptionService.getUserTier(req.user.id);
+  if (tier === "PRO" || req.user.creditExempt) {
+    return next();
+  }
+  
+  res.status(403).json({ 
+    message: "Pro subscription required", 
+    tier: "FREE",
+    upgradeRequired: true 
+  });
+};
+
+const requireFeatureAccess = (feature: string) => async (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  
+  if (req.user.creditExempt) {
+    return next();
+  }
+  
+  const hasAccess = await SubscriptionService.checkFeatureAccess(req.user.id, feature as any);
+  if (hasAccess) {
+    return next();
+  }
+  
+  res.status(403).json({ 
+    message: `${feature} requires Pro subscription`, 
+    feature,
+    upgradeRequired: true 
+  });
 };
 
 // Global error handler
@@ -107,6 +147,43 @@ export function registerRoutes(app: Express) {
   
   // Register super admin routes for God Mode
   app.use("/api/super-admin", superAdminRoutes);
+
+  // Subscription tier API routes
+  app.get("/api/user/tier", requireAuth, async (req: any, res: any) => {
+    try {
+      const tier = await SubscriptionService.getUserTier(req.user.id);
+      const limits = SubscriptionService.getTierLimits(tier);
+      
+      res.json({
+        tier,
+        limits,
+        user: {
+          id: req.user.id,
+          username: req.user.username,
+          credits: req.user.credits,
+          creditExempt: req.user.creditExempt
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to get tier info", error: error.message });
+    }
+  });
+
+  // Auto-upgrade tier when credits are purchased
+  app.post("/api/user/upgrade-tier", requireAuth, async (req: any, res: any) => {
+    try {
+      await SubscriptionService.autoUpgradeIfEligible(req.user.id);
+      const newTier = await SubscriptionService.getUserTier(req.user.id);
+      
+      res.json({
+        success: true,
+        tier: newTier,
+        message: newTier === "PRO" ? "Upgraded to Pro!" : "No upgrade needed"
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to upgrade tier", error: error.message });
+    }
+  });
 
   // Error handler must be last
   app.use(errorHandler);
