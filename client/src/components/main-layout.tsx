@@ -127,7 +127,7 @@ export function MainLayout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Original Omega-style Header */}
+      {/* Top Header - Omega Login Style */}
       <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
         <div className="container flex h-16 items-center px-4">
           {/* Left Side - Home/Dashboard Button */}
@@ -138,36 +138,11 @@ export function MainLayout({ children }: LayoutProps) {
               className="flex items-center gap-2"
             >
               <Home className="h-4 w-4" />
-              <span className="font-medium">Dashboard</span>
+              <span className="font-medium">Home</span>
             </Button>
           </div>
 
-          {/* Center - Navigation Items */}
-          <div className="hidden md:flex items-center justify-center flex-1 gap-2">
-            {navigationItems.slice(1).map((item) => (
-              <Button
-                key={item.id}
-                variant={isActive(item.path) ? "default" : "ghost"}
-                onClick={() => handleNavigation(item.path)}
-                className="flex items-center gap-2"
-              >
-                {item.icon}
-                {item.label}
-                {item.badge && (
-                  <Badge variant="secondary" className="ml-1 text-xs">
-                    {item.badge}
-                  </Badge>
-                )}
-                {item.premium && (
-                  <Badge className="ml-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500">
-                    Pro
-                  </Badge>
-                )}
-              </Button>
-            ))}
-          </div>
-
-          {/* Right Side - Controls and User */}
+          {/* Right Side - User Controls */}
           <div className="flex items-center gap-4 ml-auto">
             <div className="flex items-center gap-2">
               <AIAssistant />
@@ -202,6 +177,36 @@ export function MainLayout({ children }: LayoutProps) {
                 <span>Logout</span>
               </Button>
             )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Sub-Header - Application Navigation */}
+      <nav className="border-b bg-muted/30">
+        <div className="container flex h-12 items-center px-4">
+          <div className="flex items-center gap-2">
+            {navigationItems.slice(1).map((item) => (
+              <Button
+                key={item.id}
+                variant={isActive(item.path) ? "default" : "ghost"}
+                onClick={() => handleNavigation(item.path)}
+                className="flex items-center gap-2 h-8"
+                size="sm"
+              >
+                {item.icon}
+                {item.label}
+                {item.badge && (
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {item.badge}
+                  </Badge>
+                )}
+                {item.premium && (
+                  <Badge className="ml-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500">
+                    Pro
+                  </Badge>
+                )}
+              </Button>
+            ))}
           </div>
         </div>
       </nav>
