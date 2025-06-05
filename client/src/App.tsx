@@ -83,9 +83,7 @@ function ProtectedSupergodRoute({ component: Component }: { component: React.Com
 }
 
 function Router() {
-  const { user, isLoading, logout } = useUser();
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const { user, isLoading } = useUser();
 
   if (isLoading) {
     return (
@@ -94,26 +92,6 @@ function Router() {
       </div>
     );
   }
-
-  const handleLogout = async () => {
-    try {
-      const result = await logout();
-      if (!result.ok) {
-        throw new Error(result.message);
-      }
-      toast({
-        title: "Logged out successfully",
-        description: "See you next time!",
-      });
-      navigate("/");
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
 
   if (!user) {
     return (

@@ -1,232 +1,130 @@
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Bot, Sparkles, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import { useState } from "react";
-import { useUser } from "@/hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
-import { nanoid } from "nanoid";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Bot, Send, Loader2 } from "lucide-react";
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
 
 export function AIAssistant() {
-  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "1",
+      role: "assistant",
+      content: "Hello! I'm your AI assistant. I can help you with content generation, answer questions about GhostliAI features, and provide writing tips. How can I assist you today?",
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [responseId] = useState(() => nanoid());
-  const [response, setResponse] = useState<{
-    answer: string;
-    suggestions?: string[];
-    actions?: Array<{ type: string; label: string; endpoint: string }>;
-    metrics?: {
-      errorRate?: string;
-      activeUsers?: number;
-      systemHealth?: {
-        status: string;
-        details: Record<string, unknown>;
-      };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+      timestamp: new Date()
     };
-  } | null>(null);
 
-  const { user } = useUser();
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
     setIsLoading(true);
 
-    try {
-      // Check for user authentication
-      if (!user || !user.id) {
-        throw new Error("You must be logged in to use the AI Assistant");
-      }
-
-      const requestBody = {
-        type: user.role === "admin" ? "admin" : "user",
-        query,
-        userId: user.id
+    // Simulate AI response
+    setTimeout(() => {
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: "I understand your question. This is a demo response. In the full version, I would provide personalized assistance based on your needs and GhostliAI's capabilities.",
+        timestamp: new Date()
       };
-
-      console.log("AI Assistant Request:", requestBody);
-
-      const res = await fetch("/api/ai/query", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody)
-      });
-
-      // Check for HTTP errors
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error("AI Assistant Error:", errorText);
-        throw new Error(errorText || "Failed to get response from AI assistant");
-      }
-
-      // Parse response data with error handling
-      const textData = await res.text();
-      
-      try {
-        const jsonData = JSON.parse(textData);
-        console.log("AI Assistant Response:", jsonData);
-        setResponse(jsonData);
-      } catch (parseError) {
-        console.error("JSON Parse Error:", parseError, "Raw response:", textData);
-        throw new Error("Failed to parse AI assistant response");
-      }
-    } catch (error) {
-      console.error("AI Assistant Error:", error);
-      toast({
-        variant: "destructive",
-        title: "AI Assistant Error",
-        description: error instanceof Error ? error.message : "Failed to process query"
-      });
-    } finally {
+      setMessages(prev => [...prev, assistantMessage]);
       setIsLoading(false);
-    }
+    }, 1500);
   };
 
-  const submitFeedback = async (helpful: boolean) => {
-    try {
-      const res = await fetch("/api/ai/feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          responseId,
-          userId: user?.id,
-          rating: helpful ? 5 : 1,
-          helpful
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
-
-      toast({
-        title: "Thank you for your feedback!",
-        description: "Your input helps us improve the AI assistant."
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to submit feedback"
-      });
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8 relative" aria-label="AI Assistant">
-          {user?.role === "admin" ? <Sparkles className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-          <span className="absolute -top-1 -right-1 bg-blue-500 rounded-full w-2 h-2"></span>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bot className="h-5 w-5" />
+          <Badge className="absolute -top-1 -right-1 h-3 w-3 p-0 bg-green-500" />
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {user?.role === "admin" ? "God Mode AI Assistant" : "AI Assistant"}
-          </DialogTitle>
-          <DialogDescription>
-            {user?.role === "admin" 
-              ? "Get insights about the system architecture and technical details"
-              : "Get help with using the application"}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            placeholder="Ask me anything..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={isLoading}
-          />
-          <Button type="submit" disabled={isLoading || !query.trim()}>
-            {isLoading ? "Processing..." : "Ask"}
-          </Button>
-        </form>
-
-        {response && (
-          <div className="mt-4 space-y-4">
-            <div className="prose prose-sm dark:prose-invert">
-              {response.answer.split('\n').map((line, i) => (
-                <p key={i} className="mb-2">{line}</p>
-              ))}
-            </div>
-
-            {response.metrics && (
-              <div className="bg-muted p-3 rounded-md">
-                <h4 className="font-medium mb-2">System Metrics</h4>
-                <div className="space-y-1 text-sm">
-                  {response.metrics.errorRate && (
-                    <p>Error Rate: {response.metrics.errorRate}</p>
-                  )}
-                  {response.metrics.activeUsers && (
-                    <p>Active Users: {response.metrics.activeUsers}</p>
-                  )}
-                  {response.metrics.systemHealth && (
-                    <div>
-                      <p>System Health: {response.metrics.systemHealth.status}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {response.suggestions && response.suggestions.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Suggestions:</h4>
-                <ul className="list-disc pl-4 text-sm space-y-1">
-                  {response.suggestions.map((suggestion, i) => (
-                    <li key={i}>{suggestion}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {response.actions && response.actions.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Quick Actions:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {response.actions.map((action, i) => (
-                    <Button
-                      key={i}
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        // Handle action click based on type
-                        if (action.type === "view") {
-                          window.location.href = action.endpoint;
-                        }
-                      }}
-                    >
-                      {action.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 mt-4">
-              <span className="text-sm text-muted-foreground mr-2">Was this helpful?</span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => submitFeedback(true)}
-              >
-                <ThumbsUp className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => submitFeedback(false)}
-              >
-                <ThumbsDown className="h-4 w-4" />
-              </Button>
-            </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold">AI Assistant</h4>
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              Online
+            </Badge>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`p-3 rounded-lg ${
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground ml-4"
+                    : "bg-muted mr-4"
+                }`}
+              >
+                <p className="text-sm">{message.content}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {message.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex items-center gap-2 p-3 bg-muted mr-4 rounded-lg">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <p className="text-sm">AI is thinking...</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Textarea
+              placeholder="Ask me anything about GhostliAI..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="min-h-[60px] resize-none"
+              disabled={isLoading}
+            />
+            <Button 
+              onClick={sendMessage}
+              disabled={!input.trim() || isLoading}
+              size="icon"
+              className="self-end"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
