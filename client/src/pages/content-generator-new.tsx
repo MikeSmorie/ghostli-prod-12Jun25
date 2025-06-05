@@ -583,7 +583,7 @@ export default function ContentGeneratorNew() {
         <div className="mt-8 text-center">
           <Button 
             variant="outline" 
-            onClick={() => navigate("/")}
+            onClick={() => setLocation("/")}
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
