@@ -353,6 +353,10 @@ export function registerContentRoutes(app: Express) {
         // Consume credits after successful generation
         await consumeCredits(req, res, () => {});
 
+        // Log content generation event for launch monitoring
+        const { LaunchMonitoring } = await import('../utils/launch-monitoring');
+        LaunchMonitoring.contentGenerated(userId!, result.metadata.wordCount);
+
         // Return the generated content with plagiarism results if applicable
         return res.json({
           content: result.content,

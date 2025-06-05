@@ -23,6 +23,10 @@ router.post('/run', requireAuth, async (req, res) => {
 
     const result = await AIDetectionService.runDetectionShield(userId, content);
     
+    // Log AI detection event for launch monitoring
+    const { LaunchMonitoring } = await import('../utils/launch-monitoring');
+    LaunchMonitoring.aiDetectionRun(userId, content.length);
+    
     res.json({
       success: true,
       data: result

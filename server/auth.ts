@@ -218,6 +218,10 @@ export function setupAuth(app: Express) {
       // Grant default first-time credits to new user
       await UserRegistrationService.handleNewUserRegistration(newUser.id);
 
+      // Log user registration event for launch monitoring
+      const { LaunchMonitoring } = await import('./utils/launch-monitoring');
+      LaunchMonitoring.userRegistered(newUser.id, newUser.username);
+
       // Generate JWT token
       const token = crypto.generateToken({
         id: newUser.id,
