@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, HelpCircle, Settings, Zap, RefreshCw, Copy, ArrowLeft, Shield } from "lucide-react";
+import { Loader2, HelpCircle, Settings, Zap, RefreshCw, Copy, ArrowLeft, Shield, AlertTriangle } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -68,6 +68,11 @@ export default function ContentGeneratorNew() {
   const [antiAIDetection, setAntiAIDetection] = useState(true);
   const [usePersonalStyle, setUsePersonalStyle] = useState(false);
   
+  // Humanization parameters (1% default as per original design)
+  const [typosPercentage, setTyposPercentage] = useState(1.0);
+  const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState(1.0);
+  const [humanMisErrorsPercentage, setHumanMisErrorsPercentage] = useState(1.0);
+  
   // Result state
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
@@ -77,7 +82,16 @@ export default function ContentGeneratorNew() {
   const { mutate, isPending: isLoading } = useMutation<GenerationResult, Error, GenerationParams>({
     mutationFn: async (params) => {
       setProgress(10);
-      const response = await apiRequest("POST", "/api/content/generate", params);
+      
+      // Include humanization parameters in the request
+      const requestParams = {
+        ...params,
+        typosPercentage,
+        grammarMistakesPercentage,
+        humanMisErrorsPercentage
+      };
+      
+      const response = await apiRequest("POST", "/api/content/generate", requestParams);
       setProgress(50);
       const result = await response.json();
       setProgress(100);
@@ -532,6 +546,85 @@ export default function ContentGeneratorNew() {
                           {antiAIDetection ? "Enabled" : "Disabled"}
                         </Badge>
                       </div>
+
+                      {/* Humanization Parameters */}
+                      {antiAIDetection && (
+                        <div className="mt-4 p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <div className="flex items-center mb-3">
+                            <h4 className="text-sm font-bold text-purple-800 dark:text-purple-400">Humanization Parameters</h4>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="ml-2 cursor-help">
+                                    <HelpCircle className="h-4 w-4 text-purple-600 dark:text-purple-500" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[300px] p-3">
+                                  <p className="mb-2"><strong>Humanization Parameters:</strong></p>
+                                  <p className="mb-1">These sliders control the percentage of human-like imperfections added to make content undetectable:</p>
+                                  <p className="mb-1"><strong>Typos:</strong> Spelling mistakes and typographical errors</p>
+                                  <p className="mb-1"><strong>Grammar Mistakes:</strong> Minor grammatical issues like missing commas, wrong tense</p>
+                                  <p className="mb-1"><strong>Human Mis-errors:</strong> Natural inconsistencies like punctuation variations</p>
+                                  <p className="text-xs italic">Higher percentages make content more human-like but may impact readability.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Typos Slider */}
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <Label htmlFor="typos" className="text-xs">Typos: {typosPercentage.toFixed(1)}%</Label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <Slider
+                                id="typos"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={[typosPercentage]}
+                                onValueChange={(value) => setTyposPercentage(value[0])}
+                                className="py-1"
+                              />
+                            </div>
+                            
+                            {/* Grammar Mistakes Slider */}
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <Label htmlFor="grammar" className="text-xs">Grammar Mistakes: {grammarMistakesPercentage.toFixed(1)}%</Label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <Slider
+                                id="grammar"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={[grammarMistakesPercentage]}
+                                onValueChange={(value) => setGrammarMistakesPercentage(value[0])}
+                                className="py-1"
+                              />
+                            </div>
+                            
+                            {/* Human Mis-errors Slider */}
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <Label htmlFor="human-errors" className="text-xs">Human Mis-errors: {humanMisErrorsPercentage.toFixed(1)}%</Label>
+                                <span className="text-xs text-gray-500">0-5%</span>
+                              </div>
+                              <Slider
+                                id="human-errors"
+                                min={0}
+                                max={5}
+                                step={0.1}
+                                value={[humanMisErrorsPercentage]}
+                                onValueChange={(value) => setHumanMisErrorsPercentage(value[0])}
+                                className="py-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
