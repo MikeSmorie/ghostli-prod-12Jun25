@@ -8,6 +8,7 @@ import { AIAssistant } from "@/components/ai-assistant";
 import { NotificationCenter } from "@/components/notification-center";
 import { FontSizeControls } from "@/components/font-size-controls";
 import CreditsDisplay from "@/components/credits-display";
+import Footer from "@/components/footer";
 import { 
   FileText, 
   Sparkles, 
@@ -126,7 +127,7 @@ export function MainLayout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Top Header - Omega Login Style */}
       <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
         <div className="container flex h-16 items-center px-4">
@@ -257,6 +258,9 @@ export function MainLayout({ children }: LayoutProps) {
       <main className="flex-1">
         {children}
       </main>
+
+      {/* Global Footer */}
+      <Footer />
     </div>
   );
 }
