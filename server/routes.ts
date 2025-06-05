@@ -159,6 +159,21 @@ export function registerRoutes(app: Express) {
   // AI Detection Shield routes
   app.use("/api/ai-detection", aiDetectionRoutes);
   
+  // Launch metrics endpoint for monitoring
+  app.get("/api/supergod/launch-metrics", requireSupergod, async (req: any, res: any) => {
+    try {
+      const { LaunchMonitoring } = await import('./utils/launch-monitoring');
+      const metrics = await LaunchMonitoring.getMetrics();
+      res.json(metrics);
+    } catch (error: any) {
+      console.error("Launch metrics error:", error);
+      res.status(500).json({ 
+        error: "Failed to retrieve metrics",
+        message: error.message 
+      });
+    }
+  });
+
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
   

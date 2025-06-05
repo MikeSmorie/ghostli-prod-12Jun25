@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import CreditsDisplay from "@/components/credits-display";
 import { WriteInMyStyle } from "../components/write-in-my-style";
 import { useLocation } from "wouter";
+import { EarlyFeedbackPopup } from "@/components/early-feedback-popup";
 
 // Types
 interface GenerationParams {
@@ -77,6 +78,10 @@ export default function ContentGeneratorNew() {
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<GenerationMetadata | null>(null);
   const [progress, setProgress] = useState(0);
+  
+  // Generation tracking for feedback popup
+  const [generationCount, setGenerationCount] = useState(0);
+  const [showFeedbackPopup, setShowFeedbackPopup] = useState(false);
 
   // Content generation mutation
   const { mutate, isPending: isLoading } = useMutation<GenerationResult, Error, GenerationParams>({
@@ -101,6 +106,15 @@ export default function ContentGeneratorNew() {
       setGeneratedContent(data.content);
       setMetadata(data.metadata);
       setProgress(0);
+      
+      // Track generation count and show feedback popup after 3 generations
+      const newCount = generationCount + 1;
+      setGenerationCount(newCount);
+      
+      if (newCount === 3) {
+        setShowFeedbackPopup(true);
+      }
+      
       toast({
         title: "Content Generated Successfully",
         description: `Generated ${data.metadata.wordCount} words in ${formatDuration(data.metadata.generationTime)}`,
@@ -736,6 +750,13 @@ export default function ContentGeneratorNew() {
           </Card>
         )}
       </div>
+      
+      {/* Early Feedback Popup */}
+      <EarlyFeedbackPopup 
+        isOpen={showFeedbackPopup}
+        onClose={() => setShowFeedbackPopup(false)}
+        generationCount={generationCount}
+      />
     </div>
   );
 }
