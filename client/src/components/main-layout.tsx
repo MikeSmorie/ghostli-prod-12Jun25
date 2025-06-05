@@ -127,189 +127,126 @@ export function MainLayout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          {/* Logo and Mobile Menu */}
+      {/* Original Omega-style Header */}
+      <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
+        <div className="container flex h-16 items-center px-4">
+          {/* Left Side - Home/Dashboard Button */}
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">G</span>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold">GhostliAI</h1>
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-2">
-            <Button
-              variant={isActive("/") ? "default" : "ghost"}
               onClick={() => handleNavigation("/")}
               className="flex items-center gap-2"
             >
               <Home className="h-4 w-4" />
-              Dashboard
+              <span className="font-medium">Dashboard</span>
             </Button>
-            
+          </div>
+
+          {/* Center - Navigation Items */}
+          <div className="hidden md:flex items-center justify-center flex-1 gap-2">
             {navigationItems.slice(1).map((item) => (
               <Button
                 key={item.id}
                 variant={isActive(item.path) ? "default" : "ghost"}
-                className="relative"
                 onClick={() => handleNavigation(item.path)}
+                className="flex items-center gap-2"
               >
-                <span className="flex items-center gap-2">
-                  {item.icon}
-                  {item.label}
-                  {item.badge && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
-                      {item.badge}
-                    </Badge>
-                  )}
-                  {item.premium && (
-                    <Badge className="ml-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500">
-                      Pro
-                    </Badge>
-                  )}
-                </span>
+                {item.icon}
+                {item.label}
+                {item.badge && (
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {item.badge}
+                  </Badge>
+                )}
+                {item.premium && (
+                  <Badge className="ml-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500">
+                    Pro
+                  </Badge>
+                )}
               </Button>
             ))}
-          </nav>
+          </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-2">
-            <div className="hidden lg:block">
-              <CreditsDisplay />
+          {/* Right Side - Controls and User */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="flex items-center gap-2">
+              <AIAssistant />
+              <span className="text-sm font-medium hidden md:inline">AI Assistant</span>
             </div>
             
             <NotificationCenter />
             
-            <div className="flex items-center gap-1">
-              <AIAssistant />
-              <span className="text-sm font-medium hidden sm:inline">AI Assistant</span>
-            </div>
+            {user && (
+              <span className="text-sm font-medium">
+                {user.username}
+              </span>
+            )}
+            
+            {user && user.role === "supergod" && (
+              <span className="text-sm font-bold text-red-500">
+                👑 Super-God Mode Active
+              </span>
+            )}
             
             <FontSizeControls />
             <ThemeToggle />
             
-            {/* User Display and Controls */}
             {user && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1 bg-muted rounded-md">
-                  <div className="h-6 w-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-medium text-xs">
-                      {user.username?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium">{user.username}</span>
-                  {user.role === "supergod" && (
-                    <span className="text-xs font-bold text-red-500">👑 Super-God</span>
-                  )}
-                </div>
-                
-                <Button
-                  variant="ghost"
-                  onClick={() => handleNavigation("/subscription")}
-                  className="hidden lg:flex items-center gap-2"
-                  title="Subscription"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  <span className="capitalize">{user.role}</span>
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="flex items-center gap-2"
-                  title="Logout"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">Logout</span>
-                </Button>
-              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </Button>
             )}
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t bg-background">
-            <div className="container py-4 space-y-2">
-              {navigationItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={isActive(item.path) ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => handleNavigation(item.path)}
-                >
-                  <span className="flex items-center gap-3 w-full">
-                    {item.icon}
-                    <div className="flex-1 text-left">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{item.label}</span>
-                        <div className="flex items-center gap-1">
-                          {item.badge && (
-                            <Badge variant="outline" className="text-xs">
-                              {item.badge}
-                            </Badge>
-                          )}
-                          {item.premium && (
-                            <Badge className="text-xs bg-gradient-to-r from-purple-500 to-pink-500">
-                              Pro
-                            </Badge>
-                          )}
-                        </div>
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t bg-background">
+          <div className="container py-4 space-y-2">
+            {navigationItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={isActive(item.path) ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleNavigation(item.path)}
+              >
+                <span className="flex items-center gap-3 w-full">
+                  {item.icon}
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{item.label}</span>
+                      <div className="flex items-center gap-1">
+                        {item.badge && (
+                          <Badge variant="outline" className="text-xs">
+                            {item.badge}
+                          </Badge>
+                        )}
+                        {item.premium && (
+                          <Badge className="text-xs bg-gradient-to-r from-purple-500 to-pink-500">
+                            Pro
+                          </Badge>
+                        )}
                       </div>
-                      {item.description && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {item.description}
-                        </p>
-                      )}
                     </div>
-                  </span>
-                </Button>
-              ))}
-              
-              <div className="pt-4 border-t">
-                <div className="lg:hidden mb-3">
-                  <CreditsDisplay />
-                </div>
-                
-                <div className="flex flex-col gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleNavigation("/subscription")}
-                    className="justify-start"
-                  >
-                    <CreditCard className="h-4 w-4 mr-3" />
-                    Subscription ({user?.role})
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleNavigation("/settings")}
-                    className="justify-start"
-                  >
-                    <Settings className="h-4 w-4 mr-3" />
-                    Settings
-                  </Button>
-                </div>
-              </div>
-            </div>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </span>
+              </Button>
+            ))}
           </div>
-        )}
-      </header>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1">
