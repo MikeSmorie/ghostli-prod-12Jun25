@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, HelpCircle, Settings, Zap, RefreshCw, Copy, ArrowLeft } from "lucide-react";
+import { Loader2, HelpCircle, Settings, Zap, RefreshCw, Copy, ArrowLeft, Shield } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,

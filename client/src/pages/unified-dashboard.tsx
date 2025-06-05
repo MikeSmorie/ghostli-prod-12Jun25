@@ -73,9 +73,10 @@ export default function UnifiedDashboard() {
     {
       id: "ai-shield",
       title: "AI Detection Shield",
-      description: "Analyze and improve content humanization",
-      icon: <Shield className="h-8 w-8 text-orange-600" />,
-      path: "/ai-shield"
+      description: "Scan content through multiple AI detectors",
+      icon: <Shield className="h-8 w-8 text-blue-600" />,
+      path: "/ai-shield",
+      premium: true
     }
   ];
 
