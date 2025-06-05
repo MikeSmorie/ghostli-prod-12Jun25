@@ -20,6 +20,7 @@ import SubscriptionManagement from "@/pages/subscription-management";
 import FeatureFlagsManagerPage from "@/pages/feature-flags-manager";
 import ContentGeneratorNewPage from "./pages/content-generator-new";
 import CloneMePage from "./pages/clone-me";
+import FundPage from "./pages/fund-page";
 import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -130,6 +131,7 @@ function Router() {
         <Route path="/subscription/features" component={SubscriptionFeatures} />
         <Route path="/subscription/pro" component={SubscriptionPage} />
         <Route path="/crypto-dashboard" component={CryptoDashboard} />
+        <Route path="/fund" component={FundPage} />
         
         {/* Placeholder routes for new features */}
         <Route path="/analytics" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Performance Analytics</h1><p>Coming soon...</p></div>} />

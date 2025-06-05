@@ -150,6 +150,17 @@ export function MainLayout({ children }: LayoutProps) {
               <span className="text-sm font-medium text-foreground hidden md:inline">AI Assistant</span>
             </div>
             
+            {/* Buy Credits Button */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleNavigation("/buy-credits")}
+              className="bg-gradient-to-r from-purple-600 to-primary hover:from-purple-700 hover:to-primary/90 text-white hidden sm:flex"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Buy Credits
+            </Button>
+            
             <NotificationCenter />
             
             {user && (
