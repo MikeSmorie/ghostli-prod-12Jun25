@@ -136,6 +136,7 @@ function Router() {
         <Route path="/fund" component={FundPage} />
         <Route path="/ai-shield" component={AIShieldPage} />
         <Route path="/buy-credits" component={BuyCreditsPage} />
+        <Route path="/auth" component={AuthPage} />
         
         {/* Placeholder routes for new features */}
         <Route path="/analytics" component={() => <div className="container mx-auto p-6"><h1 className="text-2xl font-bold">Performance Analytics</h1><p>Coming soon...</p></div>} />
