@@ -62,7 +62,7 @@ router.post("/order/:orderID/capture", async (req, res) => {
             
             // Log first purchase event for launch monitoring
             const { LaunchMonitoring } = await import('../utils/launch-monitoring');
-            LaunchMonitoring.firstPurchase(userId, usdAmount, 'paypal');
+            LaunchMonitoring.firstPurchase(userId, usdAmount, creditsToAdd);
             
             console.log(`PayPal payment completed: Added ${creditsToAdd} credits to user ${userId} and upgraded to PRO`);
           }
