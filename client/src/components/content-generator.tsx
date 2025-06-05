@@ -429,13 +429,43 @@ export default function ContentGenerator() {
   
   // Export functions
   const exportAsPDF = async () => {
-    if (!generatedContent || !contentRef.current) return;
+    if (!generatedContent) {
+      toast({
+        title: "No Content",
+        description: "Please generate content first before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       setExportLoading('pdf');
-      const element = contentRef.current;
-      const canvas = await html2canvas(element);
-      const data = canvas.toDataURL('image/png');
+      
+      // Create a temporary div with the content for PDF export
+      const tempDiv = document.createElement('div');
+      tempDiv.style.padding = '20px';
+      tempDiv.style.fontFamily = 'Arial, sans-serif';
+      tempDiv.style.lineHeight = '1.6';
+      tempDiv.style.color = '#000';
+      tempDiv.style.backgroundColor = '#fff';
+      tempDiv.style.width = '210mm'; // A4 width
+      tempDiv.style.minHeight = '297mm'; // A4 height
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.innerHTML = generatedContent.replace(/\n/g, '<br />');
+      
+      document.body.appendChild(tempDiv);
+      
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      document.body.removeChild(tempDiv);
+      
+      const imgData = canvas.toDataURL('image/png');
       
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -443,11 +473,23 @@ export default function ContentGenerator() {
         format: 'a4'
       });
       
-      const imgProps = pdf.getImageProperties(data);
+      const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
-      pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Handle multiple pages if content is too long
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let position = 0;
+      
+      while (position < pdfHeight) {
+        pdf.addImage(imgData, 'PNG', 0, -position, pdfWidth, pdfHeight);
+        position += pageHeight;
+        
+        if (position < pdfHeight) {
+          pdf.addPage();
+        }
+      }
+      
       pdf.save('generated-content.pdf');
       
       toast({
@@ -458,10 +500,10 @@ export default function ContentGenerator() {
     } catch (error) {
       toast({
         title: "Export Failed",
-        description: "Failed to export content as PDF.",
+        description: "Failed to export content as PDF. Please try again.",
         variant: "destructive",
       });
-      console.error(error);
+      console.error('PDF Export Error:', error);
     } finally {
       setExportLoading(null);
     }
