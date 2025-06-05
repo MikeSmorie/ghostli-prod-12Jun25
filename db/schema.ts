@@ -454,6 +454,38 @@ export type SelectAnnouncementRecipient = typeof announcementRecipients.$inferSe
 export type InsertAnnouncementResponse = typeof announcementResponses.$inferInsert;
 export type SelectAnnouncementResponse = typeof announcementResponses.$inferSelect;
 
+// AI Detection Shield tables
+export const aiDetectionShieldRuns = pgTable("ai_detection_shield_runs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  contentText: text("content_text").notNull(),
+  gptZeroScore: decimal("gptzero_score", { precision: 5, scale: 2 }),
+  gptZeroResult: text("gptzero_result"), // "PASS" or "FAIL"
+  zeroGptScore: decimal("zerogpt_score", { precision: 5, scale: 2 }),
+  zeroGptResult: text("zerogpt_result"), // "PASS" or "FAIL"
+  copyleaksScore: decimal("copyleaks_score", { precision: 5, scale: 2 }),
+  copyleaksResult: text("copyleaks_result"), // "PASS" or "FAIL"
+  overallResult: text("overall_result").notNull(), // "PASS" or "FAIL"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  detectionMetadata: jsonb("detection_metadata") // Store full API responses
+});
+
+// Relations for AI Detection Shield
+export const aiDetectionShieldRunsRelations = relations(aiDetectionShieldRuns, ({ one }) => ({
+  user: one(users, {
+    fields: [aiDetectionShieldRuns.userId],
+    references: [users.id]
+  })
+}));
+
+// Schemas for AI Detection Shield
+export const insertAiDetectionShieldRunSchema = createInsertSchema(aiDetectionShieldRuns);
+export const selectAiDetectionShieldRunSchema = createSelectSchema(aiDetectionShieldRuns);
+
+// Types for AI Detection Shield
+export type InsertAiDetectionShieldRun = typeof aiDetectionShieldRuns.$inferInsert;
+export type SelectAiDetectionShieldRun = typeof aiDetectionShieldRuns.$inferSelect;
+
 // Schemas for validation
 export const insertUserSchema = createInsertSchema(users, {
   role: userRoleEnum.default("user"),

@@ -26,6 +26,7 @@ import creditsTestRoutes from "./routes/credits-test";
 import creditsConsumptionTestRoutes from "./routes/credits-consumption-test";
 import creditsUIRoutes from "./routes/credits-ui";
 import supergodCreditsRoutes from "./routes/supergod-credits";
+import aiDetectionRoutes from "./routes/ai-detection";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -141,6 +142,9 @@ export function registerRoutes(app: Express) {
   
   // Supergod credits management routes
   app.use("/api/supergod/credits", supergodCreditsRoutes);
+  
+  // AI Detection Shield routes
+  app.use("/api/ai-detection", aiDetectionRoutes);
   
   // Register supergod-only routes
   registerSupergodRoutes(app); // These routes have their own middleware checks
