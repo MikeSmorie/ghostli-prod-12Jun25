@@ -57,18 +57,21 @@ export const requireCredits = (operation: string = "content_generation") => {
         return next(); // Skip credit checks and proceed
       }
 
-      // Determine user tier (from subscription or default to lite)
-      const userTier = user.tier || "lite";
-      req.userTier = userTier;
+      // Get subscription tier and apply credit multipliers
+      const subscriptionTier = await SubscriptionService.getUserTier(userId);
+      req.userTier = subscriptionTier;
 
-      // Calculate credit cost based on operation and tier
-      let creditCost: number;
+      // Calculate base credit cost
+      let baseCreditCost: number;
       
       if (operation === "content_generation") {
-        creditCost = getContentGenerationCost(userTier);
+        baseCreditCost = getContentGenerationCost(user.tier || "user");
       } else {
-        creditCost = getFeatureCost(operation);
+        baseCreditCost = getFeatureCost(operation);
       }
+
+      // Apply subscription tier discount (PRO gets 20% discount)
+      let creditCost = SubscriptionService.calculateCreditCost(subscriptionTier, baseCreditCost);
 
       // Allow override from request body for bulk operations
       if (req.body.quantity && typeof req.body.quantity === "number") {

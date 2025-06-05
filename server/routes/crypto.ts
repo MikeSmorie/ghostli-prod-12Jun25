@@ -30,6 +30,7 @@ import {
 import { SubscriptionNotificationService } from '../services/subscriptionNotifications';
 import crypto from 'crypto';
 import { CreditsService } from '../services/credits';
+import { SubscriptionService } from '../subscription-service';
 import { convertUsdToCredits } from '../utils/credits-config';
 
 const router = Router();
@@ -500,7 +501,10 @@ router.post('/webhook/payment-notification', async (req: Request, res: Response)
           payload.transactionHash
         );
         
-        console.log(`Crypto payment confirmed: Added ${creditsToAdd} credits to user ${wallet.userId} for ${payload.cryptoType} transaction ${payload.transactionHash}`);
+        // Automatically upgrade user to PRO tier when they purchase credits
+        await SubscriptionService.upgradeToPro(wallet.userId);
+        
+        console.log(`Crypto payment confirmed: Added ${creditsToAdd} credits to user ${wallet.userId} for ${payload.cryptoType} transaction ${payload.transactionHash} and upgraded to PRO`);
       }
     }
     

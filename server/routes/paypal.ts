@@ -4,6 +4,7 @@ import { db } from "@db";
 import { userSubscriptions, payments } from "@db/schema";
 import { and, eq } from "drizzle-orm";
 import { CreditsService } from "../services/credits";
+import { SubscriptionService } from "../subscription-service";
 import { convertUsdToCredits } from "../utils/credits-config";
 
 const router = express.Router();
@@ -56,7 +57,10 @@ router.post("/order/:orderID/capture", async (req, res) => {
               paypalResponseData.id
             );
             
-            console.log(`PayPal payment completed: Added ${creditsToAdd} credits to user ${userId}`);
+            // Automatically upgrade user to PRO tier when they purchase credits
+            await SubscriptionService.upgradeToPro(userId);
+            
+            console.log(`PayPal payment completed: Added ${creditsToAdd} credits to user ${userId} and upgraded to PRO`);
           }
         }
         
