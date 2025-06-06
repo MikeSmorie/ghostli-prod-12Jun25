@@ -171,31 +171,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
+      // Clear the JWT token from localStorage FIRST to prevent race conditions
+      localStorage.removeItem('auth_token');
+      
+      // Clear user state immediately
+      setUser(null);
+      
+      // Clear all query cache data
+      if (window.queryClient) {
+        window.queryClient.clear();
+      }
+      
+      // Call backend logout endpoint
       const response = await fetch('/api/logout', {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       });
       
       if (!response.ok) {
-        throw new Error('Logout failed');
+        console.warn('Backend logout failed, but user was logged out locally');
       }
-      
-      // Clear the JWT token from localStorage
-      localStorage.removeItem('auth_token');
-      
-      // Invalidate user data in the cache
-      if (window.queryClient) {
-        window.queryClient.invalidateQueries({
-          queryKey: ["/api/user"],
-        });
-        window.queryClient.setQueryData(["/api/user"], null);
-      }
-      
-      setUser(null);
       
       toast({
         title: "Logged out",
         description: "You have been successfully logged out."
       });
+      
+      // Force a page reload to ensure clean state
+      window.location.href = '/auth';
     } catch (err) {
       setError(err as Error);
       toast({

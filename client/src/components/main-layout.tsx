@@ -102,27 +102,8 @@ export function MainLayout({ children }: LayoutProps) {
   };
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      
-      if (response.ok) {
-        toast({
-          title: "Logged out successfully",
-          description: "You have been logged out of your account.",
-        });
-        window.location.href = "/auth";
-      } else {
-        throw new Error("Logout failed");
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to logout",
-      });
+    if (logout) {
+      await logout();
     }
   };
 
