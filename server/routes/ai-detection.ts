@@ -1,14 +1,9 @@
 import express from 'express';
 import { AIDetectionService } from '../services/ai-detection-service';
+import { authenticateJWT } from '../auth';
 import { z } from 'zod';
 
 const router = express.Router();
-
-// Auth middleware
-const requireAuth = (req: any, res: any, next: any) => {
-  if (req.isAuthenticated()) return next();
-  res.status(401).json({ message: "Not authenticated" });
-};
 
 // Schema for detection request
 const runDetectionSchema = z.object({
@@ -16,10 +11,10 @@ const runDetectionSchema = z.object({
 });
 
 // Run AI detection shield on content
-router.post('/run', requireAuth, async (req, res) => {
+router.post('/run', authenticateJWT, async (req, res) => {
   try {
     const { content } = runDetectionSchema.parse(req.body);
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const result = await AIDetectionService.runDetectionShield(userId, content);
     
@@ -41,9 +36,9 @@ router.post('/run', requireAuth, async (req, res) => {
 });
 
 // Get user's detection history
-router.get('/history', requireAuth, async (req, res) => {
+router.get('/history', authenticateJWT, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user!.id;
     const history = await AIDetectionService.getUserDetectionHistory(userId);
     
     res.json({
@@ -60,10 +55,10 @@ router.get('/history', requireAuth, async (req, res) => {
 });
 
 // Get specific detection run
-router.get('/run/:runId', requireAuth, async (req, res) => {
+router.get('/run/:runId', authenticateJWT, async (req, res) => {
   try {
     const runId = parseInt(req.params.runId);
-    const userId = req.user.id;
+    const userId = req.user!.id;
     
     if (isNaN(runId)) {
       return res.status(400).json({
@@ -95,10 +90,10 @@ router.get('/run/:runId', requireAuth, async (req, res) => {
 });
 
 // Re-run detection on existing content
-router.post('/rerun/:runId', requireAuth, async (req, res) => {
+router.post('/rerun/:runId', authenticateJWT, async (req, res) => {
   try {
     const runId = parseInt(req.params.runId);
-    const userId = req.user.id;
+    const userId = req.user!.id;
     
     if (isNaN(runId)) {
       return res.status(400).json({
