@@ -115,6 +115,17 @@ export default function BuyCreditsPage() {
     return amount * 100; // 100 credits per $1
   };
 
+  const getTotalCredits = () => {
+    if (selectedPackage) {
+      const pkg = creditPackages.find(p => p.id === selectedPackage);
+      return pkg ? pkg.credits + pkg.bonus : 0;
+    }
+    if (customAmount && parseFloat(customAmount) > 0) {
+      return getCreditsForAmount(parseFloat(customAmount));
+    }
+    return 0;
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       {/* Header */}
