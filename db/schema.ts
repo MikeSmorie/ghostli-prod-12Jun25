@@ -498,6 +498,59 @@ export const selectUserSchema = createSelectSchema(users);
 export const insertActivityLogSchema = createInsertSchema(activityLogs);
 export const selectActivityLogSchema = createSelectSchema(activityLogs);
 
+// API Usage Monitoring for Production
+export const apiUsageLogs = pgTable("api_usage_logs", {
+  id: serial("id").primaryKey(),
+  service: text("service").notNull(), // 'openai', 'paypal', 'other'
+  endpoint: text("endpoint").notNull(),
+  userId: integer("user_id").references(() => users.id),
+  tokens: integer("tokens"),
+  cost: decimal("cost", { precision: 10, scale: 4 }),
+  responseTime: integer("response_time").notNull(), // milliseconds
+  status: text("status").notNull(), // 'success', 'error'
+  errorMessage: text("error_message"),
+  timestamp: timestamp("timestamp").defaultNow().notNull()
+});
+
+// Cost tracking for budget monitoring
+export const costTracking = pgTable("cost_tracking", {
+  id: serial("id").primaryKey(),
+  service: text("service").notNull(),
+  date: timestamp("date").defaultNow().notNull(),
+  totalCost: decimal("total_cost", { precision: 10, scale: 4 }).default("0").notNull(),
+  totalTokens: integer("total_tokens").default(0).notNull(),
+  totalRequests: integer("total_requests").default(0).notNull(),
+  avgResponseTime: integer("avg_response_time").default(0).notNull()
+});
+
+// Performance metrics for monitoring
+export const performanceMetrics = pgTable("performance_metrics", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull(),
+  avgResponseTime: integer("avg_response_time").notNull(),
+  maxResponseTime: integer("max_response_time").notNull(),
+  minResponseTime: integer("min_response_time").notNull(),
+  requestCount: integer("request_count").notNull(),
+  errorCount: integer("error_count").default(0).notNull(),
+  date: timestamp("date").defaultNow().notNull()
+});
+
+// Relations for monitoring tables
+export const apiUsageLogsRelations = relations(apiUsageLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [apiUsageLogs.userId],
+    references: [users.id]
+  })
+}));
+
+// Schemas for API monitoring
+export const insertApiUsageLogSchema = createInsertSchema(apiUsageLogs);
+export const selectApiUsageLogSchema = createSelectSchema(apiUsageLogs);
+export const insertCostTrackingSchema = createInsertSchema(costTracking);
+export const selectCostTrackingSchema = createSelectSchema(costTracking);
+export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics);
+export const selectPerformanceMetricsSchema = createSelectSchema(performanceMetrics);
+
 export const insertCreditTransactionSchema = createInsertSchema(creditTransactions, {
   transactionType: transactionTypeEnum,
 });
