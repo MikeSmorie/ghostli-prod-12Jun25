@@ -72,6 +72,8 @@ export default function PayPalButton({
   };
 
   useEffect(() => {
+    let isComponentMounted = true;
+
     const loadPayPalSDK = async () => {
       try {
         if (!(window as any).paypal) {
@@ -80,10 +82,16 @@ export default function PayPalButton({
             ? "https://www.paypal.com/web-sdk/v6/core"
             : "https://www.sandbox.paypal.com/web-sdk/v6/core";
           script.async = true;
-          script.onload = () => initPayPal();
+          script.onload = () => {
+            if (isComponentMounted) {
+              initPayPal();
+            }
+          };
           document.body.appendChild(script);
         } else {
-          await initPayPal();
+          if (isComponentMounted) {
+            initPayPal();
+          }
         }
       } catch (e) {
         console.error("Failed to load PayPal SDK", e);
@@ -91,7 +99,11 @@ export default function PayPalButton({
     };
 
     loadPayPalSDK();
-  }, []);
+
+    return () => {
+      isComponentMounted = false;
+    };
+  }, [amount, currency, intent]);
   const initPayPal = async () => {
     try {
       const clientToken: string = await fetch("/api/paypal/setup")
@@ -99,6 +111,7 @@ export default function PayPalButton({
         .then((data) => {
           return data.clientToken;
         });
+
       const sdkInstance = await (window as any).paypal.createInstance({
         clientToken,
         components: ["paypal-payments"],
