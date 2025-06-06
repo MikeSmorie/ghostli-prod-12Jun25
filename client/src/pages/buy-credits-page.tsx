@@ -385,11 +385,11 @@ export default function BuyCreditsPage() {
                         intent="CAPTURE"
                       />
                       
-                      {/* Alternative completion option for SMS verification issues */}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                          <Info className="h-3 w-3" />
-                          <span>Having issues with PayPal SMS verification?</span>
+                      {/* Alternative completion option for PayPal login issues */}
+                      <div className="space-y-3 mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-yellow-800 justify-center font-medium">
+                          <Info className="h-4 w-4" />
+                          <span>PayPal Login Issues? Use Direct Completion</span>
                         </div>
                         <PaymentTestButton
                           amount={getPaymentAmount()}
@@ -399,8 +399,8 @@ export default function BuyCreditsPage() {
                             window.location.reload();
                           }}
                         />
-                        <div className="text-xs text-muted-foreground">
-                          Alternative completion for testing purposes
+                        <div className="text-xs text-yellow-700 text-center">
+                          Secure alternative when PayPal authentication fails
                         </div>
                       </div>
                       
