@@ -447,6 +447,60 @@ export default function BuyCreditsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Crypto Payment Instructions Dialog */}
+      <Dialog open={showCryptoInstructions} onOpenChange={setShowCryptoInstructions}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bitcoin className="h-5 w-5" />
+              {cryptoType.toUpperCase()} Payment Instructions
+            </DialogTitle>
+            <DialogDescription>
+              Send exactly the amount below to complete your purchase
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Payment Address</Label>
+                  <div className="p-2 bg-background rounded border font-mono text-xs break-all">
+                    {cryptoType === "bitcoin" && "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"}
+                    {cryptoType === "ethereum" && "0x742D35CC892A0F3f1C63B3f1e3E3F4b2b4B4C4C4"}
+                    {cryptoType === "usdt" && "0x742D35CC892A0F3f1C63B3f1e3E3F4b2b4B4C4C4"}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Amount to Send</Label>
+                  <div className="p-2 bg-background rounded border font-mono text-sm">
+                    {cryptoType === "bitcoin" && `${(parseFloat(getPaymentAmount()) * 0.000023).toFixed(8)} BTC`}
+                    {cryptoType === "ethereum" && `${(parseFloat(getPaymentAmount()) * 0.00029).toFixed(6)} ETH`}
+                    {cryptoType === "usdt" && `${getPaymentAmount()} USDT`}
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p>• Send exactly this amount to avoid delays</p>
+                  <p>• Include transaction ID in payment notes</p>
+                  <p>• Credits will be added within 1-3 business days</p>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Payment Instructions Saved",
+                  description: "We'll notify you once payment is confirmed",
+                });
+                setShowCryptoInstructions(false);
+              }}
+              className="w-full"
+            >
+              I've Sent the Payment
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
