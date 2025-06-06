@@ -35,8 +35,8 @@ export default function PayPalButtonSimple({
       }
 
       const script = document.createElement('script');
-      // Using environment variable for PayPal Client ID
-      const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'AYxVJZzDjCzuzM4jT1_6hbOPGh9-HZLDKj8lAz5y8ZNECBc8Sny3GJH9_NRyD-2G0tR8GVvJfX_eOgYy';
+      // Use the same PayPal Client ID as the server
+      const clientId = 'AUyXKULe2bIRr39zNJVO4yiLXy4oXJF4dqIiK0i3iCAPfj2gkgoqVadRxDah-ctX-jr_Xpd2a-WBevLf';
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture`;
       script.async = true;
       script.onload = () => {
