@@ -54,6 +54,10 @@ const aiDetectionLimiter = rateLimit({
 // Apply general rate limiting to all requests
 app.use(generalLimiter);
 
+// Apply specific rate limits to resource-intensive endpoints
+app.use('/api/content', contentGenerationLimiter);
+app.use('/api/ai-detection', aiDetectionLimiter);
+
 // Initialize module manager
 const moduleManager = new ModuleManager();
 

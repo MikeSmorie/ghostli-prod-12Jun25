@@ -27,6 +27,7 @@ import creditsConsumptionTestRoutes from "./routes/credits-consumption-test";
 import creditsUIRoutes from "./routes/credits-ui";
 import supergodCreditsRoutes from "./routes/supergod-credits";
 import aiDetectionRoutes from "./routes/ai-detection";
+import systemHealthRoutes from "./routes/system-health";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -216,6 +217,9 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ message: "Failed to upgrade tier", error: error.message });
     }
   });
+
+  // System health and monitoring routes for production
+  app.use("/api/system", systemHealthRoutes);
 
   // Error handler must be last
   app.use(errorHandler);
