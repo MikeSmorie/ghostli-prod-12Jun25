@@ -7,15 +7,15 @@ import {
   Sparkles, 
   Settings, 
   UserCheck, 
-  Layers,
   LineChart,
-  BadgeCheck,
   RefreshCw,
   PenSquare,
   ShieldAlert,
   Users,
-  Activity
-} from "lucide-react";
+  Activity,
+  BadgeCheck,
+  Layers
+} from "@/lib/icons";
 
 export default function AppCentral() {
   const [, setLocation] = useLocation();
