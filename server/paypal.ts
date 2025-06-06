@@ -122,20 +122,52 @@ export async function createPaypalOrder(req: Request, res: Response) {
 export async function capturePaypalOrder(req: Request, res: Response) {
   try {
     const { orderID } = req.params;
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
     const collect = {
       id: orderID,
       prefer: "return=minimal",
     };
 
-    const { body, ...httpResponse } =
-          await ordersController.captureOrder(collect);
-
+    const { body, ...httpResponse } = await ordersController.captureOrder(collect);
     const jsonResponse = JSON.parse(String(body));
     const httpStatusCode = httpResponse.statusCode;
 
-    res.status(httpStatusCode).json(jsonResponse);
+    if (httpStatusCode === 201 && jsonResponse.status === 'COMPLETED') {
+      // Extract payment amount from PayPal response
+      const amount = parseFloat(jsonResponse.purchase_units[0].payments.captures[0].amount.value);
+      const creditsToAdd = amount * 100; // 100 credits per dollar
+
+      // Import credits service
+      const { CreditsService } = await import('./services/credits');
+      
+      const result = await CreditsService.addCredits(
+        userId,
+        creditsToAdd,
+        "PAYPAL",
+        "PURCHASE",
+        jsonResponse.id
+      );
+
+      if (result.success) {
+        res.status(200).json({
+          success: true,
+          creditsAdded: creditsToAdd,
+          newBalance: result.newBalance,
+          paypalResponse: jsonResponse
+        });
+      } else {
+        res.status(500).json({ error: "Failed to add credits" });
+      }
+    } else {
+      res.status(httpStatusCode).json(jsonResponse);
+    }
   } catch (error) {
-    console.error("Failed to create order:", error);
+    console.error("Failed to capture order:", error);
     res.status(500).json({ error: "Failed to capture order." });
   }
 }

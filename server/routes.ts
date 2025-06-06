@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer } from "http";
-import { setupAuth } from "./auth";
+import { setupAuth, authenticateJWT } from "./auth";
 import cors from "cors";
 import express from "express";
 import subscriptionRoutes from "./routes/subscription";
@@ -139,7 +139,7 @@ export function registerRoutes(app: Express) {
     await createPaypalOrder(req, res);
   });
 
-  app.post("/api/paypal/order/:orderID/capture", async (req, res) => {
+  app.post("/api/paypal/capture/:orderID", authenticateJWT, async (req, res) => {
     await capturePaypalOrder(req, res);
   });
   

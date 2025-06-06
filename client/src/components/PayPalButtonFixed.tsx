@@ -63,27 +63,39 @@ export default function PayPalButtonFixed({ amount, currency, onSuccess }: PayPa
 
         onApprove: async (data: any) => {
           try {
+            console.log('PayPal approval data:', data);
+            
             const response = await fetch(`/api/paypal/capture/${data.orderID}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem('token')}`
-              }
+              },
+              body: JSON.stringify({
+                orderID: data.orderID,
+                payerID: data.payerID
+              })
             });
 
-            if (response.ok) {
+            const result = await response.json();
+            console.log('Capture response:', result);
+
+            if (response.ok && result.success) {
               toast({
                 title: "Payment Successful",
-                description: "Credits have been added to your account",
+                description: `Successfully added ${result.creditsAdded || 100} credits to your account`,
               });
               
               if (onSuccess) onSuccess();
-              setTimeout(() => window.location.reload(), 1500);
+              setTimeout(() => window.location.reload(), 2000);
+            } else {
+              throw new Error(result.error || 'Payment capture failed');
             }
           } catch (error) {
+            console.error('PayPal approval error:', error);
             toast({
               title: "Payment Error",
-              description: "Payment processing failed",
+              description: error instanceof Error ? error.message : "Payment processing failed",
               variant: "destructive"
             });
           }
