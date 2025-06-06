@@ -25,11 +25,21 @@ interface PayPalButtonProps {
   intent: string;
 }
 
+// Global PayPal state management
+declare global {
+  interface Window {
+    paypalInitialized?: boolean;
+    paypalInstance?: any;
+  }
+}
+
 export default function PayPalButton({
   amount,
   currency,
   intent,
 }: PayPalButtonProps) {
+  const currentClickHandlerRef = React.useRef<((event: Event) => void) | null>(null);
+
   const createOrder = async () => {
     const orderPayload = {
       amount: amount,
@@ -71,11 +81,51 @@ export default function PayPalButton({
     console.log("onError", data);
   };
 
+  const handlePayPalClick = React.useCallback(async (event: Event) => {
+    event.preventDefault();
+    if (!window.paypalInstance) {
+      console.error("PayPal instance not available");
+      return;
+    }
+    
+    try {
+      const checkoutOptionsPromise = createOrder();
+      await window.paypalInstance.start(
+        { paymentFlow: "auto" },
+        checkoutOptionsPromise,
+      );
+    } catch (e) {
+      console.error("PayPal click error:", e);
+    }
+  }, [amount, currency, intent]);
+
+  const setupPayPalButton = React.useCallback(() => {
+    const paypalButton = document.getElementById("paypal-button");
+    if (paypalButton && window.paypalInstance) {
+      // Remove existing listener
+      if (currentClickHandlerRef.current) {
+        paypalButton.removeEventListener("click", currentClickHandlerRef.current);
+      }
+      
+      // Add new listener
+      currentClickHandlerRef.current = handlePayPalClick;
+      paypalButton.addEventListener("click", currentClickHandlerRef.current);
+    }
+  }, [handlePayPalClick]);
+
   useEffect(() => {
     let isComponentMounted = true;
 
     const loadPayPalSDK = async () => {
       try {
+        // Prevent multiple initializations
+        if (window.paypalInitialized) {
+          if (isComponentMounted) {
+            setupPayPalButton();
+          }
+          return;
+        }
+
         if (!(window as any).paypal) {
           const script = document.createElement("script");
           script.src = import.meta.env.PROD
@@ -84,12 +134,14 @@ export default function PayPalButton({
           script.async = true;
           script.onload = () => {
             if (isComponentMounted) {
+              window.paypalInitialized = true;
               initPayPal();
             }
           };
           document.body.appendChild(script);
         } else {
           if (isComponentMounted) {
+            window.paypalInitialized = true;
             initPayPal();
           }
         }
@@ -102,8 +154,14 @@ export default function PayPalButton({
 
     return () => {
       isComponentMounted = false;
+      // Clean up button event listener
+      const button = document.getElementById("paypal-button");
+      if (button && currentClickHandlerRef.current) {
+        button.removeEventListener("click", currentClickHandlerRef.current);
+      }
     };
   }, [amount, currency, intent]);
+
   const initPayPal = async () => {
     try {
       const clientToken: string = await fetch("/api/paypal/setup")
@@ -112,43 +170,24 @@ export default function PayPalButton({
           return data.clientToken;
         });
 
-      const sdkInstance = await (window as any).paypal.createInstance({
-        clientToken,
-        components: ["paypal-payments"],
-      });
+      // Store the PayPal instance globally to reuse
+      if (!window.paypalInstance) {
+        const sdkInstance = await (window as any).paypal.createInstance({
+          clientToken,
+          components: ["paypal-payments"],
+        });
 
-      const paypalCheckout =
-            sdkInstance.createPayPalOneTimePaymentSession({
-              onApprove,
-              onCancel,
-              onError,
-            });
-
-      const onClick = async () => {
-        try {
-          const checkoutOptionsPromise = createOrder();
-          await paypalCheckout.start(
-            { paymentFlow: "auto" },
-            checkoutOptionsPromise,
-          );
-        } catch (e) {
-          console.error(e);
-        }
-      };
-
-      const paypalButton = document.getElementById("paypal-button");
-
-      if (paypalButton) {
-        paypalButton.addEventListener("click", onClick);
+        window.paypalInstance = sdkInstance.createPayPalOneTimePaymentSession({
+          onApprove,
+          onCancel,
+          onError,
+        });
       }
 
-      return () => {
-        if (paypalButton) {
-          paypalButton.removeEventListener("click", onClick);
-        }
-      };
+      // Set up the button click handler
+      setupPayPalButton();
     } catch (e) {
-      console.error(e);
+      console.error("PayPal init error:", e);
     }
   };
 
