@@ -26,22 +26,22 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  DownloadIcon,
-  CopyIcon,
-  HelpCircleIcon,
-  FileIcon,
-  FileTextIcon,
-  CheckIcon,
-  CheckCircleIcon,
-  SettingsIcon,
-  ArrowRightIcon,
-  ArrowLeftIcon,
-  PencilIcon,
-  SaveIcon,
-  ClockIcon,
-  RefreshCwIcon,
+  Download as DownloadIcon,
+  Copy as CopyIcon,
+  HelpCircle as HelpCircleIcon,
+  FileText as FileIcon,
+  FileText as FileTextIcon,
+  Check as CheckIcon,
+  CheckCircle as CheckCircleIcon,
+  Settings as SettingsIcon,
+  ArrowRight as ArrowRightIcon,
+  ArrowLeft as ArrowLeftIcon,
+  Edit as PencilIcon,
+  Save as SaveIcon,
+  Clock as ClockIcon,
+  RefreshCw as RefreshCwIcon,
   Info as InfoIcon,
-} from "lucide-react";
+} from "@/lib/icons";
 import { useToast } from "@/hooks/use-toast";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';

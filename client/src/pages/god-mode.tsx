@@ -82,7 +82,7 @@ import {
   User, 
   Users, 
   WifiOff
-} from "lucide-react";
+} from "@/lib/icons";
 
 // Type definitions
 interface SystemMetrics {

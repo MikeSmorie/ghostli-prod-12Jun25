@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Home, Settings, Users, Shield, ShieldAlert, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Home, Settings, Users, Shield, ShieldAlert, FileText, Sparkles } from "@/lib/icons";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUser } from "@/hooks/use-user";
 import { useAdmin } from "@/contexts/admin-context";
