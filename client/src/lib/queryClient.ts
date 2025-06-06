@@ -23,7 +23,7 @@ export async function apiRequest(
   };
 
   // Get JWT token from localStorage if available
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
   if (token) {
     options.headers = {
       ...options.headers,
@@ -49,7 +49,7 @@ export function getQueryFn(options: QueryFnOptions = {}) {
       const headers: HeadersInit = {};
       
       // Get JWT token from localStorage if available
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
