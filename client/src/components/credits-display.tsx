@@ -147,7 +147,7 @@ export default function CreditsDisplay() {
         <Button 
           className="w-full" 
           variant={isCriticalCredits ? "default" : "outline"}
-          onClick={() => window.location.href = '/subscription'}
+          onClick={() => window.location.href = '/buy-credits'}
         >
           <TrendingUp className="h-4 w-4 mr-2" />
           {isCriticalCredits ? 'Buy Credits Now' : 'Top Up Credits'}

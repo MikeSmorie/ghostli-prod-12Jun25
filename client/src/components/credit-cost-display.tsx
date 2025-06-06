@@ -98,20 +98,11 @@ export default function CreditCostDisplay() {
           <Button 
             size="sm" 
             variant={isCriticalCredits ? "default" : "outline"}
-            onClick={() => window.location.href = '/subscription'}
+            onClick={() => window.location.href = '/buy-credits'}
             className="flex-1"
           >
             <CreditCard className="h-4 w-4 mr-2" />
-            PayPal Top-up
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => window.location.href = '/crypto-dashboard'}
-            className="flex-1"
-          >
-            <Bitcoin className="h-4 w-4 mr-2" />
-            Bitcoin Top-up
+            Buy Credits
           </Button>
         </div>
       )}
