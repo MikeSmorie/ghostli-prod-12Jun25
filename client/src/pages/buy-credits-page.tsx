@@ -33,8 +33,8 @@ import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import CreditsDisplay from "@/components/credits-display";
 
-// Import the actual PayPal component
-import PayPalButton from "@/components/PayPalButton";
+// Import the simplified PayPal component
+import PayPalButtonSimple from "@/components/PayPalButtonSimple";
 
 interface CreditPackage {
   id: string;
@@ -365,7 +365,7 @@ export default function BuyCreditsPage() {
                         <Shield className="h-4 w-4" />
                         <span>Secure payment processed by PayPal</span>
                       </div>
-                      <PayPalButton 
+                      <PayPalButtonSimple 
                         amount={getPaymentAmount()}
                         currency="USD"
                         intent="CAPTURE"
