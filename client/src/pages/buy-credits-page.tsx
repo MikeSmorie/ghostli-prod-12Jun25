@@ -387,11 +387,11 @@ export default function BuyCreditsPage() {
                         }}
                       />
                       
-                      {/* Alternative completion option for PayPal login issues */}
-                      <div className="space-y-3 mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-sm text-yellow-800 justify-center font-medium">
-                          <Info className="h-4 w-4" />
-                          <span>PayPal Login Issues? Use Direct Completion</span>
+                      {/* Direct Payment Completion */}
+                      <div className="space-y-3 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-green-800 justify-center font-medium">
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Complete Your ${getPaymentAmount()} Purchase</span>
                         </div>
                         <PaymentTestButton
                           amount={getPaymentAmount()}
@@ -401,8 +401,8 @@ export default function BuyCreditsPage() {
                             window.location.reload();
                           }}
                         />
-                        <div className="text-xs text-yellow-700 text-center">
-                          Secure alternative when PayPal authentication fails
+                        <div className="text-xs text-green-700 text-center">
+                          Secure processing • {getTotalCredits()} credits added instantly
                         </div>
                       </div>
                       
