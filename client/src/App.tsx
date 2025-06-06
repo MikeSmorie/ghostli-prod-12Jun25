@@ -32,6 +32,7 @@ import { MainLayout } from "@/components/main-layout";
 import { AdminProvider } from "@/contexts/admin-context";
 import SubscriptionPlans from "@/pages/subscription-plans";
 import CryptoDashboard from "@/pages/crypto-dashboard";
+import ContentGenerationPage from "@/pages/content-generation";
 
 function ProtectedAdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useUser();
@@ -126,6 +127,7 @@ function Router() {
         {/* Main public routes with unified dashboard */}
         <Route path="/" component={UnifiedDashboard} />
         <Route path="/dashboard" component={UnifiedDashboard} />
+        <Route path="/content-generation" component={ContentGenerationPage} />
         <Route path="/content-generator-new" component={ContentGeneratorNewPage} />
         <Route path="/clone-me" component={CloneMePage} />
         <Route path="/subscription" component={SubscriptionManagement} />
