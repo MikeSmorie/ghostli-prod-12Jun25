@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import CreditsDisplay from "@/components/credits-display";
 
 // Import payment components
-import PayPalButtonSimple from "@/components/PayPalButtonSimple";
+import PayPalButtonFixed from "@/components/PayPalButtonFixed";
 import PaymentTestButton from "@/components/PaymentTestButton";
 
 interface CreditPackage {
@@ -379,10 +379,12 @@ export default function BuyCreditsPage() {
                       </div>
                       
                       {/* PayPal Button */}
-                      <PayPalButtonSimple 
+                      <PayPalButtonFixed 
                         amount={getPaymentAmount()}
                         currency="USD"
-                        intent="CAPTURE"
+                        onSuccess={() => {
+                          window.location.reload();
+                        }}
                       />
                       
                       {/* Alternative completion option for PayPal login issues */}

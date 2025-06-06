@@ -37,7 +37,7 @@ export default function PayPalButtonSimple({
       const script = document.createElement('script');
       // Use the same PayPal Client ID as the server
       const clientId = 'AUyXKULe2bIRr39zNJVO4yiLXy4oXJF4dqIiK0i3iCAPfj2gkgoqVadRxDah-ctX-jr_Xpd2a-WBevLf';
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture`;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture&components=buttons,marks&enable-funding=venmo,paylater`;
       script.async = true;
       script.onload = () => {
         setPaypalLoaded(true);
@@ -63,11 +63,21 @@ export default function PayPalButtonSimple({
     paypalRef.current.innerHTML = '';
 
     window.paypal.Buttons({
+      style: {
+        layout: 'vertical',
+        color: 'blue',
+        shape: 'rect',
+        label: 'paypal'
+      },
+      
       createOrder: async () => {
         try {
           const response = await fetch("/api/paypal/order", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${localStorage.getItem('token')}`
+            },
             body: JSON.stringify({
               amount: amount,
               currency: currency,
@@ -141,13 +151,6 @@ export default function PayPalButtonSimple({
           variant: "default",
         });
         setIsProcessing(false);
-      },
-
-      style: {
-        layout: 'vertical',
-        color: 'blue',
-        shape: 'rect',
-        label: 'paypal'
       }
     }).render(paypalRef.current);
   };
