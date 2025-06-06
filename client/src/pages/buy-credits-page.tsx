@@ -4,6 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   CreditCard, 
   Zap, 
@@ -12,10 +21,16 @@ import {
   DollarSign,
   Gift,
   Star,
-  Sparkles
+  Sparkles,
+  Bitcoin,
+  Shield,
+  Clock,
+  CheckCircle,
+  Info
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
+import { useToast } from "@/hooks/use-toast";
 import CreditsDisplay from "@/components/credits-display";
 
 // Import the actual PayPal component
@@ -35,7 +50,11 @@ export default function BuyCreditsPage() {
   const [, navigate] = useLocation();
   const [customAmount, setCustomAmount] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "crypto">("paypal");
+  const [cryptoType, setCryptoType] = useState<"bitcoin" | "ethereum" | "usdt">("bitcoin");
+  const [showCryptoInstructions, setShowCryptoInstructions] = useState(false);
   const { user } = useUser();
+  const { toast } = useToast();
 
   const creditPackages: CreditPackage[] = [
     {
@@ -43,14 +62,15 @@ export default function BuyCreditsPage() {
       name: "Starter Pack",
       credits: 500,
       price: 5,
-      bonus: 0
+      bonus: 50,
+      badge: "Good Start"
     },
     {
       id: "popular",
       name: "Popular Pack",
       credits: 1000,
       price: 10,
-      bonus: 200,
+      bonus: 250,
       popular: true,
       badge: "Best Value"
     },
@@ -245,9 +265,13 @@ export default function BuyCreditsPage() {
 
         {/* Payment Section */}
         <div className="space-y-6">
+          {/* Payment Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment Summary</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Payment Summary
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {selectedPackage ? (
@@ -260,16 +284,26 @@ export default function BuyCreditsPage() {
                         <span className="font-medium">{pkg.name}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span>Base Credits:</span>
+                        <span className="font-medium">{pkg.credits.toLocaleString()}</span>
+                      </div>
+                      {pkg.bonus > 0 && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Bonus Credits:</span>
+                          <span className="font-medium">+{pkg.bonus.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
                         <span>Price:</span>
                         <span className="font-medium">${pkg.price}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Credits:</span>
-                        <span className="font-medium">{(pkg.credits + pkg.bonus).toLocaleString()}</span>
+                      <Separator />
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Total Credits:</span>
+                        <span className="text-primary">{(pkg.credits + pkg.bonus).toLocaleString()}</span>
                       </div>
-                      <hr />
                       <div className="flex justify-between font-semibold">
-                        <span>Total:</span>
+                        <span>Total Price:</span>
                         <span className="text-primary">${pkg.price}</span>
                       </div>
                     </div>
@@ -282,58 +316,132 @@ export default function BuyCreditsPage() {
                     <span className="font-medium">${parseFloat(customAmount).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Credits:</span>
+                    <span>Credits (100 per $1):</span>
                     <span className="font-medium">{getCreditsForAmount(parseFloat(customAmount)).toLocaleString()}</span>
                   </div>
-                  <hr />
+                  <Separator />
                   <div className="flex justify-between font-semibold">
                     <span>Total:</span>
                     <span className="text-primary">${parseFloat(customAmount).toFixed(2)}</span>
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  Select a package or enter a custom amount
-                </div>
-              )}
-
-              {(selectedPackage || (customAmount && parseFloat(customAmount) > 0)) && (
-                <div className="space-y-3 pt-4">
-                  <PayPalButton 
-                    amount={getPaymentAmount()}
-                    currency="USD"
-                    intent="CAPTURE"
-                  />
-                  
-                  <div className="text-xs text-muted-foreground text-center">
-                    Secure payment processed by PayPal
-                  </div>
+                <div className="text-center text-muted-foreground py-8">
+                  <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Select a package or enter a custom amount to see payment options</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
+          {/* Payment Methods */}
+          {(selectedPackage || (customAmount && parseFloat(customAmount) > 0)) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Choose Payment Method
+                </CardTitle>
+                <CardDescription>
+                  Select your preferred payment option below
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "paypal" | "crypto")}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="paypal" className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      PayPal
+                    </TabsTrigger>
+                    <TabsTrigger value="crypto" className="flex items-center gap-2">
+                      <Bitcoin className="h-4 w-4" />
+                      Crypto
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="paypal" className="space-y-4 mt-6">
+                    <div className="text-center space-y-4">
+                      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                        <Shield className="h-4 w-4" />
+                        <span>Secure payment processed by PayPal</span>
+                      </div>
+                      <PayPalButton 
+                        amount={getPaymentAmount()}
+                        currency="USD"
+                        intent="CAPTURE"
+                      />
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3" />
+                        <span>Credits added instantly after payment</span>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="crypto" className="space-y-4 mt-6">
+                    <div className="space-y-4">
+                      <Label>Select Cryptocurrency</Label>
+                      <Tabs value={cryptoType} onValueChange={(value) => setCryptoType(value as "bitcoin" | "ethereum" | "usdt")}>
+                        <TabsList className="grid w-full grid-cols-3">
+                          <TabsTrigger value="bitcoin">Bitcoin</TabsTrigger>
+                          <TabsTrigger value="ethereum">Ethereum</TabsTrigger>
+                          <TabsTrigger value="usdt">USDT</TabsTrigger>
+                        </TabsList>
+                        
+                        <div className="mt-4 p-4 bg-muted rounded-lg">
+                          <div className="text-center space-y-3">
+                            <div className="flex items-center justify-center gap-2">
+                              <Bitcoin className="h-5 w-5" />
+                              <span className="font-medium">
+                                Send {cryptoType.toUpperCase()} to complete purchase
+                              </span>
+                            </div>
+                            <Button 
+                              onClick={() => setShowCryptoInstructions(true)}
+                              className="w-full"
+                            >
+                              Get {cryptoType.toUpperCase()} Payment Address
+                            </Button>
+                            <div className="text-xs text-muted-foreground">
+                              Manual crypto payments require verification (1-3 business days)
+                            </div>
+                          </div>
+                        </div>
+                      </Tabs>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Benefits Reminder */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">What You Get</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Gift className="h-5 w-5" />
+                What You Get
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-purple-600" />
-                <span>Instant PRO tier upgrade</span>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span>Instant PRO tier upgrade with your first purchase</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-green-600" />
-                <span>20% better credit efficiency</span>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span>20% better credit efficiency for all content generation</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-blue-600" />
-                <span>Access to all premium features</span>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span>Access to Clone Me, AI Detection Shield, and all premium features</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-orange-600" />
-                <span>Priority customer support</span>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span>Priority customer support and faster response times</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span>No subscription fees - pay only for credits you use</span>
               </div>
             </CardContent>
           </Card>
