@@ -1,5 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import "express-async-errors";
+import compression from "compression";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { ModuleManager } from "./moduleManager";
@@ -12,6 +15,44 @@ interface IModule {
 }
 
 const app = express();
+
+// Security and performance middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable for development/flexibility
+  crossOriginEmbedderPolicy: false
+}));
+app.use(compression()); // Gzip compression for all responses
+
+// Trust proxy for proper IP handling in deployment
+app.set('trust proxy', 1);
+
+// Rate limiting for API protection
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const contentGenerationLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Limit content generation to 10 requests per minute per IP
+  message: 'Content generation rate limit exceeded. Please wait before generating more content.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const aiDetectionLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // Allow more AI detection requests
+  message: 'AI detection rate limit exceeded. Please wait before running more detections.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
 
 // Initialize module manager
 const moduleManager = new ModuleManager();
@@ -29,9 +70,9 @@ const testModule: IModule = {
 
 moduleManager.registerModule(testModule);
 
-// Body parsing middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Body parsing middleware with limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
