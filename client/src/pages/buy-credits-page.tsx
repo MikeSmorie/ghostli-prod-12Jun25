@@ -36,6 +36,7 @@ import CreditsDisplay from "@/components/credits-display";
 // Import payment components
 import PayPalButtonComplete from "@/components/PayPalButtonComplete";
 import PaymentTestButton from "@/components/PaymentTestButton";
+import DirectPurchaseButton from "@/components/DirectPurchaseButton";
 
 interface CreditPackage {
   id: string;
@@ -388,12 +389,12 @@ export default function BuyCreditsPage() {
                       />
                       
                       {/* Direct Payment Completion */}
-                      <div className="space-y-3 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-sm text-green-800 justify-center font-medium">
-                          <CheckCircle className="h-4 w-4" />
-                          <span>Complete Your ${getPaymentAmount()} Purchase</span>
+                      <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-blue-800 justify-center font-medium">
+                          <CreditCard className="h-4 w-4" />
+                          <span>Instant Credit Purchase</span>
                         </div>
-                        <PaymentTestButton
+                        <DirectPurchaseButton
                           amount={getPaymentAmount()}
                           creditAmount={getTotalCredits()}
                           onSuccess={() => {
@@ -401,8 +402,8 @@ export default function BuyCreditsPage() {
                             window.location.reload();
                           }}
                         />
-                        <div className="text-xs text-green-700 text-center">
-                          Secure processing • {getTotalCredits()} credits added instantly
+                        <div className="text-xs text-blue-700 text-center">
+                          Direct processing • {getTotalCredits()} credits added immediately
                         </div>
                       </div>
                       
