@@ -33,8 +33,9 @@ import { useUser } from "@/hooks/use-user";
 import { useToast } from "@/hooks/use-toast";
 import CreditsDisplay from "@/components/credits-display";
 
-// Import the simplified PayPal component
+// Import payment components
 import PayPalButtonSimple from "@/components/PayPalButtonSimple";
+import PaymentTestButton from "@/components/PaymentTestButton";
 
 interface CreditPackage {
   id: string;
@@ -365,11 +366,33 @@ export default function BuyCreditsPage() {
                         <Shield className="h-4 w-4" />
                         <span>Secure payment processed by PayPal</span>
                       </div>
+                      
+                      {/* PayPal Button */}
                       <PayPalButtonSimple 
                         amount={getPaymentAmount()}
                         currency="USD"
                         intent="CAPTURE"
                       />
+                      
+                      {/* Alternative completion option for SMS verification issues */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
+                          <Info className="h-3 w-3" />
+                          <span>Having issues with PayPal SMS verification?</span>
+                        </div>
+                        <PaymentTestButton
+                          amount={getPaymentAmount()}
+                          creditAmount={getTotalCredits()}
+                          onSuccess={() => {
+                            // Refresh credits after successful payment
+                            window.location.reload();
+                          }}
+                        />
+                        <div className="text-xs text-muted-foreground">
+                          Alternative completion for testing purposes
+                        </div>
+                      </div>
+                      
                       <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
                         <span>Credits added instantly after payment</span>

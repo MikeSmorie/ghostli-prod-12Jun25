@@ -28,6 +28,7 @@ import creditsUIRoutes from "./routes/credits-ui";
 import supergodCreditsRoutes from "./routes/supergod-credits";
 import aiDetectionRoutes from "./routes/ai-detection";
 import systemHealthRoutes from "./routes/system-health";
+import paymentTestRoutes from "./routes/payment-test";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -220,6 +221,9 @@ export function registerRoutes(app: Express) {
 
   // System health and monitoring routes for production
   app.use("/api/system", systemHealthRoutes);
+  
+  // Payment testing routes for development
+  app.use("/api/payment-test", paymentTestRoutes);
 
   // Error handler must be last
   app.use(errorHandler);
