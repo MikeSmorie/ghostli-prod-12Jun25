@@ -3,19 +3,19 @@ export const ProductionConfig = {
   rateLimits: {
     general: {
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // requests per window per IP
+      max: 500, // requests per window per IP
     },
     contentGeneration: {
       windowMs: 60 * 1000, // 1 minute
-      max: 10, // content generations per minute per IP
+      max: 50, // content generations per minute per IP
     },
     aiDetection: {
       windowMs: 60 * 1000, // 1 minute
-      max: 20, // AI detections per minute per IP
+      max: 100, // AI detections per minute per IP
     },
     payment: {
       windowMs: 60 * 1000, // 1 minute
-      max: 5, // payment attempts per minute per IP
+      max: 50, // payment attempts per minute per IP
     },
   },
 

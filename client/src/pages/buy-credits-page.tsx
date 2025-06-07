@@ -376,17 +376,8 @@ export default function BuyCreditsPage() {
                     <div className="text-center space-y-4">
                       <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                         <Shield className="h-4 w-4" />
-                        <span>Secure payment processed by PayPal</span>
+                        <span>Secure payment processing with instant credit allocation</span>
                       </div>
-                      
-                      {/* PayPal Button */}
-                      <PayPalButtonComplete 
-                        amount={getPaymentAmount()}
-                        currency="USD"
-                        onSuccess={() => {
-                          window.location.reload();
-                        }}
-                      />
                       
                       {/* Direct Payment Completion */}
                       <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
