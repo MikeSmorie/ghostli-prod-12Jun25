@@ -30,6 +30,7 @@ import aiDetectionRoutes from "./routes/ai-detection";
 import systemHealthRoutes from "./routes/system-health";
 import paymentTestRoutes from "./routes/payment-test";
 import directPurchaseRoutes from "./routes/direct-purchase";
+import cryptoQuotesRoutes from "./routes/crypto-quotes";
 
 // Simple auth checks
 const requireAuth = (req: any, res: any, next: any) => {
@@ -228,6 +229,9 @@ export function registerRoutes(app: Express) {
   
   // Direct purchase routes
   app.use("/api/direct-purchase", directPurchaseRoutes);
+  
+  // Crypto quotes and pricing routes
+  app.use("/api/crypto-quotes", cryptoQuotesRoutes);
   
   // Simple direct purchase endpoint for testing (no rate limiting)
   app.post("/api/purchase-credits", async (req: any, res: any) => {

@@ -361,14 +361,10 @@ export default function BuyCreditsPage() {
               </CardHeader>
               <CardContent>
                 <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "paypal" | "crypto")}>
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-1">
                     <TabsTrigger value="paypal" className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      PayPal
-                    </TabsTrigger>
-                    <TabsTrigger value="crypto" className="flex items-center gap-2">
-                      <Bitcoin className="h-4 w-4" />
-                      Crypto
+                      Secure Payment
                     </TabsTrigger>
                   </TabsList>
                   
@@ -405,38 +401,7 @@ export default function BuyCreditsPage() {
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="crypto" className="space-y-4 mt-6">
-                    <div className="space-y-4">
-                      <Label>Select Cryptocurrency</Label>
-                      <Tabs value={cryptoType} onValueChange={(value) => setCryptoType(value as "bitcoin" | "ethereum" | "usdt")}>
-                        <TabsList className="grid w-full grid-cols-3">
-                          <TabsTrigger value="bitcoin">Bitcoin</TabsTrigger>
-                          <TabsTrigger value="ethereum">Ethereum</TabsTrigger>
-                          <TabsTrigger value="usdt">USDT</TabsTrigger>
-                        </TabsList>
-                        
-                        <div className="mt-4 p-4 bg-muted rounded-lg">
-                          <div className="text-center space-y-3">
-                            <div className="flex items-center justify-center gap-2">
-                              <Bitcoin className="h-5 w-5" />
-                              <span className="font-medium">
-                                Send {cryptoType.toUpperCase()} to complete purchase
-                              </span>
-                            </div>
-                            <Button 
-                              onClick={() => setShowCryptoInstructions(true)}
-                              className="w-full"
-                            >
-                              Get {cryptoType.toUpperCase()} Payment Address
-                            </Button>
-                            <div className="text-xs text-muted-foreground">
-                              Manual crypto payments require verification (1-3 business days)
-                            </div>
-                          </div>
-                        </div>
-                      </Tabs>
-                    </div>
-                  </TabsContent>
+
                 </Tabs>
               </CardContent>
             </Card>
