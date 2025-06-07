@@ -85,6 +85,10 @@ export interface ContentGenerationParams {
   isRewrite?: boolean;                    // Indicates if this is a rewrite request
   // Language options
   englishVariant?: string;                // 'american' or 'british' English variant
+  // Dialect and jargon options
+  dialectJargon?: string;                 // Selected dialect or jargon style
+  customDialect?: string;                 // Custom dialect description when "other" is selected
+  dialectSample?: string;                 // Sample text for custom dialect
   // Website scanning options
   websiteUrl?: string;                    // URL to scan for content or style
   copyWebsiteStyle?: boolean;             // Whether to copy the website's style/tone

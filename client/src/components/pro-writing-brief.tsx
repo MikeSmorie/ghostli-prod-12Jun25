@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -53,6 +53,9 @@ export type ProWritingBriefValues = {
   keywords: string;
   keywordDensity: string;
   forceSourceLinks: boolean;
+  dialectJargon: string;
+  customDialect?: string;
+  dialectSample?: string;
 };
 
 // Form validation schema
@@ -68,7 +71,10 @@ const formSchema = z.object({
   humanizationLevel: z.number().min(0).max(15),
   keywords: z.string().optional(),
   keywordDensity: z.string(),
-  forceSourceLinks: z.boolean()
+  forceSourceLinks: z.boolean(),
+  dialectJargon: z.string(),
+  customDialect: z.string().optional(),
+  dialectSample: z.string().optional()
 });
 
 export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps) {
@@ -86,7 +92,10 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
       humanizationLevel: 5,
       keywords: "",
       keywordDensity: "medium",
-      forceSourceLinks: false
+      forceSourceLinks: false,
+      dialectJargon: "general",
+      customDialect: "",
+      dialectSample: ""
     },
   });
 
@@ -265,6 +274,110 @@ export function ProWritingBrief({ onSubmit, isSubmitting }: ProWritingBriefProps
                   )}
                 />
               </div>
+            </div>
+            
+            {/* Dialect & Jargon Selector - Premium Feature */}
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-lg font-semibold flex items-center">
+                <BookOpen className="mr-2 h-5 w-5" />
+                Dialect &amp; Jargon
+                <Badge variant="secondary" className="ml-2 text-xs">Premium</Badge>
+              </h3>
+              
+              <FormField
+                control={form.control}
+                name="dialectJargon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dialect / Jargon Style</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select dialect or jargon" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="general">US — General</SelectItem>
+                        <SelectItem value="uk-general">UK — General</SelectItem>
+                        <SelectItem value="australia">Australia</SelectItem>
+                        <SelectItem value="jamaican">Jamaican English / Patois</SelectItem>
+                        <SelectItem value="southern-us">Southern US</SelectItem>
+                        <SelectItem value="aave">AAVE (African American Vernacular English)</SelectItem>
+                        <SelectItem value="socal-surfer">SoCal Surfer</SelectItem>
+                        <SelectItem value="elizabethan">Elizabethan / Archaic English</SelectItem>
+                        <SelectItem value="legal">Legal</SelectItem>
+                        <SelectItem value="academic">Academic</SelectItem>
+                        <SelectItem value="medical">Medical</SelectItem>
+                        <SelectItem value="journalism">Journalism</SelectItem>
+                        <SelectItem value="government">Government</SelectItem>
+                        <SelectItem value="marketing-sales">Marketing / Sales</SelectItem>
+                        <SelectItem value="technical-manual">Technical Manual</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      {field.value === "aave" && (
+                        <span className="text-amber-600 dark:text-amber-400 font-medium">
+                          Note: Please ensure respectful and culturally appropriate usage
+                        </span>
+                      )}
+                      {field.value !== "aave" && field.value !== "other" && field.value && (
+                        "Select the dialect or professional jargon for your content"
+                      )}
+                      {field.value === "other" && (
+                        "Describe your custom dialect or style below"
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Custom Dialect Fields - Show when "Other" is selected */}
+              {form.watch("dialectJargon") === "other" && (
+                <div className="space-y-4 pl-4 border-l-2 border-blue-200 dark:border-blue-800">
+                  <FormField
+                    control={form.control}
+                    name="customDialect"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Describe your desired dialect / jargon / style</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., 1950s detective noir, Victorian literature, Silicon Valley tech..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide a clear description of the writing style you want
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="dialectSample"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Style Sample (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Paste a paragraph or two that exemplifies the style you want..."
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Provide sample text that demonstrates the desired style, tone, and vocabulary
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
             </div>
             
             {/* Advanced Options */}
