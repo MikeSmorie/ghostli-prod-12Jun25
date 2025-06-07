@@ -23,6 +23,12 @@ export default function DirectPurchaseButton({ amount, creditAmount, onSuccess }
         throw new Error('Authentication required');
       }
 
+      console.log('Making purchase request with:', {
+        amount: parseFloat(amount),
+        creditAmount: creditAmount,
+        token: token.substring(0, 20) + '...'
+      });
+
       const response = await fetch('/api/purchase-credits', {
         method: 'POST',
         headers: {
@@ -34,6 +40,15 @@ export default function DirectPurchaseButton({ amount, creditAmount, onSuccess }
           creditAmount: creditAmount
         })
       });
+
+      console.log('Purchase response status:', response.status);
+      console.log('Purchase response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Purchase error response:', errorText);
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
 
       const result = await response.json();
 
