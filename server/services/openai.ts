@@ -1092,6 +1092,27 @@ ${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated
  * @param params Content generation parameters
  * @returns System message string
  */
+function getDialectDescription(dialect: string): string {
+  const dialectDescriptions: { [key: string]: string } = {
+    'uk-general': 'British English with proper Queen\'s English formality and vocabulary',
+    'australia': 'Australian English with characteristic expressions, slang, and informal tone',
+    'jamaican': 'Jamaican English/Patois with Caribbean expressions and rhythmic language patterns',
+    'southern-us': 'Southern US dialect with characteristic drawl, expressions, and hospitality tone',
+    'aave': 'African American Vernacular English with appropriate cultural expressions and linguistic patterns',
+    'socal-surfer': 'Southern California surfer dialect with laid-back expressions and beach culture terminology',
+    'elizabethan': 'Elizabethan/Archaic English with period-appropriate vocabulary and formal structures',
+    'legal': 'Legal jargon with precise terminology, formal structure, and professional legal language',
+    'academic': 'Academic writing style with scholarly tone, complex sentence structures, and formal vocabulary',
+    'medical': 'Medical terminology and professional healthcare communication style',
+    'journalism': 'Journalistic writing style with clear, concise reporting and objective tone',
+    'government': 'Government/bureaucratic language with official terminology and formal procedures',
+    'marketing-sales': 'Marketing and sales language with persuasive techniques and engaging copy',
+    'technical-manual': 'Technical manual style with clear instructions and precise procedural language'
+  };
+  
+  return dialectDescriptions[dialect] || 'Standard dialect/jargon style';
+}
+
 function constructSystemMessage(params: ContentGenerationParams): string {
   const toneDescription = getToneDescription(params.tone);
   const archetypeDescription = getArchetypeDescription(params.brandArchetype);
@@ -1124,6 +1145,27 @@ LANGUAGE VARIANT: ${params.englishVariant === 'uk' ? 'British English' : 'Americ
 - Follow ${params.englishVariant === 'uk' ? 'British' : 'American'} English punctuation and quotation styles
 - Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English date formats (${params.englishVariant === 'uk' ? 'DD/MM/YYYY' : 'MM/DD/YYYY'})
 - Use ${params.englishVariant === 'uk' ? 'British' : 'American'} English expressions and idioms when appropriate
+` : '';
+
+  // Define dialect and jargon instructions
+  const dialectJargonInstructions = params.dialectJargon && params.dialectJargon !== 'general' ? `
+DIALECT & JARGON STYLE: ${getDialectDescription(params.dialectJargon)}
+${params.dialectJargon === 'other' && params.customDialect ? `
+CUSTOM DIALECT DESCRIPTION: ${params.customDialect}
+${params.dialectSample ? `
+STYLE SAMPLE: 
+${params.dialectSample}
+
+Match this style in tone, vocabulary, and phrasing patterns throughout your content.` : ''}
+` : params.dialectJargon === 'other' ? `Write this content matching the following dialect / jargon / style:
+
+Description: ${params.customDialect || 'Custom style'}
+
+${params.dialectSample ? `Style Sample: 
+${params.dialectSample}
+
+Maintain consistency with this style in tone, vocabulary, and phrasing.` : ''}
+` : ''}
 ` : '';
   
   // Build humanization instructions based on the parameters
@@ -1319,6 +1361,7 @@ CONTENT REQUIREMENTS:
 ${preferredHeadlineInstructions}
 ${websiteScanningInstructions}
 ${englishVariantInstructions}
+${dialectJargonInstructions}
 ${keywordFrequencyInstructions}
 ${sourceRequirementsInstructions}
 ${regionalFocusInstructions}

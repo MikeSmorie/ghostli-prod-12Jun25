@@ -60,6 +60,11 @@ const ContentGenerationRequestSchema = z.object({
     z.string().transform(val => val === "uk" ? "uk" : "us")
   ]).default("us"),
   
+  // Dialect and jargon fields
+  dialectJargon: z.string().optional().default(""),
+  customDialect: z.string().optional().default(""),
+  dialectSample: z.string().optional().default(""),
+  
   // Keep other string fields simple
   websiteUrl: z.string().optional().default(""),
   regionFocus: z.string().optional().default(""),
@@ -273,11 +278,18 @@ export function registerContentRoutes(app: Express) {
         }
         
         // Check if detailed brief features are being used (PRO only)
-        const usingDetailedFeatures = params.keywordFrequencies?.length > 0 || 
-                                     params.requiredSources?.length > 0 ||
+        const usingDetailedFeatures = (params.requiredKeywords && params.requiredKeywords.length > 0) || 
+                                     (params.requiredSources && params.requiredSources.length > 0) ||
                                      params.strictToneAdherence ||
                                      params.technicalAccuracy ||
-                                     params.legalCompliance;
+                                     params.legalCompliance ||
+                                     params.addRhetoricalElements ||
+                                     params.includeCitations;
+
+        // Check if dialect & jargon features are being used (PRO only)
+        const usingDialectFeatures = (params.dialectJargon && params.dialectJargon !== 'general' && params.dialectJargon !== '') ||
+                                   params.customDialect ||
+                                   params.dialectSample;
         
         if (usingDetailedFeatures && !limits.hasDetailedBrief) {
           return res.status(403).json({
@@ -286,6 +298,16 @@ export function registerContentRoutes(app: Express) {
             tier,
             upgradeRequired: true,
             message: "Upgrade to Pro to access advanced content generation options"
+          });
+        }
+
+        if (usingDialectFeatures && !limits.hasDetailedBrief) {
+          return res.status(403).json({
+            error: "Dialect & Jargon features require Pro subscription",
+            feature: "dialectJargon",
+            tier,
+            upgradeRequired: true,
+            message: "Upgrade to Pro to access dialect and jargon customization"
           });
         }
       }
