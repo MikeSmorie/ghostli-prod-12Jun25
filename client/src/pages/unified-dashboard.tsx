@@ -248,6 +248,76 @@ export default function UnifiedDashboard() {
         </div>
       </div>
 
+      {/* Dialect & Jargon Premium Feature CTA */}
+      <Card className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border-purple-200 dark:border-purple-800">
+        <CardContent className="p-8">
+          <div className="text-center space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-2xl">🗣️</span>
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold px-3 py-1">
+                  NEW!
+                </Badge>
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Dialect & Jargon Control
+              </h2>
+              <p className="text-xl text-foreground/80 font-medium">
+                Write in ANY voice, from ANY place, in ANY style.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-4xl mx-auto">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span>Choose regional dialects (US, UK, AU, Jamaican Patois, Southern US, SoCal, AAVE, Elizabethan, etc.)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span>Control slang level — from formal to fun</span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span>Match professional tone — Legal, Academic, Medical, Government, Journalism</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span>Or… upload YOUR OWN style with our unique "Other" option!</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-lg font-bold text-purple-700 dark:text-purple-300">
+                Nobody else gives you this power.
+              </p>
+              <p className="text-lg">
+                Only with <span className="font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">GhostliAI Premium</span>.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold px-8 py-3 text-lg"
+                onClick={() => {
+                  console.log('[DIALECT_JARGON_CTA_READY]');
+                  navigate('/content-generator-new');
+                }}
+              >
+                Try Dialect & Jargon Now →
+              </Button>
+              <div className="text-sm text-foreground/70">
+                👉 Try it FREE → Get 50 bonus credits today.
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Feature Highlights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
