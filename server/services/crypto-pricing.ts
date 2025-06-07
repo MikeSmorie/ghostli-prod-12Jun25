@@ -27,7 +27,13 @@ export class CryptoPricingService {
     try {
       // CoinGecko API - free tier, no API key required
       const response = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd'
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana&vs_currencies=usd',
+        {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Omega-Credits-App/1.0'
+          }
+        }
       );
 
       if (!response.ok) {

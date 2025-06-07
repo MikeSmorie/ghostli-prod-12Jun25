@@ -37,6 +37,7 @@ import CreditsDisplay from "@/components/credits-display";
 import PayPalButtonComplete from "@/components/PayPalButtonComplete";
 import PaymentTestButton from "@/components/PaymentTestButton";
 import DirectPurchaseButton from "@/components/DirectPurchaseButton";
+import CryptoPurchasePanel from "@/components/CryptoPurchasePanel";
 
 interface CreditPackage {
   id: string;
@@ -361,10 +362,14 @@ export default function BuyCreditsPage() {
               </CardHeader>
               <CardContent>
                 <Tabs value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as "paypal" | "crypto")}>
-                  <TabsList className="grid w-full grid-cols-1">
+                  <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="paypal" className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      Secure Payment
+                      PayPal
+                    </TabsTrigger>
+                    <TabsTrigger value="crypto" className="flex items-center gap-2">
+                      <Bitcoin className="h-4 w-4" />
+                      Crypto
                     </TabsTrigger>
                   </TabsList>
                   
@@ -401,7 +406,15 @@ export default function BuyCreditsPage() {
                     </div>
                   </TabsContent>
                   
-
+                  <TabsContent value="crypto" className="space-y-4 mt-6">
+                    <CryptoPurchasePanel 
+                      usdAmount={getPaymentAmount()}
+                      creditAmount={getTotalCredits()}
+                      onSuccess={() => {
+                        window.location.reload();
+                      }}
+                    />
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
