@@ -9,6 +9,9 @@ const router = express.Router();
 // Direct credit purchase endpoint
 router.post("/purchase", authenticateJWT, async (req, res) => {
   try {
+    console.log("[DIRECT-PURCHASE] Request received:", req.body);
+    console.log("[DIRECT-PURCHASE] User from JWT:", req.user);
+    
     const { amount, creditAmount } = req.body;
     const userId = req.user?.id;
 

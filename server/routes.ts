@@ -228,6 +228,72 @@ export function registerRoutes(app: Express) {
   
   // Direct purchase routes
   app.use("/api/direct-purchase", directPurchaseRoutes);
+  
+  // Simple direct purchase endpoint for testing
+  app.post("/api/purchase-credits", authenticateJWT, async (req: any, res: any) => {
+    try {
+      console.log("[PURCHASE-CREDITS] Request received:", req.body);
+      console.log("[PURCHASE-CREDITS] User:", req.user);
+      
+      const { amount, creditAmount } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ success: false, error: "Authentication required" });
+      }
+
+      if (!amount || !creditAmount || amount <= 0 || creditAmount <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Invalid amount or credit amount" 
+        });
+      }
+
+      // Import db and users here to avoid module issues
+      const { db } = await import("../db/index.js");
+      const { users } = await import("../db/schema.js");
+      const { eq } = await import("drizzle-orm");
+
+      // Get current user
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+
+      // Calculate new credit balance
+      const newCreditBalance = user.credits + creditAmount;
+
+      // Update user credits
+      await db
+        .update(users)
+        .set({ 
+          credits: newCreditBalance,
+          lastLogin: new Date()
+        })
+        .where(eq(users.id, userId));
+
+      console.log(`[PURCHASE-CREDITS] User ${userId} purchased ${creditAmount} credits for $${amount}`);
+
+      res.json({
+        success: true,
+        message: "Purchase completed successfully",
+        creditsAdded: creditAmount,
+        newBalance: newCreditBalance,
+        amountPaid: amount
+      });
+
+    } catch (error) {
+      console.error("Purchase credits error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Purchase processing failed" 
+      });
+    }
+  });
 
   // Error handler must be last
   app.use(errorHandler);

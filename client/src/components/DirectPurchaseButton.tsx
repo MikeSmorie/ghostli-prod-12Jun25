@@ -23,7 +23,7 @@ export default function DirectPurchaseButton({ amount, creditAmount, onSuccess }
         throw new Error('Authentication required');
       }
 
-      const response = await fetch('/api/direct-purchase/purchase', {
+      const response = await fetch('/api/purchase-credits', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
