@@ -69,6 +69,9 @@ export default function ContentGeneratorNew() {
   const [antiAIDetection, setAntiAIDetection] = useState(true);
   const [usePersonalStyle, setUsePersonalStyle] = useState(false);
   
+  // Language options
+  const [englishVariant, setEnglishVariant] = useState<'us' | 'uk'>('us'); // Default to US English
+  
   // Humanization parameters (1% default as per original design)
   const [typosPercentage, setTyposPercentage] = useState(1.0);
   const [grammarMistakesPercentage, setGrammarMistakesPercentage] = useState(1.0);
@@ -88,9 +91,10 @@ export default function ContentGeneratorNew() {
     mutationFn: async (params) => {
       setProgress(10);
       
-      // Include humanization parameters in the request
+      // Include humanization parameters and language variant in the request
       const requestParams = {
         ...params,
+        englishVariant,
         typosPercentage,
         grammarMistakesPercentage,
         humanMisErrorsPercentage
@@ -403,6 +407,47 @@ export default function ContentGeneratorNew() {
                     </div>
                   </div>
                   
+                  {/* Language Options */}
+                  <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Label className="font-medium text-green-900 dark:text-green-100">English Variant</Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[300px] p-3">
+                              <p className="mb-1"><strong>English Variant:</strong></p>
+                              <p>Select whether to use American English (US) or British English (UK) spelling, vocabulary, and expressions.</p>
+                              <ul className="mt-1 space-y-1 list-disc list-inside text-xs">
+                                <li><strong>US:</strong> color, center, analyze, program, apartment</li>
+                                <li><strong>UK:</strong> colour, centre, analyse, programme, flat</li>
+                              </ul>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <Badge variant={englishVariant === 'uk' ? "default" : "outline"}>
+                        {englishVariant === 'uk' ? "British" : "American"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-center">
+                      <span className={`text-sm mr-3 ${englishVariant === 'us' ? 'font-bold text-green-800 dark:text-green-200' : 'text-green-600 dark:text-green-400'}`}>
+                        American English
+                      </span>
+                      <Switch
+                        id="english-variant"
+                        checked={englishVariant === 'uk'}
+                        onCheckedChange={(checked) => setEnglishVariant(checked ? 'uk' : 'us')}
+                      />
+                      <span className={`text-sm ml-3 ${englishVariant === 'uk' ? 'font-bold text-green-800 dark:text-green-200' : 'text-green-600 dark:text-green-400'}`}>
+                        British English
+                      </span>
+                    </div>
+                  </div>
+
                   {/* Anti-AI Detection Toggle */}
                   <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                     <div className="flex items-center space-x-3">
@@ -538,6 +583,47 @@ export default function ContentGeneratorNew() {
                           step={50}
                           className="w-full"
                         />
+                      </div>
+                      
+                      {/* Language Options */}
+                      <div className="p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <Label className="font-medium text-green-900 dark:text-green-100">English Variant</Label>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <HelpCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[300px] p-3">
+                                  <p className="mb-1"><strong>English Variant:</strong></p>
+                                  <p>Select whether to use American English (US) or British English (UK) spelling, vocabulary, and expressions.</p>
+                                  <ul className="mt-1 space-y-1 list-disc list-inside text-xs">
+                                    <li><strong>US:</strong> color, center, analyze, program, apartment</li>
+                                    <li><strong>UK:</strong> colour, centre, analyse, programme, flat</li>
+                                  </ul>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          <Badge variant={englishVariant === 'uk' ? "default" : "outline"}>
+                            {englishVariant === 'uk' ? "British" : "American"}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center justify-center">
+                          <span className={`text-sm mr-3 ${englishVariant === 'us' ? 'font-bold text-green-800 dark:text-green-200' : 'text-green-600 dark:text-green-400'}`}>
+                            American English
+                          </span>
+                          <Switch
+                            id="english-variant-detailed"
+                            checked={englishVariant === 'uk'}
+                            onCheckedChange={(checked) => setEnglishVariant(checked ? 'uk' : 'us')}
+                          />
+                          <span className={`text-sm ml-3 ${englishVariant === 'uk' ? 'font-bold text-green-800 dark:text-green-200' : 'text-green-600 dark:text-green-400'}`}>
+                            British English
+                          </span>
+                        </div>
                       </div>
                       
                       <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
