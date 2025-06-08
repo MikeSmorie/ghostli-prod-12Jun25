@@ -137,10 +137,32 @@ export class VoucherService {
 
       if (voucher.valueType === "credits") {
         creditsAwarded = parseInt(voucher.valueAmount);
-        const creditResult = await addCreditsToUser(userId, creditsAwarded, "BONUS", `Voucher redemption: ${voucherCode}`);
-        if (creditResult.success && creditResult.transactionId) {
-          transactionId = creditResult.transactionId;
-        }
+        
+        // Get current user credits
+        const currentUser = await db.query.users.findFirst({
+          where: eq(users.id, userId),
+          columns: { credits: true }
+        });
+        
+        const currentCredits = currentUser?.credits || 0;
+        const newBalance = currentCredits + creditsAwarded;
+        
+        // Update user credits
+        await db.update(users)
+          .set({ credits: newBalance })
+          .where(eq(users.id, userId));
+        
+        // Create transaction record
+        const [creditTransaction] = await db.insert(creditTransactions).values({
+          userId,
+          amount: creditsAwarded,
+          transactionType: "BONUS",
+          description: `Voucher redemption: ${voucherCode}`,
+          source: "voucher_system",
+          balanceAfter: newBalance
+        }).returning({ id: creditTransactions.id });
+          
+        transactionId = creditTransaction.id;
       } else if (voucher.valueType === "percentage_discount" || voucher.valueType === "dollar_discount") {
         discountApplied = parseFloat(voucher.valueAmount);
         // Note: Discount vouchers would be applied at payment time, not here
@@ -181,7 +203,31 @@ export class VoucherService {
     try {
       // Award credits to referrer (typically same or more than referred user)
       const referrerCredits = Math.max(referredCredits, 50); // Minimum 50 credits for referrer
-      await addCreditsToUser(referrerId, referrerCredits, "BONUS", `Referral reward: ${referralCode}`);
+      
+      // Get current referrer credits
+      const currentReferrer = await db.query.users.findFirst({
+        where: eq(users.id, referrerId),
+        columns: { credits: true }
+      });
+      
+      if (currentReferrer) {
+        const newBalance = (currentReferrer.credits || 0) + referrerCredits;
+        
+        // Update referrer credits
+        await db.update(users)
+          .set({ credits: newBalance })
+          .where(eq(users.id, referrerId));
+        
+        // Create transaction record for referrer
+        await db.insert(creditTransactions).values({
+          userId: referrerId,
+          amount: referrerCredits,
+          transactionType: "BONUS",
+          description: `Referral reward: ${referralCode}`,
+          source: "referral_system",
+          balanceAfter: newBalance
+        });
+      }
 
       // Create referral relationship record
       await db.insert(referralRelationships).values({
@@ -193,13 +239,19 @@ export class VoucherService {
         status: "completed"
       });
 
-      // Update referral code stats
-      await db.update(userReferralCodes)
-        .set({
-          totalReferrals: db.select({ count: count() }).from(referralRelationships).where(eq(referralRelationships.referrerId, referrerId)),
-          totalCreditsEarned: db.select({ sum: sum(referralRelationships.referrerCreditsAwarded) }).from(referralRelationships).where(eq(referralRelationships.referrerId, referrerId))
-        })
-        .where(eq(userReferralCodes.userId, referrerId));
+      // Update referral code stats manually
+      const referralStats = await db.query.userReferralCodes.findFirst({
+        where: eq(userReferralCodes.userId, referrerId)
+      });
+      
+      if (referralStats) {
+        await db.update(userReferralCodes)
+          .set({
+            totalReferrals: (referralStats.totalReferrals || 0) + 1,
+            totalCreditsEarned: (referralStats.totalCreditsEarned || 0) + referrerCredits
+          })
+          .where(eq(userReferralCodes.userId, referrerId));
+      }
 
     } catch (error) {
       console.error("Error processing referral reward:", error);
