@@ -1,0 +1,93 @@
+Prompt 26 of ~30 — Execute ONLY this prompt.
+
+You are now implementing the **Voucher & Referral System** for GhostliAI — using modern SaaS best practice.
+
+Objectives:
+
+✅ Core System:
+
+1️⃣ Create Vouchers Table in DB:
+    • voucher_code (unique)
+    • type (discount / referral)
+    • value_type (credits / % discount / $ discount)
+    • value_amount
+    • max_uses (total)
+    • per_user_limit
+    • expiry_date
+    • created_by (admin user ID)
+    • is_active (true/false)
+    • referral_source_user_id (optional — for referral codes)
+
+✅ Core Logic:
+
+2️⃣ Voucher Redemption:
+    • Track redemption per user
+    • Enforce per_user_limit
+    • Enforce max_uses
+    • Enforce expiry_date
+    • Log successful uses
+
+✅ Referral System:
+
+3️⃣ Referral Flow:
+    • Each user has unique referral code
+    • When used:
+        - Referrer (P-A) earns reward (auto-credit)
+        - Referred (P-B/C/D) earns welcome bonus (auto-credit)
+    • Notify referrer (dashboard + email optional)
+
+✅ God Mode Controls:
+
+4️⃣ In God Mode UI — add Voucher Management:
+    • Create new voucher
+    • Edit voucher
+    • Deactivate/reactivate
+    • View usage stats
+    • Set per-tier availability (e.g. Pro only, Free eligible, etc.)
+    • Toggle referral program ON/OFF globally
+
+✅ User Tooltips:
+
+5️⃣ For Users:
+    • “Enter a voucher or referral code” field
+    • Tooltip: 
+    ```
+    “Use a voucher to unlock discounts or bonus credits.  
+    Referral codes reward both you and your referrer!” 
+    ```
+
+✅ Admin Tooltips:
+
+6️⃣ In God Mode:
+    • For each field → small `?` tooltip explaining:
+        - voucher_code → “Unique code entered by user”  
+        - type → “Discount (promo) or Referral (tracking referrals)”  
+        - value_type → “How this voucher rewards users”  
+        - max_uses → “Max total times this code can be used”  
+        - per_user_limit → “Max times each user can use this”  
+        - referral_source_user_id → “For referral codes → links to referrer”  
+
+✅ Agility:
+
+7️⃣ Design system to allow:
+    • Future new reward types (e.g. tiered rewards, badges)
+    • New voucher types (e.g. subscription extension)
+
+✅ Logging:
+
+When system is implemented, log:  
+`[VOUCHER_REFERRAL_SYSTEM_READY]`
+
+---
+
+Constraints:
+
+✅ DO NOT interfere with core subscription flow  
+✅ DO NOT interfere with credits system logic  
+✅ DO NOT break payment system  
+✅ DO NOT break existing God Mode controls  
+✅ System should be **modular and extendable**
+
+---
+
+Execute Prompt 26 now.

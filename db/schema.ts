@@ -269,15 +269,101 @@ export const featureFlags = pgTable("feature_flags", {
   updatedAt: timestamp("updated_at")
 });
 
+// Voucher type and value type enums
+export const voucherTypeEnum = z.enum(["discount", "referral"]);
+export type VoucherType = z.infer<typeof voucherTypeEnum>;
+
+export const valueTypeEnum = z.enum(["credits", "percentage_discount", "dollar_discount"]);
+export type ValueType = z.infer<typeof valueTypeEnum>;
+
+// Vouchers table for discount codes and referral tracking
+export const vouchers = pgTable("vouchers", {
+  id: serial("id").primaryKey(),
+  voucherCode: text("voucher_code").notNull().unique(),
+  type: text("type").notNull(), // discount or referral
+  valueType: text("value_type").notNull(), // credits, percentage_discount, dollar_discount
+  valueAmount: decimal("value_amount", { precision: 10, scale: 2 }).notNull(),
+  maxUses: integer("max_uses"), // null = unlimited
+  perUserLimit: integer("per_user_limit").default(1),
+  expiryDate: timestamp("expiry_date"), // null = no expiry
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isActive: boolean("is_active").default(true),
+  referralSourceUserId: integer("referral_source_user_id").references(() => users.id), // for referral codes
+  tierRestriction: text("tier_restriction"), // null = all tiers, or specific tier
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => {
+  return {
+    codeIdx: index("voucher_code_idx").on(table.voucherCode),
+    typeIdx: index("voucher_type_idx").on(table.type),
+    referralIdx: index("voucher_referral_source_idx").on(table.referralSourceUserId),
+  }
+});
+
+// Voucher redemptions tracking table
+export const voucherRedemptions = pgTable("voucher_redemptions", {
+  id: serial("id").primaryKey(),
+  voucherId: integer("voucher_id").notNull().references(() => vouchers.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  creditsAwarded: integer("credits_awarded").default(0),
+  discountApplied: decimal("discount_applied", { precision: 10, scale: 2 }).default("0"),
+  redemptionDate: timestamp("redemption_date").defaultNow(),
+  transactionId: integer("transaction_id").references(() => creditTransactions.id), // link to credit transaction
+}, (table) => {
+  return {
+    voucherUserIdx: index("voucher_redemption_voucher_user_idx").on(table.voucherId, table.userId),
+    userIdx: index("voucher_redemption_user_idx").on(table.userId),
+  }
+});
+
+// User referral codes - each user gets a unique referral code
+export const userReferralCodes = pgTable("user_referral_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  referralCode: text("referral_code").notNull().unique(),
+  totalReferrals: integer("total_referrals").default(0),
+  totalCreditsEarned: integer("total_credits_earned").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    referralCodeIdx: index("user_referral_code_idx").on(table.referralCode),
+    userIdx: index("user_referral_user_idx").on(table.userId),
+  }
+});
+
+// Referral tracking - who referred whom
+export const referralRelationships = pgTable("referral_relationships", {
+  id: serial("id").primaryKey(),
+  referrerId: integer("referrer_id").notNull().references(() => users.id), // person who referred
+  referredId: integer("referred_id").notNull().references(() => users.id), // person who was referred
+  referralCode: text("referral_code").notNull(),
+  referrerCreditsAwarded: integer("referrer_credits_awarded").default(0),
+  referredCreditsAwarded: integer("referred_credits_awarded").default(0),
+  status: text("status").default("completed"), // completed, pending, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    referrerIdx: index("referral_referrer_idx").on(table.referrerId),
+    referredIdx: index("referral_referred_idx").on(table.referredId),
+    codeIdx: index("referral_code_idx").on(table.referralCode),
+  }
+});
+
 // Define all relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   activityLogs: many(activityLogs),
   subscriptions: many(userSubscriptions),
   payments: many(payments),
   paymentGateways: many(clientPaymentGateways),
   cryptoWallets: many(cryptoWallets),
   cryptoTransactions: many(cryptoTransactions),
-  creditTransactions: many(creditTransactions)
+  creditTransactions: many(creditTransactions),
+  createdVouchers: many(vouchers, { relationName: "createdVouchers" }),
+  voucherRedemptions: many(voucherRedemptions),
+  referralCode: one(userReferralCodes),
+  referralsGiven: many(referralRelationships, { relationName: "referralsGiven" }),
+  referralsReceived: many(referralRelationships, { relationName: "referralsReceived" })
 }));
 
 export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
@@ -368,6 +454,54 @@ export const cryptoTransactionsRelations = relations(cryptoTransactions, ({ one 
   })
 }));
 
+// Voucher and referral relations
+export const vouchersRelations = relations(vouchers, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [vouchers.createdBy],
+    references: [users.id],
+    relationName: "createdVouchers"
+  }),
+  referralSource: one(users, {
+    fields: [vouchers.referralSourceUserId],
+    references: [users.id]
+  }),
+  redemptions: many(voucherRedemptions)
+}));
+
+export const voucherRedemptionsRelations = relations(voucherRedemptions, ({ one }) => ({
+  voucher: one(vouchers, {
+    fields: [voucherRedemptions.voucherId],
+    references: [vouchers.id]
+  }),
+  user: one(users, {
+    fields: [voucherRedemptions.userId],
+    references: [users.id]
+  }),
+  transaction: one(creditTransactions, {
+    fields: [voucherRedemptions.transactionId],
+    references: [creditTransactions.id]
+  })
+}));
+
+export const userReferralCodesRelations = relations(userReferralCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [userReferralCodes.userId],
+    references: [users.id]
+  })
+}));
+
+export const referralRelationshipsRelations = relations(referralRelationships, ({ one }) => ({
+  referrer: one(users, {
+    fields: [referralRelationships.referrerId],
+    references: [users.id],
+    relationName: "referralsGiven"
+  }),
+  referred: one(users, {
+    fields: [referralRelationships.referredId],
+    references: [users.id],
+    relationName: "referralsReceived"
+  })
+}));
 
 // New tables for admin-to-user communication
 export const adminAnnouncements = pgTable("admin_announcements", {
