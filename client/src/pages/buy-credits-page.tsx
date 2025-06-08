@@ -38,6 +38,7 @@ import PayPalButtonComplete from "@/components/PayPalButtonComplete";
 import PaymentTestButton from "@/components/PaymentTestButton";
 import DirectPurchaseButton from "@/components/DirectPurchaseButton";
 import CryptoPurchasePanel from "@/components/CryptoPurchasePanel";
+import { VoucherRedemption } from "@/components/voucher-redemption";
 
 interface CreditPackage {
   id: string;
@@ -180,6 +181,32 @@ export default function BuyCreditsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Voucher Section - Prominently Placed */}
+      <div className="mb-8">
+        <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Gift className="h-6 w-6 text-green-600" />
+              <CardTitle className="text-xl text-green-800 dark:text-green-200">
+                Save Money with Voucher Codes!
+              </CardTitle>
+            </div>
+            <CardDescription className="text-green-700 dark:text-green-300">
+              Got a voucher code? Redeem it here for free credits before purchasing
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <VoucherRedemption onSuccess={() => {
+              toast({
+                title: "Credits Added!",
+                description: "Your voucher has been redeemed successfully",
+              });
+              setTimeout(() => window.location.reload(), 1500);
+            }} />
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Credit Packages */}
@@ -384,18 +411,17 @@ export default function BuyCreditsPage() {
                       <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <div className="flex items-center gap-2 text-sm text-blue-800 justify-center font-medium">
                           <CreditCard className="h-4 w-4" />
-                          <span>Instant Credit Purchase</span>
+                          <span>PayPal Checkout</span>
                         </div>
-                        <DirectPurchaseButton
-                          amount={getPaymentAmount()}
-                          creditAmount={getTotalCredits()}
+                        <PayPalButtonComplete
+                          amount={parseFloat(getPaymentAmount())}
+                          currency="USD"
                           onSuccess={() => {
-                            // Refresh credits after successful payment
                             window.location.reload();
                           }}
                         />
                         <div className="text-xs text-blue-700 text-center">
-                          Direct processing • {getTotalCredits()} credits added immediately
+                          Secure PayPal processing • {getTotalCredits()} credits added immediately
                         </div>
                       </div>
                       

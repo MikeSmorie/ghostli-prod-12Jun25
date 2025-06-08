@@ -245,6 +245,19 @@ export default function AuthPage() {
             </TabsContent>
           </Tabs>
 
+          {/* Welcome Voucher for New Users */}
+          <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="text-center space-y-2">
+              <h3 className="font-semibold text-green-800 dark:text-green-200">🎉 Welcome Gift!</h3>
+              <p className="text-sm text-green-700 dark:text-green-300">
+                New users get starter credits plus bonus codes: <strong>WELCOME50</strong>
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                Redeem after signup for 50 extra credits!
+              </p>
+            </div>
+          </div>
+
           <div className="mt-6 text-center">
             <Link href="/admin-register">
               <Button variant="outline" className="w-full">
