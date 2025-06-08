@@ -68,10 +68,12 @@ import {
   Shield,
   ShieldAlert,
   Terminal,
+  Ticket,
   User,
   Users,
   WifiOff
 } from "lucide-react";
+import { VoucherManagement } from "@/components/voucher-management";
 
 // Simulated system metrics
 const generateMetrics = () => ({
@@ -322,7 +324,7 @@ export default function GodModeAdmin() {
       </div>
 
       <Tabs defaultValue="system" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="system" className="flex items-center gap-2">
             <Cpu className="h-4 w-4" />
             System Overview
@@ -334,6 +336,10 @@ export default function GodModeAdmin() {
           <TabsTrigger value="activity" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             User Activity
+          </TabsTrigger>
+          <TabsTrigger value="vouchers" className="flex items-center gap-2">
+            <Ticket className="h-4 w-4" />
+            Vouchers
           </TabsTrigger>
           <TabsTrigger value="admin" className="flex items-center gap-2">
             <Terminal className="h-4 w-4" />
@@ -770,6 +776,11 @@ export default function GodModeAdmin() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Voucher Management Tab */}
+        <TabsContent value="vouchers" className="space-y-4">
+          <VoucherManagement />
         </TabsContent>
 
         {/* Admin Controls Tab */}

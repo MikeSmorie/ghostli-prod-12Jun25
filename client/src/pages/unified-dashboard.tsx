@@ -357,6 +357,12 @@ export default function UnifiedDashboard() {
         </Card>
       </div>
 
+      {/* Voucher Redemption */}
+      <VoucherRedemption onSuccess={(result) => {
+        // Refresh credits after successful voucher redemption
+        window.location.reload();
+      }} />
+
       {/* Call-to-Action */}
       <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <CardContent className="text-center py-8">
