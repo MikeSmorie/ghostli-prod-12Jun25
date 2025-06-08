@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, Gift, Users, ArrowRight, Check, AlertCircle } from "lucide-react";
+import { Ticket, Gift, Users, ArrowRight, Check, AlertCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface VoucherRedemptionProps {
@@ -50,11 +50,13 @@ export function VoucherRedemption({ onSuccess }: VoucherRedemptionProps) {
           variant: "default"
         });
         setVoucherCode("");
-        onSuccess?.(result);
+        if (onSuccess) {
+          onSuccess(result);
+        }
       } else {
         toast({
           title: "Redemption Failed",
-          description: result.message || "Invalid voucher code",
+          description: result.message || "Failed to redeem voucher",
           variant: "destructive"
         });
       }
@@ -69,12 +71,6 @@ export function VoucherRedemption({ onSuccess }: VoucherRedemptionProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isRedeeming) {
-      handleRedeem();
-    }
-  };
-
   return (
     <div className="space-y-6">
       {/* Voucher Redemption Card */}
@@ -82,48 +78,55 @@ export function VoucherRedemption({ onSuccess }: VoucherRedemptionProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Ticket className="h-5 w-5" />
-            Redeem Voucher or Referral Code
+            Redeem Voucher
           </CardTitle>
           <CardDescription>
-            Enter a voucher code to unlock discounts or bonus credits. Referral codes reward both you and your referrer!
+            Enter a voucher code to get free credits or subscription benefits
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Enter voucher or referral code"
-              value={voucherCode}
-              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-              onKeyPress={handleKeyPress}
-              disabled={isRedeeming}
-              className="flex-1"
-            />
-            <Button 
-              onClick={handleRedeem} 
-              disabled={isRedeeming || !voucherCode.trim()}
-              className="min-w-[100px]"
-            >
-              {isRedeeming ? "Redeeming..." : "Redeem"}
-            </Button>
-          </div>
-          
-          {redemptionResult && (
-            <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                <Check className="h-4 w-4" />
-                <span className="font-medium">Voucher Redeemed Successfully!</span>
-              </div>
-              {redemptionResult.creditsAwarded > 0 && (
-                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                  +{redemptionResult.creditsAwarded} credits added to your account
-                </p>
-              )}
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter voucher code..."
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                className="flex-1"
+                maxLength={20}
+              />
+              <Button 
+                onClick={handleRedeem}
+                disabled={isRedeeming || !voucherCode.trim()}
+                className="px-6"
+              >
+                {isRedeeming ? "Redeeming..." : "Redeem"}
+              </Button>
             </div>
-          )}
+
+            {redemptionResult && (
+              <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <Check className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium text-green-800 dark:text-green-200">
+                    Voucher Redeemed Successfully!
+                  </p>
+                  {redemptionResult.creditsAwarded && (
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      You received {redemptionResult.creditsAwarded} credits
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs text-muted-foreground">
+              Sample codes: WELCOME50, PREMIUM100, BOOST25
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Referral Program Info */}
+      {/* Referral System Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -131,12 +134,12 @@ export function VoucherRedemption({ onSuccess }: VoucherRedemptionProps) {
             Referral Program
           </CardTitle>
           <CardDescription>
-            Invite friends and earn credits when they join GhostliAI
+            Invite friends and earn credits together
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                 <Gift className="h-5 w-5 text-blue-600" />
                 <div>
@@ -221,38 +224,38 @@ function ReferralCodeDisplay() {
   }
 
   return (
-    <div className="space-y-4">
-      <Separator />
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">Your Referral Code:</span>
-          <Badge variant="secondary" className="font-mono">
-            {referralData?.referralCode}
-          </Badge>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+        <div>
+          <p className="font-mono text-sm font-bold">{referralData.referralCode}</p>
+          <p className="text-xs text-muted-foreground">Your referral code</p>
         </div>
-        
-        <div className="flex gap-2">
-          <Button onClick={copyReferralCode} variant="outline" size="sm" className="flex-1">
-            Copy Code
-          </Button>
-          <Button onClick={copyReferralLink} variant="outline" size="sm" className="flex-1">
-            Copy Link
-          </Button>
-        </div>
-
-        {referralData?.stats && (
-          <div className="grid grid-cols-2 gap-4 pt-3 border-t">
-            <div className="text-center">
-              <p className="text-lg font-bold text-blue-600">{referralData.stats.totalReferrals}</p>
-              <p className="text-xs text-muted-foreground">Total Referrals</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-green-600">{referralData.stats.totalCreditsEarned}</p>
-              <p className="text-xs text-muted-foreground">Credits Earned</p>
-            </div>
-          </div>
-        )}
+        <Button size="sm" variant="outline" onClick={copyReferralCode}>
+          <Copy className="h-4 w-4" />
+        </Button>
       </div>
+      
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={copyReferralLink}
+        className="w-full"
+      >
+        Copy Referral Link
+      </Button>
+
+      {referralData.stats && (
+        <div className="grid grid-cols-2 gap-3 text-center">
+          <div>
+            <p className="text-lg font-bold text-blue-600">{referralData.stats.totalReferrals}</p>
+            <p className="text-xs text-muted-foreground">Total Referrals</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-green-600">{referralData.stats.totalCreditsEarned}</p>
+            <p className="text-xs text-muted-foreground">Credits Earned</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
