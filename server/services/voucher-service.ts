@@ -157,9 +157,8 @@ export class VoucherService {
           userId,
           amount: creditsAwarded,
           transactionType: "BONUS",
-          description: `Voucher redemption: ${voucherCode}`,
           source: "voucher_system",
-          balanceAfter: newBalance
+          txId: `voucher_${voucherCode}_${Date.now()}`
         }).returning({ id: creditTransactions.id });
           
         transactionId = creditTransaction.id;
