@@ -1,45 +1,20 @@
-# syntax = docker/dockerfile:1
+# Use stable Node.js image
+FROM node:18
 
-# Adjust NODE_VERSION as desired
-ARG NODE_VERSION=20.18.0
-FROM node:${NODE_VERSION}-slim AS base
-
-LABEL fly_launch_runtime="Node.js"
-
-# Node.js app lives here
+# Set working directory
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV="production"
+# Copy package.json and package-lock.json
+COPY package.json package-lock.json ./
 
+# Install dependencies
+RUN npm ci
 
-# Throw-away build stage to reduce size of final image
-FROM base AS build
-
-# Install packages needed to build node modules
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
-
-# Install node modules
-COPY package-lock.json package.json ./
-RUN npm ci --include=dev
-
-# Copy application code
+# Copy rest of the app
 COPY . .
 
-# Build application
-RUN npm run build
+# Expose port required by Fly (8080)
+EXPOSE 8080
 
-# Remove development dependencies
-RUN npm prune --omit=dev
-
-
-# Final stage for app image
-FROM base
-
-# Copy built application
-COPY --from=build /app /app
-
-# Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-CMD [ "npm", "run", "start" ]
+# Start the app (adjust to match your "start" command and port)
+CMD ["npm", "run", "start"]
