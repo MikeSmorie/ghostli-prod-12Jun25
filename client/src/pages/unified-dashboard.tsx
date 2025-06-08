@@ -20,6 +20,7 @@ import {
   Users
 } from "lucide-react";
 import { useUser } from "@/hooks/use-user";
+import { VoucherRedemption } from "@/components/voucher-redemption";
 
 interface QuickAction {
   id: string;
