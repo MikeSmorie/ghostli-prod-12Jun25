@@ -414,7 +414,7 @@ export default function BuyCreditsPage() {
                           <span>PayPal Checkout</span>
                         </div>
                         <PayPalButtonComplete
-                          amount={parseFloat(getPaymentAmount())}
+                          amount={getPaymentAmount()}
                           currency="USD"
                           onSuccess={() => {
                             window.location.reload();
