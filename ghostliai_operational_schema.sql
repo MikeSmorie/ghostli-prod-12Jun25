@@ -180,3 +180,30 @@ INSERT INTO vouchers (voucher_code, type, value_type, value_amount, max_uses, pe
 INSERT INTO vouchers (voucher_code, type, value_type, value_amount, max_uses, per_user_limit, expiry_date, is_active, tier_restriction, source_app) VALUES ('PREMIUM100', 'credit', 'fixed', '100', 50, 1, '2025-12-31 23:59:59', true, 'PRO', 'GhostliAI');
 INSERT INTO vouchers (voucher_code, type, value_type, value_amount, max_uses, per_user_limit, expiry_date, is_active, tier_restriction, source_app) VALUES ('BOOST25', 'credit', 'fixed', '25', 200, 1, '2025-12-31 23:59:59', true, NULL, 'GhostliAI');
 INSERT INTO vouchers (voucher_code, type, value_type, value_amount, max_uses, per_user_limit, expiry_date, is_active, tier_restriction, source_app) VALUES ('UNLIMITED30', 'subscription', 'days', '30', 20, 1, '2025-12-31 23:59:59', true, NULL, 'GhostliAI');
+
+-- Global Settings (System configuration)
+INSERT INTO global_settings (setting_key, setting_value, description, created_at, updated_at, source_app) VALUES ('default_first_time_credits', '100', 'Default credits given to new users upon registration', '2025-06-03 18:18:58.623154', '2025-06-03 18:18:58.623154', 'GhostliAI');
+
+-- System Feature Flags (Essential for deployment)
+INSERT INTO feature_flags (flag_name, is_enabled, description, target_audience, rollout_percentage, created_at, updated_at, source_app) VALUES ('ai_detection_shield', true, 'AI detection and humanization features', 'all', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GhostliAI');
+INSERT INTO feature_flags (flag_name, is_enabled, description, target_audience, rollout_percentage, created_at, updated_at, source_app) VALUES ('clone_me_system', true, 'Clone Me writing style replication', 'premium', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GhostliAI');
+INSERT INTO feature_flags (flag_name, is_enabled, description, target_audience, rollout_percentage, created_at, updated_at, source_app) VALUES ('voucher_system', true, 'Voucher and referral system', 'all', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GhostliAI');
+INSERT INTO feature_flags (flag_name, is_enabled, description, target_audience, rollout_percentage, created_at, updated_at, source_app) VALUES ('crypto_payments', true, 'Cryptocurrency payment support', 'all', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GhostliAI');
+INSERT INTO feature_flags (flag_name, is_enabled, description, target_audience, rollout_percentage, created_at, updated_at, source_app) VALUES ('paypal_integration', true, 'PayPal payment gateway', 'all', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'GhostliAI');
+
+-- System Features (Core functionality)
+INSERT INTO system_features (feature_name, feature_type, configuration, is_active, created_at, updated_at, dependencies, source_app) VALUES ('content_generation', 'ai_service', '{"model": "gpt-4o", "max_tokens": 4000, "temperature": 0.7}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'openai_api', 'GhostliAI');
+INSERT INTO system_features (feature_name, feature_type, configuration, is_active, created_at, updated_at, dependencies, source_app) VALUES ('ai_detection', 'analysis_service', '{"providers": ["copyleaks", "originality"], "threshold": 0.75}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'detection_apis', 'GhostliAI');
+INSERT INTO system_features (feature_name, feature_type, configuration, is_active, created_at, updated_at, dependencies, source_app) VALUES ('payment_processing', 'financial_service', '{"paypal_enabled": true, "crypto_enabled": true}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'paypal_api,crypto_wallets', 'GhostliAI');
+INSERT INTO system_features (feature_name, feature_type, configuration, is_active, created_at, updated_at, dependencies, source_app) VALUES ('credit_management', 'core_service', '{"default_credits": 100, "free_tier_limit": 1000}', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'subscription_plans', 'GhostliAI');
+
+-- ====================
+-- DEPLOYMENT NOTES
+-- ====================
+-- 1. This schema is compatible with PostgreSQL 15+ and Render deployment
+-- 2. All tables use source_app = 'GhostliAI' for multi-tenant isolation
+-- 3. No foreign key dependencies on user data - clean boot guaranteed
+-- 4. Includes essential operational data for immediate functionality
+-- 5. Voucher system ready with 4 promotional codes
+-- 6. Subscription plans configured for Lite (free) and Pro tiers
+-- 7. System features and flags configured for full functionality
