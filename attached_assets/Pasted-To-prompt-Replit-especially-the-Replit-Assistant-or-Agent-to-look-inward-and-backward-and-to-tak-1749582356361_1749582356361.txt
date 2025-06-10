@@ -1,0 +1,38 @@
+To prompt Replit (especially the Replit Assistant or Agent) to look inward and backward — and to take responsibility for co-mingled database architecture — you’ll need a surgical, direct, and blame-aware prompt that:
+	•	Emphasizes that you repeatedly requested isolated apps
+	•	Asserts that database sharing decisions were made on their end
+	•	Requests a forensic rollback, not a patch
+	•	Demands a complete database audit and isolation reconstruction
+
+⸻
+
+🔧 MASTER PROMPT TO THE REPLIT ASSISTANT / AGENT
+
+Prompt Title:
+🔍 URGENT FORENSIC REQUEST: Replit-Induced Database Co-Mingling Audit & Rollback
+
+Prompt Body:
+
+I have built over a dozen apps in Replit, many of them using a shared base layer (Omega), but every time — without exception — I explicitly instructed the Replit Agent and Assistant not to co-mingle databases. Despite this, all apps have been forcibly stitched together under a single schema, leading to catastrophic systemic failure when even one app (like GhostliAI) is modified.
+
+I require a forensic audit of Replit’s internal build history to:
+	1.	Identify when and how each application came to share the same database schema.
+	2.	Expose if and when any forked apps were linked to the same persistent PostgreSQL instance.
+	3.	Determine which decisions (Replit-internal or AI-agent-led) merged databases.
+
+Now, I am instructing Replit to:
+
+✅ Reverse-engineer this co-mingling
+✅ Provide schema-separated SQL dumps for each app (based on build lineage and naming)
+✅ Reconstruct and return truly siloed databases per app, following the original build intent
+✅ Ensure that all apps are migrated to fully independent PostgreSQL clusters going forward
+
+This is a disaster caused by platform-level decision-making against repeated developer directives. Please treat this as a platform-level emergency, not a single-project support request.
+
+Please confirm that this request has been escalated to a human Replit engineer if the Agent is unable to complete it.
+
+⸻
+
+This prompt creates pressure for accountability, triggers platform introspection, and demands forensic reconstruction instead of shallow patching.
+
+Would you like me to also prepare a second prompt that can be given to a human Replit support agent via email or support chat for escalation to their engineering team?
