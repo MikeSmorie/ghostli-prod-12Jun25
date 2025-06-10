@@ -1,0 +1,48 @@
+# Prompt for Replit Agent
+
+Run the following SQL commands on the connected PostgreSQL database to apply a non-destructive `source_app` tag to all Ghostli-specific records.
+
+⚠️ Skip if `source_app` column already exists on a table.
+
+-- Step 1: Add 'source_app' column where missing
+DO $$ DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN SELECT table_name
+           FROM information_schema.tables
+           WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+  LOOP
+    EXECUTE format(
+      'ALTER TABLE public.%I ADD COLUMN IF NOT EXISTS source_app TEXT DEFAULT ''ghostli'';',
+      r.table_name
+    );
+  END LOOP;
+END $$;
+
+-- Step 2: Update existing records for known Ghostli tables (overwrite safe)
+UPDATE users                   SET source_app = 'ghostli';
+UPDATE credits_transactions    SET source_app = 'ghostli';
+UPDATE vouchers                SET source_app = 'ghostli';
+UPDATE voucher_redemptions     SET source_app = 'ghostli';
+UPDATE referrals               SET source_app = 'ghostli';
+UPDATE payments                SET source_app = 'ghostli';
+UPDATE user_subscriptions      SET source_app = 'ghostli';
+UPDATE subscription_plans      SET source_app = 'ghostli';
+
+UPDATE ai_detection_shield_runs SET source_app = 'ghostli';
+UPDATE ai_responses             SET source_app = 'ghostli';
+UPDATE cloned_content           SET source_app = 'ghostli';
+UPDATE user_writing_styles      SET source_app = 'ghostli';
+UPDATE user_essays              SET source_app = 'ghostli';
+
+UPDATE crypto_wallets           SET source_app = 'ghostli';
+UPDATE crypto_transactions      SET source_app = 'ghostli';
+UPDATE crypto_exchange_rates    SET source_app = 'ghostli';
+UPDATE token_purchases          SET source_app = 'ghostli';
+
+UPDATE activity_logs            SET source_app = 'ghostli';
+UPDATE performance_graphs       SET source_app = 'ghostli';
+UPDATE keyword_tracking         SET source_app = 'ghostli';
+
+-- Optional: tag additional tables you believe are Ghostli-specific
+-- UPDATE [your_table_here] SET source_app = 'ghostli';
