@@ -5,14 +5,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { ModuleManager } from "./moduleManager";
 
-interface IModule {
-  name: string;
-  inputSchema: any;
-  outputSchema: any;
-  process: (input: any) => Promise<any>;
-}
 
 const app = express();
 
@@ -62,21 +55,7 @@ app.use(generalLimiter);
 app.use('/api/content', contentGenerationLimiter);
 app.use('/api/ai-detection', aiDetectionLimiter);
 
-// Initialize module manager
-const moduleManager = new ModuleManager();
 
-// Register test module
-const testModule: IModule = {
-  name: "testModule",
-  inputSchema: { data: "string" },
-  outputSchema: { result: "string" },
-  async process(input: any) {
-    console.log(`[DEBUG] Processing input: ${input.data}`);
-    return { result: `Processed: ${input.data}` };
-  }
-};
-
-moduleManager.registerModule(testModule);
 
 // Body parsing middleware with limits
 app.use(express.json({ limit: '10mb' }));
@@ -115,17 +94,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Test endpoint for module manager
-app.get("/api/module/test", async (req, res) => {
-  try {
-    const result = await moduleManager.runModule("testModule", { data: "hello" });
-    console.log("[DEBUG] Module test result:", result);
-    res.json({ message: "Module test successful", result });
-  } catch (error) {
-    console.error("[ERROR] Module test failed:", error);
-    res.status(500).json({ error: "Module test failed" });
-  }
-});
+
 
 (async () => {
   // Register all API routes and create HTTP server
