@@ -16,10 +16,10 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("user"),
   email: text("email").unique(),
   credits: integer("credits").default(0).notNull(),
-  creditExempt: boolean("credit_exempt").default(false).notNull(),
-  subscriptionTier: text("subscription_tier").notNull().default("FREE"),
+  creditExempt: boolean("creditexempt").default(false).notNull(),
+  subscriptionTier: text("subscriptiontier").notNull().default("FREE"),
   createdAt: timestamp("created_at").defaultNow(),
-  lastLogin: timestamp("last_login")
+  lastLogin: timestamp("lastlogin")
 });
 
 export const activityLogs = pgTable("activity_logs", {
