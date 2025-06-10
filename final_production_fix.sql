@@ -27,9 +27,9 @@ BEGIN
     RAISE NOTICE 'Database decontamination complete. % tables cleaned.', cleanup_count;
 END $$;
 
--- Step 2: Create admin user account with known credentials
+-- Step 2: Create admin user account with original credentials
 INSERT INTO users (username, password, role, email, credits, creditexempt, subscriptiontier, created_at, lastlogin) 
-VALUES ('Ghost1#Ghost1*', '$2b$10$7b6cXLYYAKPBAm2SYd7mK.h4T4zoahJHk4zQe4UYqbw2GQ64l/FD6', 'admin', 'ghost@ghostliai.com', 1000, true, 'PRO', NOW(), NOW())
+VALUES ('Ghost1#Ghost1*', '$2b$10$1FI6OFJgQ9IVA6pb5g9.OOgH8biGMmdAWfg5pDb0sQruN2Q5KujFu', 'admin', 'ghost@ghostliai.com', 1000, true, 'PRO', NOW(), NOW())
 ON CONFLICT (username) DO UPDATE SET 
     password = EXCLUDED.password,
     role = EXCLUDED.role,
