@@ -1,0 +1,3 @@
+id,username,password,role,email,credits,creditexempt,subscriptiontier,created_at,lastlogin,source_app
+1,testuser,$2b$10$rGbx3IkZDD0c3L8LSnmrY.7Ry57BdX8yDt7VRtF1iIAQZU4aufkF.,user,test@ghostliai.com,100,f,FREE,2025-06-10 07:23:16.456545,2025-06-10 07:23:16.456545,GhostliAI
+2,testuser_humanization,$2b$10$rGbx3IkZDD0c3L8LSnmrY.7Ry57BdX8yDt7VRtF1iIAQZU4aufkF.,user,humanization@test.com,500,f,PRO,2025-06-10 07:56:56.554943,2025-06-10 07:56:56.554943,GhostliAI
