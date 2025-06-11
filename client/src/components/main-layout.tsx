@@ -109,7 +109,7 @@ export function MainLayout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top Header - Omega Login Style */}
+      {/* Top Header - GhostliAI Navigation */}
       <nav className="border-b bg-white dark:bg-gray-800 shadow-sm">
         <div className="container flex h-16 items-center px-4">
           {/* Left Side - Home/Dashboard Button */}

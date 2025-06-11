@@ -42,7 +42,7 @@ export default function SupergodRegisterPage() {
 
   const onSubmit = async (data: SupergodAuthFormData) => {
     // Verify secret key (in a real app, this would be more secure)
-    if (data.secretKey !== "omegasupergod") {
+    if (data.secretKey !== "ghostlisupergod") {
       toast({
         title: "Invalid Super-God key",
         description: "You don't have permission to create a Super-God account",

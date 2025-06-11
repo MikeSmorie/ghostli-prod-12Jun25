@@ -30,10 +30,10 @@ export async function logError(
 }
 
 // Create a custom error instance with source tracking
-export class OmegaError extends Error {
+export class GhostliError extends Error {
   constructor(message: string, public source: string) {
     super(message);
-    this.name = "OmegaError";
+    this.name = "GhostliError";
   }
 }
 

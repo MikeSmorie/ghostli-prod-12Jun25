@@ -31,7 +31,7 @@ export class CryptoPricingService {
         {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'Omega-Credits-App/1.0'
+            'User-Agent': 'GhostliAI-App/1.0'
           }
         }
       );
