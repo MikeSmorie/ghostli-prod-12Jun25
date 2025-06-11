@@ -120,7 +120,7 @@ export function MainLayout({ children }: LayoutProps) {
               className="flex items-center gap-2"
             >
               <Home className="h-4 w-4" />
-              <span className="font-medium">Home</span>
+              <span className="font-bold text-lg">GhostliAI</span>
             </Button>
           </div>
 
