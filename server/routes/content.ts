@@ -375,31 +375,48 @@ export function registerContentRoutes(app: Express) {
         // Consume credits after successful generation
         await consumeCredits(req, res, () => {});
 
-        // Log content generation event for launch monitoring
-        const { LaunchMonitoring } = await import('../utils/launch-monitoring');
-        LaunchMonitoring.contentGenerated(userId!, result.metadata.wordCount);
+        // Ensure robust response structure with defensive programming
+        const safeMetadata = result?.metadata || {};
+        const safeContent = result?.content || "";
+        
+        // Calculate word count as fallback if not provided
+        const wordCount = safeMetadata.wordCount || safeContent.split(/\s+/).filter(Boolean).length || 0;
+        
+        // Calculate generation time safely
+        const generationTime = safeMetadata.endTime && safeMetadata.startTime 
+          ? safeMetadata.endTime.getTime() - safeMetadata.startTime.getTime()
+          : 0;
 
-        // Return the generated content with plagiarism results if applicable
+        // Log content generation event for launch monitoring with safe data
+        try {
+          const { LaunchMonitoring } = await import('../utils/launch-monitoring');
+          LaunchMonitoring.contentGenerated(userId!, wordCount);
+        } catch (monitoringError) {
+          console.error("Launch monitoring error:", monitoringError);
+          // Don't fail the request if monitoring fails
+        }
+
+        // Return the generated content with complete error handling
         return res.json({
-          content: result.content,
-          contentWithFootnotes: result.contentWithFootnotes,
-          bibliography: result.bibliography || [],
-          keywordUsage: result.keywordUsage || [],
+          content: safeContent,
+          contentWithFootnotes: result?.contentWithFootnotes || undefined,
+          bibliography: result?.bibliography || [],
+          keywordUsage: result?.keywordUsage || [],
           metadata: {
-            wordCount: result.metadata.wordCount,
-            generationTime: result.metadata.endTime.getTime() - result.metadata.startTime.getTime(),
-            iterations: result.metadata.iterations,
+            wordCount: wordCount,
+            generationTime: generationTime,
+            iterations: safeMetadata.iterations || 1,
             tokens: {
-              prompt: result.metadata.promptTokens,
-              completion: result.metadata.completionTokens,
-              total: result.metadata.totalTokens
+              prompt: safeMetadata.promptTokens || 0,
+              completion: safeMetadata.completionTokens || 0,
+              total: safeMetadata.totalTokens || 0
             }
           },
           // Include plagiarism results if available
           ...(plagiarismResults && { plagiarismResults }),
-          seo: result.seo || [],
-          hashtags: result.hashtags || [],
-          keywords: result.keywords || []
+          seo: result?.seo || [],
+          hashtags: result?.hashtags || [],
+          keywords: result?.keywords || []
         });
       } catch (error) {
         console.error("OpenAI API error:", error);

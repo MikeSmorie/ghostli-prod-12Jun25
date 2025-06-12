@@ -107,8 +107,17 @@ export default function ContentGeneratorNew() {
       return result;
     },
     onSuccess: (data) => {
-      setGeneratedContent(data.content);
-      setMetadata(data.metadata);
+      // Defensive programming - ensure data structure exists
+      const content = data?.content || "";
+      const metadata = data?.metadata || {
+        wordCount: 0,
+        generationTime: 0,
+        iterations: 0,
+        tokens: { prompt: 0, completion: 0, total: 0 }
+      };
+      
+      setGeneratedContent(content);
+      setMetadata(metadata);
       setProgress(0);
       
       // Track generation count and show feedback popup after 3 generations
@@ -119,9 +128,13 @@ export default function ContentGeneratorNew() {
         setShowFeedbackPopup(true);
       }
       
+      // Safe access to metadata properties with fallbacks
+      const wordCount = metadata?.wordCount || content.split(/\s+/).filter(Boolean).length || 0;
+      const generationTime = metadata?.generationTime || 0;
+      
       toast({
         title: "Content Generated Successfully",
-        description: `Generated ${data.metadata.wordCount} words in ${formatDuration(data.metadata.generationTime)}`,
+        description: `Generated ${wordCount} words in ${formatDuration(generationTime)}`,
       });
     },
     onError: (error) => {
