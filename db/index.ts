@@ -8,8 +8,34 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Enhanced database connection with comprehensive error handling
 export const db = drizzle({
   connection: process.env.DATABASE_URL,
   schema,
   ws: ws,
 });
+
+// Database connection health check
+export async function verifyDatabaseConnection(): Promise<boolean> {
+  try {
+    // Simple query to verify connection
+    await db.execute('SELECT 1 as health_check');
+    return true;
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    return false;
+  }
+}
+
+// Initialize database connection verification on startup
+verifyDatabaseConnection()
+  .then(isHealthy => {
+    if (isHealthy) {
+      console.log("Database connection verified successfully");
+    } else {
+      console.error("Database connection verification failed");
+    }
+  })
+  .catch(error => {
+    console.error("Database initialization error:", error);
+  });

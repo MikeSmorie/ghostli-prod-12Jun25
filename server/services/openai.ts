@@ -1083,6 +1083,24 @@ ${finalContent.substring(0, 3000)}${finalContent.length > 3000 ? '... [truncated
     };
   } catch (error) {
     console.error("Error generating content with OpenAI:", error);
+    
+    // Return a safe error structure that won't break the client
+    const errorResult = {
+      content: "",
+      metadata: {
+        startTime: startTime,
+        endTime: new Date(),
+        wordCount: 0,
+        iterations: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        refinementSteps: [],
+        error: error instanceof Error ? error.message : "Content generation failed"
+      }
+    };
+    
+    // Still throw the error for proper error handling upstream
     throw error;
   }
 }

@@ -420,14 +420,34 @@ export function registerContentRoutes(app: Express) {
         });
       } catch (error) {
         console.error("OpenAI API error:", error);
-        throw error;
+        
+        // Return structured error response that won't break client
+        return res.status(500).json({
+          error: "Content generation failed",
+          message: error instanceof Error ? error.message : "OpenAI service unavailable",
+          content: "",
+          metadata: {
+            wordCount: 0,
+            generationTime: 0,
+            iterations: 0,
+            tokens: { prompt: 0, completion: 0, total: 0 }
+          }
+        });
       }
     } catch (error) {
       console.error("Content generation error:", error);
       
+      // Comprehensive error response with safe structure
       return res.status(500).json({
         error: "Content generation failed",
-        message: error instanceof Error ? error.message : "An unknown error occurred"
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+        content: "",
+        metadata: {
+          wordCount: 0,
+          generationTime: 0,
+          iterations: 0,
+          tokens: { prompt: 0, completion: 0, total: 0 }
+        }
       });
     }
   });
